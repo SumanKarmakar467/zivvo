@@ -31,7 +31,9 @@ const userSchema = new mongoose.Schema(
     refreshTokens: { type: [String], select: false, default: [] },
     provider: { type: String, enum: ["local", "google"], default: "local" },
     refreshToken: { type: String, select: false, default: null },
-    isVerified: { type: Boolean, default: false }
+    isVerified: { type: Boolean, default: false },
+    resetPasswordToken: { type: String, select: false, default: null },
+    resetPasswordExpiry: { type: Date, select: false, default: null }
   },
   { timestamps: true }
 );

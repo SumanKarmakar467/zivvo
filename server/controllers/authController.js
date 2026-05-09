@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import admin from "firebase-admin";
 import User from "../models/User.js";
@@ -10,21 +11,21 @@ const REFRESH_EXPIRES_IN = "7d";
 const getCookieOptions = () => ({
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  sameSite: "strict",
   maxAge: 7 * 24 * 60 * 60 * 1000
 });
 
-const signAccessToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: ACCESS_EXPIRES_IN });
+const signAccessToken = (user) =>
+  jwt.sign({ id: user._id, role: user.role, email: user.email }, process.env.JWT_SECRET, { expiresIn: ACCESS_EXPIRES_IN });
+
 const signRefreshToken = (id) => jwt.sign({ id }, process.env.JWT_REFRESH_SECRET, { expiresIn: REFRESH_EXPIRES_IN });
 
 const sanitizeUser = (user) => ({
-  id: user._id,
+  _id: user._id,
   name: user.name,
   email: user.email,
   role: user.role,
-  avatar: user.avatar,
-  provider: user.provider,
-  isVerified: user.isVerified
+  avatar: user.avatar
 });
 
 const ensureFirebaseAdmin = () => {
@@ -38,75 +39,58 @@ const ensureFirebaseAdmin = () => {
         privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
       })
     });
-    return;
+  } else {
+    admin.initializeApp();
   }
-
-  admin.initializeApp();
 };
+
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const isStrongPassword = (password) => /^(?=.*[A-Z])(?=.*\d).{8,}$/.test(password);
 
 export const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
-  if (!name || !email || !password) {
+  if (!name || String(name).trim().length < 2) {
     res.status(400);
-    throw new Error("name, email and password are required");
+    throw new Error("Name must be at least 2 characters");
   }
 
-  if (password.length < 6) {
+  if (!email || !isValidEmail(String(email).toLowerCase())) {
     res.status(400);
-    throw new Error("Password must be at least 6 characters");
+    throw new Error("Invalid email format");
   }
 
-  const existingUser = await User.findOne({ email: email.toLowerCase() });
-  if (existingUser) {
-    res.status(409);
+  if (!password || !isStrongPassword(String(password))) {
+    res.status(400);
+    throw new Error("Password must be at least 8 characters with 1 uppercase and 1 number");
+  }
+
+  const lowerEmail = String(email).toLowerCase();
+  const exists = await User.findOne({ email: lowerEmail }).lean();
+  if (exists) {
+    res.status(400);
     throw new Error("Email already registered");
   }
 
   const passwordHash = await User.hashPassword(password);
-
   const user = await User.create({
-    name,
-    email: email.toLowerCase(),
+    name: String(name).trim(),
+    email: lowerEmail,
     passwordHash,
     provider: "local",
     isVerified: true
   });
 
-  const accessToken = signAccessToken(user._id);
+  const accessToken = signAccessToken(user);
   const refreshToken = signRefreshToken(user._id);
 
-  user.refreshToken = refreshToken;
+  user.refreshTokens = [...(user.refreshTokens || []), refreshToken].slice(-5);
   await user.save();
-  await sendWelcomeEmail(user);
 
   res.cookie("refreshToken", refreshToken, getCookieOptions());
+  await sendWelcomeEmail(user);
 
-  res.status(201).json({
-    success: true,
-    user: sanitizeUser(user),
-    accessToken
-  });
-});
-
-export const forgotPassword = asyncHandler(async (req, res) => {
-  const { email } = req.body;
-  if (!email) {
-    res.status(400);
-    throw new Error("email is required");
-  }
-
-  const user = await User.findOne({ email: email.toLowerCase() }).lean();
-  if (!user) {
-    return res.status(200).json({ success: true, message: "If this email exists, a reset link has been sent." });
-  }
-
-  const resetToken = jwt.sign({ id: user._id, purpose: "password_reset" }, process.env.JWT_SECRET, {
-    expiresIn: "1h"
-  });
-
-  await sendPasswordResetEmail(user, resetToken);
-  return res.status(200).json({ success: true, message: "If this email exists, a reset link has been sent." });
+  res.status(201).json({ user: sanitizeUser(user), accessToken });
 });
 
 export const login = asyncHandler(async (req, res) => {
@@ -117,49 +101,29 @@ export const login = asyncHandler(async (req, res) => {
     throw new Error("email and password are required");
   }
 
-  const user = await User.findOne({ email: email.toLowerCase() }).select("+passwordHash +refreshToken");
+  const user = await User.findOne({ email: String(email).toLowerCase() }).select("+passwordHash +refreshTokens");
 
   if (!user || !(await user.matchPassword(password))) {
     res.status(401);
     throw new Error("Invalid credentials");
   }
 
-  const accessToken = signAccessToken(user._id);
+  if (!user.isActive) {
+    res.status(403);
+    throw new Error("Account is deactivated");
+  }
+
+  const accessToken = signAccessToken(user);
   const refreshToken = signRefreshToken(user._id);
 
-  user.refreshToken = refreshToken;
+  user.refreshTokens = [...(user.refreshTokens || []), refreshToken].slice(-5);
   await user.save();
 
   res.cookie("refreshToken", refreshToken, getCookieOptions());
-
-  res.status(200).json({
-    success: true,
-    user: sanitizeUser(user),
-    accessToken
-  });
+  res.json({ user: sanitizeUser(user), accessToken });
 });
 
-export const refreshToken = asyncHandler(async (req, res) => {
-  const token = req.cookies.refreshToken;
-
-  if (!token) {
-    res.status(401);
-    throw new Error("Refresh token missing");
-  }
-
-  const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-  const user = await User.findById(decoded.id).select("+refreshToken");
-
-  if (!user || user.refreshToken !== token) {
-    res.status(401);
-    throw new Error("Invalid refresh token");
-  }
-
-  const accessToken = signAccessToken(user._id);
-  res.status(200).json({ success: true, accessToken });
-});
-
-export const googleFirebaseLogin = asyncHandler(async (req, res) => {
+export const googleLogin = asyncHandler(async (req, res) => {
   const { idToken } = req.body;
 
   if (!idToken) {
@@ -169,38 +133,65 @@ export const googleFirebaseLogin = asyncHandler(async (req, res) => {
 
   ensureFirebaseAdmin();
   const decoded = await admin.auth().verifyIdToken(idToken);
+  const { email, name, picture, uid } = decoded;
 
-  if (!decoded.email) {
+  if (!email) {
     res.status(400);
     throw new Error("Google account email not found");
   }
 
-  let user = await User.findOne({ email: decoded.email.toLowerCase() }).select("+refreshToken");
+  let user = await User.findOne({ $or: [{ email: email.toLowerCase() }, { googleId: uid }] }).select("+refreshTokens");
 
   if (!user) {
     user = await User.create({
-      name: decoded.name || decoded.email.split("@")[0],
-      email: decoded.email.toLowerCase(),
-      avatar: decoded.picture || "",
+      name: name || email.split("@")[0],
+      email: email.toLowerCase(),
+      avatar: picture || "",
+      googleId: uid,
       provider: "google",
-      googleId: decoded.uid,
       isVerified: true
     });
   }
 
-  const accessToken = signAccessToken(user._id);
-  const refresh = signRefreshToken(user._id);
+  if (!user.isActive) {
+    res.status(403);
+    throw new Error("Account is deactivated");
+  }
 
-  user.refreshToken = refresh;
+  const accessToken = signAccessToken(user);
+  const refreshToken = signRefreshToken(user._id);
+
+  user.refreshTokens = [...(user.refreshTokens || []), refreshToken].slice(-5);
   await user.save();
 
-  res.cookie("refreshToken", refresh, getCookieOptions());
+  res.cookie("refreshToken", refreshToken, getCookieOptions());
+  res.json({ user: sanitizeUser(user), accessToken });
+});
 
-  res.status(200).json({
-    success: true,
-    user: sanitizeUser(user),
-    accessToken
-  });
+export const refreshToken = asyncHandler(async (req, res) => {
+  const token = req.cookies.refreshToken;
+  if (!token) {
+    res.status(401);
+    throw new Error("Refresh token missing");
+  }
+
+  const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+  const user = await User.findById(decoded.id).select("+refreshTokens");
+
+  if (!user || !(user.refreshTokens || []).includes(token)) {
+    res.status(401);
+    throw new Error("Invalid refresh token");
+  }
+
+  const newRefreshToken = signRefreshToken(user._id);
+  user.refreshTokens = (user.refreshTokens || []).filter((t) => t !== token);
+  user.refreshTokens.push(newRefreshToken);
+  user.refreshTokens = user.refreshTokens.slice(-5);
+  await user.save();
+
+  const accessToken = signAccessToken(user);
+  res.cookie("refreshToken", newRefreshToken, getCookieOptions());
+  res.json({ accessToken });
 });
 
 export const logout = asyncHandler(async (req, res) => {
@@ -209,12 +200,69 @@ export const logout = asyncHandler(async (req, res) => {
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-      await User.findByIdAndUpdate(decoded.id, { refreshToken: null });
+      const user = await User.findById(decoded.id).select("+refreshTokens");
+      if (user) {
+        user.refreshTokens = (user.refreshTokens || []).filter((t) => t !== token);
+        await user.save();
+      }
     } catch (error) {
-      // Ignore invalid/expired refresh token during logout.
+      // token invalid/expired: ignore cleanup
     }
   }
 
   res.clearCookie("refreshToken", getCookieOptions());
-  res.status(200).json({ success: true, message: "Logged out successfully" });
+  res.json({ message: "Logged out successfully" });
+});
+
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (email) {
+    const user = await User.findOne({ email: String(email).toLowerCase() }).select("+resetPasswordToken +resetPasswordExpiry");
+    if (user) {
+      const resetToken = crypto.randomBytes(32).toString("hex");
+      const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+      user.resetPasswordToken = hashedToken;
+      user.resetPasswordExpiry = new Date(Date.now() + 60 * 60 * 1000);
+      await user.save();
+
+      await sendPasswordResetEmail(user, resetToken);
+    }
+  }
+
+  res.json({ message: "Reset email sent" });
+});
+
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    res.status(400);
+    throw new Error("token and newPassword are required");
+  }
+
+  if (!isStrongPassword(String(newPassword))) {
+    res.status(400);
+    throw new Error("Password must be at least 8 characters with 1 uppercase and 1 number");
+  }
+
+  const hashedToken = crypto.createHash("sha256").update(String(token)).digest("hex");
+
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpiry: { $gt: new Date() }
+  }).select("+resetPasswordToken +resetPasswordExpiry +passwordHash");
+
+  if (!user) {
+    res.status(400);
+    throw new Error("Invalid or expired reset token");
+  }
+
+  user.passwordHash = await User.hashPassword(newPassword);
+  user.resetPasswordToken = null;
+  user.resetPasswordExpiry = null;
+  await user.save();
+
+  res.json({ message: "Password reset successful" });
 });

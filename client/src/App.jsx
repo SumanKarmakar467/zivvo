@@ -8,6 +8,9 @@ import CategoryPage from "./pages/CategoryPage";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import OrderTracking from "./pages/OrderTracking";
@@ -16,6 +19,7 @@ import Account from "./pages/Account";
 import SellerDashboard from "./pages/SellerDashboard";
 import AdminPanel from "./pages/AdminPanel";
 import { setWishlist } from "./store/slices/wishlistSlice";
+import { setCredentials, setLoading } from "./store/slices/authSlice";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
@@ -42,10 +46,46 @@ function AdminRoute({ children }) {
   return children;
 }
 
+const parseJwt = (token) => {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload;
+  } catch {
+    return null;
+  }
+};
+
 export default function App() {
   const location = useLocation();
   const dispatch = useDispatch();
   const { isAuthenticated, accessToken } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    const restore = async () => {
+      dispatch(setLoading(true));
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
+          method: "POST",
+          credentials: "include"
+        });
+        if (!res.ok) throw new Error("No active session");
+        const data = await res.json();
+        const payload = parseJwt(data.accessToken);
+        if (payload?.id) {
+          dispatch(
+            setCredentials({
+              accessToken: data.accessToken,
+              user: { _id: payload.id, email: payload.email || "", role: payload.role || "user", name: "" }
+            })
+          );
+        }
+      } catch {
+        dispatch(setLoading(false));
+      }
+    };
+
+    restore();
+  }, [dispatch]);
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken) return;
@@ -73,6 +113,9 @@ export default function App() {
           <Route path="/product/:slug" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/seller" element={<SellerRoute><SellerDashboard /></SellerRoute>} />
           <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
           <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
