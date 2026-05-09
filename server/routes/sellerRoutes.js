@@ -1,0 +1,11 @@
+import express from "express";
+import { addProductImages, dashboard, sellerOrders, sellerProducts } from "../controllers/sellerController.js";
+import { authorize, protect } from "../middleware/authMiddleware.js";
+import { upload } from "../middleware/upload.js";
+const router = express.Router();
+router.use(protect, authorize("seller", "admin"));
+router.get("/dashboard", dashboard);
+router.get("/products", sellerProducts);
+router.get("/orders", sellerOrders);
+router.post("/products/:id/images", upload.array("images", 8), addProductImages);
+export default router;

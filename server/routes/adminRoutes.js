@@ -1,0 +1,16 @@
+import express from "express";
+import { approveProduct, changeRole, coupons, createCoupon, deleteCoupon, deleteProductAdmin, orders, products, stats, users } from "../controllers/adminController.js";
+import { authorize, protect } from "../middleware/authMiddleware.js";
+const router = express.Router();
+router.use(protect, authorize("admin"));
+router.get("/users", users);
+router.patch("/users/:id/role", changeRole);
+router.get("/products", products);
+router.patch("/products/:id/approve", approveProduct);
+router.delete("/products/:id", deleteProductAdmin);
+router.get("/orders", orders);
+router.get("/stats", stats);
+router.get("/coupons", coupons);
+router.post("/coupons", createCoupon);
+router.delete("/coupons/:id", deleteCoupon);
+export default router;

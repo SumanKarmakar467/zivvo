@@ -1,0 +1,14 @@
+import express from "express";
+import { createProduct, deleteProduct, getByCategorySlug, getDeals, getFeaturedProducts, getProductById, getProducts, updateProduct } from "../controllers/productController.js";
+import { authorize, protect } from "../middleware/authMiddleware.js";
+import { upload } from "../middleware/upload.js";
+const router = express.Router();
+router.get("/", getProducts);
+router.get("/featured", getFeaturedProducts);
+router.get("/deals", getDeals);
+router.get("/category/:slug", getByCategorySlug);
+router.get("/:id", getProductById);
+router.post("/", protect, authorize("seller", "admin"), upload.array("images", 8), createProduct);
+router.put("/:id", protect, authorize("seller", "admin"), updateProduct);
+router.delete("/:id", protect, authorize("seller", "admin"), deleteProduct);
+export default router;
