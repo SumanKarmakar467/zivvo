@@ -1,6 +1,7 @@
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
-import { useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Home from "./pages/Home";
 import SearchResults from "./pages/SearchResults";
 import CategoryPage from "./pages/CategoryPage";
@@ -11,6 +12,8 @@ import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import OrderTracking from "./pages/OrderTracking";
 import AccountOrders from "./pages/AccountOrders";
+import Account from "./pages/Account";
+import { setWishlist } from "./store/slices/wishlistSlice";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
@@ -25,6 +28,23 @@ function PrivateRoute({ children }) {
 
 export default function App() {
   const location = useLocation();
+  const dispatch = useDispatch();
+  const { isAuthenticated, accessToken } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (!isAuthenticated || !accessToken) return;
+    const syncWishlist = async () => {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/wishlist`, {
+        credentials: "include",
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        dispatch(setWishlist((data.wishlist || []).map((item) => String(item._id))));
+      }
+    };
+    syncWishlist();
+  }, [dispatch, isAuthenticated, accessToken]);
 
   return (
     <div className="min-h-screen bg-zivvo-dark-bg text-zivvo-text-base">
@@ -38,6 +58,7 @@ export default function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/login" element={<Login />} />
           <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
+          <Route path="/account" element={<PrivateRoute><Account /></PrivateRoute>} />
           <Route path="/order-success/:orderId" element={<PrivateRoute><OrderSuccess /></PrivateRoute>} />
           <Route path="/account/orders" element={<PrivateRoute><AccountOrders /></PrivateRoute>} />
           <Route path="/orders/:id" element={<PrivateRoute><OrderTracking /></PrivateRoute>} />
