@@ -1,12 +1,22 @@
 import express from "express";
-import { addToCart, applyCoupon, clearCart, getCart, removeCartItem, updateCartItem } from "../controllers/cartController.js";
 import { protect } from "../middleware/authMiddleware.js";
+import {
+  getCart,
+  addToCart,
+  updateCartItem,
+  removeFromCart,
+  applyCoupon,
+  removeCoupon
+} from "../controllers/cartController.js";
+
 const router = express.Router();
+
 router.use(protect);
 router.get("/", getCart);
 router.post("/add", addToCart);
-router.post("/apply-coupon", applyCoupon);
-router.patch("/:itemId", updateCartItem);
-router.delete("/:itemId", removeCartItem);
-router.delete("/clear", clearCart);
+router.put("/:itemId", updateCartItem);
+router.delete("/:itemId", removeFromCart);
+router.post("/coupon", applyCoupon);
+router.delete("/coupon", removeCoupon);
+
 export default router;

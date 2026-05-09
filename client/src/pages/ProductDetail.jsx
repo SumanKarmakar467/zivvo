@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import PageTransition from "../components/common/PageTransition";
 import ProductCard from "../components/ProductCard";
 import { formatPrice } from "../utils/formatPrice";
-import { addItem } from "../features/cartSlice";
+import { addToCart } from "../store/slices/cartSlice";
 import { useCreateReviewMutation, useGetProductBySlugQuery, useGetReviewsQuery } from "../services/productApi";
 import { notifyError, notifySuccess } from "../components/common/Toast";
 
@@ -62,16 +62,7 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     if (!product || stock <= 0) return;
-    dispatch(
-      addItem({
-        product: product._id,
-        slug: product.slug,
-        name: product.name,
-        price: product.price,
-        image: product.images?.[0] || "",
-        quantity: qty
-      })
-    );
+    dispatch(addToCart({ productId: product._id, quantity: qty, productData: product }));
     notifySuccess("Added to cart");
   };
 
