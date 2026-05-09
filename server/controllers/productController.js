@@ -60,8 +60,20 @@ const buildCommonFilters = async (query, forceCategoryId) => {
   }
 
   if (query.search) {
-    const searchRegex = new RegExp(query.search, "i");
-    filter.$or = [{ name: searchRegex }, { description: searchRegex }];
+    const rawSearch = String(query.search).trim();
+    const singularized = rawSearch
+      .split(/\s+/)
+      .map((word) => (word.length > 3 && word.endsWith("s") ? word.slice(0, -1) : word))
+      .join(" ");
+
+    const primaryRegex = new RegExp(rawSearch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    const secondaryRegex = singularized !== rawSearch
+      ? new RegExp(singularized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i")
+      : null;
+
+    filter.$or = secondaryRegex
+      ? [{ name: primaryRegex }, { description: primaryRegex }, { name: secondaryRegex }, { description: secondaryRegex }]
+      : [{ name: primaryRegex }, { description: primaryRegex }];
   }
 
   return { filter, categoryMissing: false };
@@ -79,7 +91,13 @@ export const getProducts = asyncHandler(async (req, res) => {
   }
 
   const [products, total, brands] = await Promise.all([
-    Product.find(filter).sort(getSortOption(req.query.sort)).skip(skip).limit(limit).lean(),
+    Product.find(filter)
+      .populate("category", "name slug")
+      .populate("seller", "name avatar")
+      .sort(getSortOption(req.query.sort))
+      .skip(skip)
+      .limit(limit)
+      .lean(),
     Product.countDocuments(filter),
     Product.distinct("brand", { isActive: true, brand: { $nin: ["", null] } })
   ]);
@@ -118,6 +136,8 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
 
 export const getFeaturedProducts = asyncHandler(async (req, res) => {
   const products = await Product.find({ isActive: true, isFeatured: true })
+    .populate("category", "name slug")
+    .populate("seller", "name avatar")
     .sort({ createdAt: -1 })
     .limit(12)
     .lean();
@@ -139,7 +159,13 @@ export const getProductsByCategory = asyncHandler(async (req, res) => {
   const { filter } = await buildCommonFilters(req.query, category._id);
 
   const [products, total, brands] = await Promise.all([
-    Product.find(filter).sort(getSortOption(req.query.sort)).skip(skip).limit(limit).lean(),
+    Product.find(filter)
+      .populate("category", "name slug")
+      .populate("seller", "name avatar")
+      .sort(getSortOption(req.query.sort))
+      .skip(skip)
+      .limit(limit)
+      .lean(),
     Product.countDocuments(filter),
     Product.distinct("brand", { ...filter, brand: { $nin: ["", null] } })
   ]);

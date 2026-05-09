@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -8,15 +8,26 @@ import ProductCardSkeleton from "../components/ProductCardSkeleton";
 import { useGetFeaturedProductsQuery, useGetProductsQuery } from "../store/api/productsApi";
 
 const categories = [
-  { name: "Electronics", icon: "??", slug: "electronics" },
-  { name: "Mobiles", icon: "??", slug: "mobiles" },
-  { name: "Fashion", icon: "??", slug: "fashion" },
-  { name: "Beauty", icon: "??", slug: "beauty" },
-  { name: "Home & Kitchen", icon: "??", slug: "home-kitchen" },
-  { name: "Sports", icon: "?", slug: "sports" },
-  { name: "Books", icon: "??", slug: "books" },
-  { name: "Toys", icon: "??", slug: "toys" }
+  { name: "Electronics", icon: "💻", slug: "electronics" },
+  { name: "Mobiles", icon: "📱", slug: "mobiles" },
+  { name: "Fashion", icon: "👗", slug: "fashion" },
+  { name: "Beauty", icon: "💄", slug: "beauty" },
+  { name: "Home & Kitchen", icon: "🏠", slug: "home-kitchen" },
+  { name: "Sports", icon: "⚽", slug: "sports" },
+  { name: "Books", icon: "📚", slug: "books" },
+  { name: "Toys", icon: "🎮", slug: "toys" }
 ];
+
+const categoryDummyImages = {
+  electronics: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&q=80&auto=format&fit=crop",
+  mobiles: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=1200&q=80&auto=format&fit=crop",
+  fashion: "https://images.unsplash.com/photo-1445205170230-053b83016050?w=1200&q=80&auto=format&fit=crop",
+  beauty: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=1200&q=80&auto=format&fit=crop",
+  "home-kitchen": "https://images.unsplash.com/photo-1556911220-bff31c812dba?w=1200&q=80&auto=format&fit=crop",
+  sports: "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1200&q=80&auto=format&fit=crop",
+  books: "https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=1200&q=80&auto=format&fit=crop",
+  toys: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=1200&q=80&auto=format&fit=crop"
+};
 
 function useCountdownToMidnight() {
   const [left, setLeft] = useState({ h: 0, m: 0, s: 0 });
@@ -53,7 +64,12 @@ function CountCard({ label, target }) {
     }, 24);
     return () => clearInterval(id);
   }, [target]);
-  return <div><p className="text-xl font-black text-[#ef9f27]">{count.toLocaleString()}+</p><p className="text-xs text-zinc-300">{label}</p></div>;
+  return (
+    <div>
+      <p className="text-xl font-black text-[#ef9f27]">{count.toLocaleString()}+</p>
+      <p className="text-xs text-zinc-300">{label}</p>
+    </div>
+  );
 }
 
 export default function Home() {
@@ -63,8 +79,8 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const timer = useCountdownToMidnight();
 
-  const featured = useMemo(() => Array.isArray(featuredData) ? featuredData : featuredData?.products || [], [featuredData]);
-  const allProducts = useMemo(() => Array.isArray(productsData) ? productsData : productsData?.products || [], [productsData]);
+  const featured = useMemo(() => (Array.isArray(featuredData) ? featuredData : featuredData?.products || []), [featuredData]);
+  const allProducts = useMemo(() => (Array.isArray(productsData) ? productsData : productsData?.products || []), [productsData]);
 
   const flashSaleProducts = useMemo(() => allProducts.filter((p) => Number(p.discount || 0) >= 20), [allProducts]);
   const dealProduct = useMemo(() => [...allProducts].sort((a, b) => (b.discount || 0) - (a.discount || 0))[0], [allProducts]);
@@ -141,12 +157,20 @@ export default function Home() {
           <h2 className="mb-4 text-2xl font-bold">Shop by Category</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {categories.map((c, i) => {
-              const bg = allProducts[i]?.images?.[0] || `https://via.placeholder.com/700x500?text=${encodeURIComponent(c.name)}`;
+              const productImage = allProducts[i]?.images?.[0];
+              const bg = productImage && String(productImage).trim() ? productImage : categoryDummyImages[c.slug];
+
               return (
                 <Link key={c.slug} to={`/category/${c.slug}`} className="group relative h-44 overflow-hidden rounded-2xl border border-zinc-700">
-                  <img src={bg} alt={c.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                  <motion.img
+                    src={bg}
+                    alt={c.name}
+                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                    animate={{ scale: [1, 1.03, 1], x: [0, -6, 0] }}
+                    transition={{ duration: 8, repeat: Infinity, delay: i * 0.25, ease: "easeInOut" }}
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between"><div><p className="font-semibold">{c.name}</p><p className="text-xs text-zinc-300">{categoryCounts[c.name] || 0} products</p></div><span className="text-xl">?</span></div>
+                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between"><div><p className="font-semibold">{c.name}</p><p className="text-xs text-zinc-300">{categoryCounts[c.name] || 0} products</p></div><span className="text-xl">→</span></div>
                 </Link>
               );
             })}
@@ -185,9 +209,9 @@ export default function Home() {
             <div><h4 className="font-semibold text-[#ef9f27]">About Zivvo</h4><p className="mt-2 text-sm text-zinc-400">India's smartest shopping destination.</p></div>
             <div><h4 className="font-semibold text-[#ef9f27]">Customer Service</h4><p className="mt-2 text-sm text-zinc-400">Help Center<br />Returns<br />Shipping</p></div>
             <div><h4 className="font-semibold text-[#ef9f27]">My Account</h4><p className="mt-2 text-sm text-zinc-400">Profile<br />Orders<br />Wishlist</p></div>
-            <div><h4 className="font-semibold text-[#ef9f27]">Connect With Us</h4><p className="mt-2 text-sm text-zinc-400">Instagram � X � YouTube</p></div>
+            <div><h4 className="font-semibold text-[#ef9f27]">Connect With Us</h4><p className="mt-2 text-sm text-zinc-400">Instagram · X · YouTube</p></div>
           </div>
-          <div className="mt-6 border-t border-zinc-800 pt-4 text-sm text-zinc-400">Made with ? in India</div>
+          <div className="mt-6 border-t border-zinc-800 pt-4 text-sm text-zinc-400">Made with heart in India</div>
           <div className="mt-2 text-xs text-zinc-500">Powered by Razorpay | Cloudinary</div>
         </footer>
       </main>

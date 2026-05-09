@@ -4,6 +4,19 @@ import { useDispatch, useSelector } from "react-redux";
 import { toggleWishlistItem } from "../store/slices/wishlistSlice";
 import { notifyError } from "./common/Toast";
 
+const categoryFallbacks = {
+  electronics: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=900&q=80&auto=format&fit=crop",
+  mobiles: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=900&q=80&auto=format&fit=crop",
+  fashion: "https://images.unsplash.com/photo-1445205170230-053b83016050?w=900&q=80&auto=format&fit=crop",
+  beauty: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=900&q=80&auto=format&fit=crop",
+  "home-kitchen": "https://images.unsplash.com/photo-1556911220-bff31c812dba?w=900&q=80&auto=format&fit=crop",
+  sports: "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=900&q=80&auto=format&fit=crop",
+  books: "https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=900&q=80&auto=format&fit=crop",
+  toys: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=900&q=80&auto=format&fit=crop"
+};
+
+const genericFallback = "https://via.placeholder.com/600x600?text=Zivvo+Product";
+
 export default function ProductCard({ product }) {
   const dispatch = useDispatch();
   const { isAuthenticated, accessToken } = useSelector((s) => s.auth);
@@ -11,6 +24,10 @@ export default function ProductCard({ product }) {
   const wishlisted = ids.includes(String(product._id));
   const hasSecondaryImage = Boolean(product.images?.[1]);
   const showDiscount = Number(product.mrp) > Number(product.price);
+  const categorySlug = product?.category?.slug || product?.categorySlug || "";
+  const fallbackImage = categoryFallbacks[categorySlug] || genericFallback;
+  const primaryImage = product?.images?.[0] || fallbackImage;
+  const secondaryImage = product?.images?.[1] || fallbackImage;
 
   const onToggleWishlist = async (e) => {
     e.preventDefault();
@@ -35,9 +52,19 @@ export default function ProductCard({ product }) {
     >
       <Link to={`/product/${product.slug}`} className="block">
         <div className="relative aspect-square overflow-hidden">
-          <img src={product.images?.[0]} alt={product.name} className={`h-full w-full object-cover transition duration-500 ${hasSecondaryImage ? "group-hover:-translate-x-full" : ""}`} />
+          <img
+            src={primaryImage}
+            alt={product.name}
+            onError={(e) => { e.currentTarget.src = fallbackImage; }}
+            className={`h-full w-full object-cover transition duration-500 ${hasSecondaryImage ? "group-hover:-translate-x-full" : ""}`}
+          />
           {hasSecondaryImage && (
-            <img src={product.images[1]} alt={product.name} className="absolute inset-0 h-full w-full translate-x-full object-cover transition duration-500 group-hover:translate-x-0" />
+            <img
+              src={secondaryImage}
+              alt={product.name}
+              onError={(e) => { e.currentTarget.src = fallbackImage; }}
+              className="absolute inset-0 h-full w-full translate-x-full object-cover transition duration-500 group-hover:translate-x-0"
+            />
           )}
 
           {showDiscount && <span className="absolute left-2 top-2 rounded-full bg-[#ef9f27] px-2 py-1 text-xs font-bold text-black">{product.discount}% OFF</span>}

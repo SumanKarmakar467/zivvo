@@ -24,6 +24,8 @@ const rowAnim = {
   exit: { opacity: 0, x: 80 }
 };
 
+const cartImageFallback = "https://placehold.co/120x120/1f1a14/efe0d3?text=Zivvo";
+
 export default function Cart() {
   const dispatch = useDispatch();
   const [couponInput, setCouponInput] = useState("");
@@ -110,7 +112,12 @@ export default function Cart() {
                   return (
                     <motion.article key={item._id} variants={rowAnim} initial="hidden" animate="show" exit="exit" className="rounded-xl border border-zivvo-dark-raised bg-zivvo-dark-surface p-4">
                       <div className="flex gap-4">
-                        <img src={product.images?.[0] || "https://picsum.photos/120"} alt={product.name || "Product"} className="h-24 w-24 rounded-lg object-cover" />
+                        <img
+                          src={product.images?.[0] || cartImageFallback}
+                          alt={product.name || "Product"}
+                          onError={(e) => { e.currentTarget.src = cartImageFallback; }}
+                          className="h-24 w-24 rounded-lg object-cover"
+                        />
 
                         <div className="min-w-0 flex-1">
                           <Link to={`/product/${product.slug || ""}`} className="line-clamp-2 text-sm font-semibold text-zivvo-text-base hover:text-zivvo-amber-brand">

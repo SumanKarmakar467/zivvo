@@ -17,7 +17,6 @@ export default function Navbar() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [logoutApi] = useLogoutApiMutation();
-  const [scrolled, setScrolled] = useState(false);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [cartPulse, setCartPulse] = useState(false);
@@ -25,12 +24,6 @@ export default function Navbar() {
   const { user, isAuthenticated } = useSelector((s) => s.auth);
   const wishlistCount = useSelector((s) => s.wishlist.items.length);
   const cartCount = useSelector((s) => s.cart.itemCount || 0);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     if (!cartCount) return;
@@ -62,7 +55,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className={`fixed left-0 right-0 top-0 z-50 border-b transition ${scrolled ? "border-zinc-800 bg-[#1f1a14]/80 backdrop-blur-lg" : "border-transparent bg-transparent"}`}>
+      <header className="z-50 border-b border-zinc-800 bg-[#1f1a14]">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 md:px-6">
           <button className="rounded-md border border-zinc-700 p-2 text-zinc-200 md:hidden"><Icon className="h-4 w-4"><path d="M4 6h16M4 12h16M4 18h16" /></Icon></button>
           <Link to="/" className="text-xl font-black tracking-tight text-[#efe0d3]">Ziv<span className="text-[#ef9f27]">vo</span></Link>

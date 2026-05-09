@@ -31,17 +31,37 @@ const sanitizeUser = (user) => ({
 const ensureFirebaseAdmin = () => {
   if (admin.apps.length) return;
 
+  const normalizePrivateKey = (key = "") =>
+    String(key)
+      .trim()
+      .replace(/^"+|"+$/g, "")
+      .replace(/^'+|'+$/g, "")
+      .replace(/\\n/g, "\n");
+
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    const parsed = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: parsed.project_id,
+        clientEmail: parsed.client_email,
+        privateKey: normalizePrivateKey(parsed.private_key)
+      })
+    });
+    return;
+  }
+
   if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
+        privateKey: normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY)
       })
     });
-  } else {
-    admin.initializeApp();
+    return;
   }
+
+  throw new Error("Firebase Admin is not configured. Set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY in server/.env");
 };
 
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -131,8 +151,20 @@ export const googleLogin = asyncHandler(async (req, res) => {
     throw new Error("idToken is required");
   }
 
-  ensureFirebaseAdmin();
-  const decoded = await admin.auth().verifyIdToken(idToken);
+  try {
+    ensureFirebaseAdmin();
+  } catch (error) {
+    res.status(500);
+    throw new Error(error.message);
+  }
+
+  let decoded;
+  try {
+    decoded = await admin.auth().verifyIdToken(idToken);
+  } catch (error) {
+    res.status(401);
+    throw new Error("Invalid Google token");
+  }
   const { email, name, picture, uid } = decoded;
 
   if (!email) {

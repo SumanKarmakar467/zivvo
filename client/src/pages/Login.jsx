@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { signInWithPopup } from "firebase/auth";
-import { auth, googleProvider } from "../config/firebase";
+import { auth, googleProvider, hasFirebaseConfig } from "../config/firebase";
 import { setCredentials } from "../store/slices/authSlice";
 import { useGoogleLoginMutation, useLoginMutation } from "../services/authApi";
 
@@ -30,6 +30,10 @@ export default function Login() {
 
   const onGoogle = async () => {
     setError("");
+    if (!hasFirebaseConfig || !auth || !googleProvider) {
+      setError("Google login is not configured. Add VITE_FIREBASE_* keys in client/.env");
+      return;
+    }
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
@@ -65,7 +69,7 @@ export default function Login() {
 
         <div className="my-5 text-center text-sm text-zinc-400">or continue with</div>
 
-        <button onClick={onGoogle} disabled={googleLoading} className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 font-semibold text-zinc-900 disabled:opacity-70">
+        <button onClick={onGoogle} disabled={googleLoading || !hasFirebaseConfig} className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 font-semibold text-zinc-900 disabled:opacity-70">
           Continue with Google
         </button>
 
