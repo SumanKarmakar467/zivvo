@@ -1,11 +1,31 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { toggleWishlistItem } from "../store/slices/wishlistSlice";
+import { notifyError } from "./common/Toast";
 
 export default function ProductCard({ product }) {
-  const [wishlisted, setWishlisted] = useState(false);
+  const dispatch = useDispatch();
+  const { isAuthenticated, accessToken } = useSelector((s) => s.auth);
+  const ids = useSelector((s) => s.wishlist.items);
+  const wishlisted = ids.includes(String(product._id));
   const hasSecondaryImage = Boolean(product.images?.[1]);
   const showDiscount = Number(product.mrp) > Number(product.price);
+
+  const onToggleWishlist = async (e) => {
+    e.preventDefault();
+    dispatch(toggleWishlistItem(String(product._id)));
+    if (!isAuthenticated) return;
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/users/wishlist/${product._id}`, {
+      method: "POST",
+      credentials: "include",
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if (!res.ok) {
+      dispatch(toggleWishlistItem(String(product._id)));
+      notifyError("Wishlist update failed");
+    }
+  };
 
   return (
     <motion.article
@@ -24,10 +44,7 @@ export default function ProductCard({ product }) {
 
           <button
             type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              setWishlisted((prev) => !prev);
-            }}
+            onClick={onToggleWishlist}
             className="absolute right-2 top-2 rounded-full bg-black/40 p-2"
           >
             <span className={wishlisted ? "text-red-500" : "text-white"}>?</span>

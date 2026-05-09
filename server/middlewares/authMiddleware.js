@@ -30,3 +30,11 @@ export const authorize = (...roles) => (req, res, next) => {
   }
   next();
 };
+
+export const isSeller = (req, res, next) => {
+  if (!req.user || (req.user.role !== "seller" && req.user.role !== "admin")) {
+    res.status(403);
+    throw new Error("Seller access required");
+  }
+  next();
+};

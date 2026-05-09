@@ -5,11 +5,7 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
-import reviewRoutes from "./routes/reviewRoutes.js";
-import cartRoutes from "./routes/cartRoutes.js";
-import paymentRoutes from "./routes/paymentRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import orderRoutes from "./routes/orderRoutes.js";
+import sellerRoutes from "./routes/sellerRoutes.js";
 import { notFound, errorHandler } from "./middlewares/errorMiddleware.js";
 
 const app = express();
@@ -50,11 +46,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
-app.use("/api/reviews", reviewRoutes);
-app.use("/api/cart", cartRoutes);
-app.use("/api/payment", paymentRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/orders", orderRoutes);
+app.use("/api/seller", sellerRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
