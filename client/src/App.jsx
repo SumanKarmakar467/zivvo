@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import OrderTracking from "./pages/OrderTracking";
+import AccountOrders from "./pages/AccountOrders";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
           <Route path="/order-success/:orderId" element={<PrivateRoute><OrderSuccess /></PrivateRoute>} />
+          <Route path="/account/orders" element={<PrivateRoute><AccountOrders /></PrivateRoute>} />
           <Route path="/orders/:id" element={<PrivateRoute><OrderTracking /></PrivateRoute>} />
           <Route path="*" element={<Placeholder title="Not Found" />} />
         </Routes>
