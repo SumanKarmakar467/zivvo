@@ -11,6 +11,7 @@ import { cartApi } from "./api/cartApi";
 import { paymentApi } from "../services/paymentApi";
 import { productsApi } from "./api/productsApi";
 import { sellerApi } from "./api/sellerApi";
+import { adminApi } from "./api/adminApi";
 
 export const store = configureStore({
   reducer: {
@@ -25,7 +26,8 @@ export const store = configureStore({
     [cartApi.reducerPath]: cartApi.reducer,
     [paymentApi.reducerPath]: paymentApi.reducer,
     [productsApi.reducerPath]: productsApi.reducer,
-    [sellerApi.reducerPath]: sellerApi.reducer
+    [sellerApi.reducerPath]: sellerApi.reducer,
+    [adminApi.reducerPath]: adminApi.reducer
   },
   middleware: (gDM) =>
     gDM().concat(
@@ -35,6 +37,7 @@ export const store = configureStore({
       cartApi.middleware,
       paymentApi.middleware,
       productsApi.middleware,
-      sellerApi.middleware
+      sellerApi.middleware,
+      adminApi.middleware
     )
 });

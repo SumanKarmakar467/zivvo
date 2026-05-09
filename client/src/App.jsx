@@ -14,6 +14,7 @@ import OrderTracking from "./pages/OrderTracking";
 import AccountOrders from "./pages/AccountOrders";
 import Account from "./pages/Account";
 import SellerDashboard from "./pages/SellerDashboard";
+import AdminPanel from "./pages/AdminPanel";
 import { setWishlist } from "./store/slices/wishlistSlice";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -31,6 +32,13 @@ function SellerRoute({ children }) {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (!user || (user.role !== "seller" && user.role !== "admin")) return <Navigate to="/" replace />;
+  return children;
+}
+
+function AdminRoute({ children }) {
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!user || user.role !== "admin") return <Navigate to="/" replace />;
   return children;
 }
 
@@ -66,6 +74,7 @@ export default function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/login" element={<Login />} />
           <Route path="/seller" element={<SellerRoute><SellerDashboard /></SellerRoute>} />
+          <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
           <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
           <Route path="/account" element={<PrivateRoute><Account /></PrivateRoute>} />
           <Route path="/order-success/:orderId" element={<PrivateRoute><OrderSuccess /></PrivateRoute>} />

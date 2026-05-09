@@ -1,16 +1,46 @@
 import express from "express";
-import { approveProduct, changeRole, coupons, createCoupon, deleteCoupon, deleteProductAdmin, orders, products, stats, users } from "../controllers/adminController.js";
-import { authorize, protect } from "../middleware/authMiddleware.js";
+import {
+  createCategory,
+  createCoupon,
+  deleteCategory,
+  deleteCoupon,
+  getAllOrders,
+  getAllProducts,
+  getAllUsers,
+  getCategories,
+  getCoupons,
+  getDashboardStats,
+  toggleProductActive,
+  updateCategory,
+  updateCoupon,
+  updateOrderStatus,
+  updateUser
+} from "../controllers/adminController.js";
+import { protect, isAdmin } from "../middlewares/authMiddleware.js";
+
 const router = express.Router();
-router.use(protect, authorize("admin"));
-router.get("/users", users);
-router.patch("/users/:id/role", changeRole);
-router.get("/products", products);
-router.patch("/products/:id/approve", approveProduct);
-router.delete("/products/:id", deleteProductAdmin);
-router.get("/orders", orders);
-router.get("/stats", stats);
-router.get("/coupons", coupons);
+
+router.use(protect, isAdmin);
+
+router.get("/stats", getDashboardStats);
+
+router.get("/users", getAllUsers);
+router.put("/users/:id", updateUser);
+
+router.get("/products", getAllProducts);
+router.put("/products/:id/toggle", toggleProductActive);
+
+router.get("/orders", getAllOrders);
+router.put("/orders/:id/status", updateOrderStatus);
+
+router.get("/categories", getCategories);
+router.post("/categories", createCategory);
+router.put("/categories/:id", updateCategory);
+router.delete("/categories/:id", deleteCategory);
+
+router.get("/coupons", getCoupons);
 router.post("/coupons", createCoupon);
+router.put("/coupons/:id", updateCoupon);
 router.delete("/coupons/:id", deleteCoupon);
+
 export default router;
