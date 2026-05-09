@@ -1,32 +1,15 @@
-import { useEffect, useState } from "react";
+import { useTheme } from "../context/ThemeContext";
 
 export default function ThemeToggle() {
-  const [isDark, setIsDark] = useState(true);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("zivvo-theme");
-    const dark = saved ? saved === "dark" : true;
-    setIsDark(dark);
-    document.documentElement.classList.toggle("dark", dark);
-  }, []);
-
-  const toggleTheme = () => {
-    setIsDark((prev) => {
-      const next = !prev;
-      localStorage.setItem("zivvo-theme", next ? "dark" : "light");
-      document.documentElement.classList.toggle("dark", next);
-      return next;
-    });
-  };
+  const { theme, toggleTheme } = useTheme();
 
   return (
-    <button
-      type="button"
-      onClick={toggleTheme}
-      className="rounded-full border border-zinc-300 bg-white px-3 py-2 text-xs font-semibold text-zinc-800 transition hover:border-[#ef9f27] hover:text-[#ef9f27] dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-      aria-label="Toggle theme"
-    >
-      {isDark ? "Light" : "Dark"}
+    <button type="button" onClick={toggleTheme} aria-label="Toggle theme" className="rounded-full border border-zinc-700 bg-zinc-900 p-2 text-zinc-100 transition hover:border-[#ef9f27] hover:text-[#ef9f27]">
+      {theme === "dark" ? (
+        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v2m0 14v2m9-9h-2M5 12H3m14.5 6.5-1.5-1.5M8 8 6.5 6.5m11 0L16 8M8 16l-1.5 1.5" /><circle cx="12" cy="12" r="4" /></svg>
+      ) : (
+        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" /></svg>
+      )}
     </button>
   );
 }

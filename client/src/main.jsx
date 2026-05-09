@@ -8,16 +8,19 @@ import "./index.css";
 import App from "./App";
 import { store } from "./store/store";
 import { ToastViewport } from "./components/common/Toast";
+import { ThemeProvider } from "./context/ThemeContext";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
-      <BrowserRouter>
-        <AnimatePresence mode="wait" initial={false}>
-          <App />
-        </AnimatePresence>
-        <ToastViewport />
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <AnimatePresence mode="wait" initial={false}>
+            <App />
+          </AnimatePresence>
+          <ToastViewport />
+        </BrowserRouter>
+      </ThemeProvider>
     </Provider>
   </StrictMode>
 );
