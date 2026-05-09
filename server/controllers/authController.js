@@ -1,116 +1,198 @@
-﻿import crypto from "crypto";
 import jwt from "jsonwebtoken";
-import { body, validationResult } from "express-validator";
+import admin from "firebase-admin";
 import User from "../models/User.js";
-import { AppError, asyncHandler } from "../middleware/errorHandler.js";
-import { generateAccessToken, generateRefreshToken } from "../utils/generateToken.js";
-import sendEmail from "../utils/sendEmail.js";
+import asyncHandler from "../middlewares/asyncHandler.js";
 
-const cookieOptions = {
+const ACCESS_EXPIRES_IN = "15m";
+const REFRESH_EXPIRES_IN = "7d";
+
+const getCookieOptions = () => ({
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   maxAge: 7 * 24 * 60 * 60 * 1000
+});
+
+const signAccessToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: ACCESS_EXPIRES_IN });
+const signRefreshToken = (id) => jwt.sign({ id }, process.env.JWT_REFRESH_SECRET, { expiresIn: REFRESH_EXPIRES_IN });
+
+const sanitizeUser = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  avatar: user.avatar,
+  provider: user.provider,
+  isVerified: user.isVerified
+});
+
+const ensureFirebaseAdmin = () => {
+  if (admin.apps.length) return;
+
+  if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
+      })
+    });
+    return;
+  }
+
+  admin.initializeApp();
 };
-
-const setRefreshCookie = (res, token) => {
-  res.cookie("refreshToken", token, cookieOptions);
-};
-
-const buildAuthResponse = (user) => ({ id: user._id, name: user.name, email: user.email, role: user.role, isVerified: user.isVerified });
-
-export const registerValidation = [body("name").notEmpty(), body("email").isEmail(), body("password").isLength({ min: 6 })];
 
 export const register = asyncHandler(async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) throw new AppError(errors.array()[0].msg, 400);
-  const exists = await User.findOne({ email: req.body.email }).lean();
-  if (exists) throw new AppError("Email already registered", 400);
+  const { name, email, password } = req.body;
 
-  const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
-  const user = await User.create({ ...req.body, otp, otpExpiry: new Date(Date.now() + 10 * 60 * 1000), role: req.body.role === "seller" ? "seller" : "user" });
-  await sendEmail({ to: user.email, subject: "Verify your ShopPop account", html: `<h3>Your OTP is ${otp}</h3>` });
+  if (!name || !email || !password) {
+    res.status(400);
+    throw new Error("name, email and password are required");
+  }
 
-  const accessToken = generateAccessToken({ id: user._id });
-  const refreshToken = generateRefreshToken({ id: user._id });
+  if (password.length < 6) {
+    res.status(400);
+    throw new Error("Password must be at least 6 characters");
+  }
+
+  const existingUser = await User.findOne({ email: email.toLowerCase() });
+  if (existingUser) {
+    res.status(409);
+    throw new Error("Email already registered");
+  }
+
+  const passwordHash = await User.hashPassword(password);
+
+  const user = await User.create({
+    name,
+    email: email.toLowerCase(),
+    passwordHash,
+    provider: "local",
+    isVerified: true
+  });
+
+  const accessToken = signAccessToken(user._id);
+  const refreshToken = signRefreshToken(user._id);
+
   user.refreshToken = refreshToken;
   await user.save();
-  setRefreshCookie(res, refreshToken);
-  res.status(201).json({ user: buildAuthResponse(user), accessToken });
+
+  res.cookie("refreshToken", refreshToken, getCookieOptions());
+
+  res.status(201).json({
+    success: true,
+    user: sanitizeUser(user),
+    accessToken
+  });
 });
 
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email }).select("+password");
-  if (!user || !(await user.matchPassword(password))) throw new AppError("Invalid credentials", 401);
 
-  const accessToken = generateAccessToken({ id: user._id });
-  const refreshToken = generateRefreshToken({ id: user._id });
+  if (!email || !password) {
+    res.status(400);
+    throw new Error("email and password are required");
+  }
+
+  const user = await User.findOne({ email: email.toLowerCase() }).select("+passwordHash +refreshToken");
+
+  if (!user || !(await user.matchPassword(password))) {
+    res.status(401);
+    throw new Error("Invalid credentials");
+  }
+
+  const accessToken = signAccessToken(user._id);
+  const refreshToken = signRefreshToken(user._id);
+
   user.refreshToken = refreshToken;
   await user.save();
-  setRefreshCookie(res, refreshToken);
-  res.json({ user: buildAuthResponse(user), accessToken });
+
+  res.cookie("refreshToken", refreshToken, getCookieOptions());
+
+  res.status(200).json({
+    success: true,
+    user: sanitizeUser(user),
+    accessToken
+  });
+});
+
+export const refreshToken = asyncHandler(async (req, res) => {
+  const token = req.cookies.refreshToken;
+
+  if (!token) {
+    res.status(401);
+    throw new Error("Refresh token missing");
+  }
+
+  const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+  const user = await User.findById(decoded.id).select("+refreshToken");
+
+  if (!user || user.refreshToken !== token) {
+    res.status(401);
+    throw new Error("Invalid refresh token");
+  }
+
+  const accessToken = signAccessToken(user._id);
+  res.status(200).json({ success: true, accessToken });
+});
+
+export const googleFirebaseLogin = asyncHandler(async (req, res) => {
+  const { idToken } = req.body;
+
+  if (!idToken) {
+    res.status(400);
+    throw new Error("idToken is required");
+  }
+
+  ensureFirebaseAdmin();
+  const decoded = await admin.auth().verifyIdToken(idToken);
+
+  if (!decoded.email) {
+    res.status(400);
+    throw new Error("Google account email not found");
+  }
+
+  let user = await User.findOne({ email: decoded.email.toLowerCase() }).select("+refreshToken");
+
+  if (!user) {
+    user = await User.create({
+      name: decoded.name || decoded.email.split("@")[0],
+      email: decoded.email.toLowerCase(),
+      avatar: decoded.picture || "",
+      provider: "google",
+      googleId: decoded.uid,
+      isVerified: true
+    });
+  }
+
+  const accessToken = signAccessToken(user._id);
+  const refresh = signRefreshToken(user._id);
+
+  user.refreshToken = refresh;
+  await user.save();
+
+  res.cookie("refreshToken", refresh, getCookieOptions());
+
+  res.status(200).json({
+    success: true,
+    user: sanitizeUser(user),
+    accessToken
+  });
 });
 
 export const logout = asyncHandler(async (req, res) => {
   const token = req.cookies.refreshToken;
+
   if (token) {
-    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-    await User.findByIdAndUpdate(decoded.id, { refreshToken: null });
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+      await User.findByIdAndUpdate(decoded.id, { refreshToken: null });
+    } catch (error) {
+      // Ignore invalid/expired refresh token during logout.
+    }
   }
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
-  });
-  res.json({ message: "Logged out" });
-});
 
-export const refresh = asyncHandler(async (req, res) => {
-  const token = req.cookies.refreshToken;
-  if (!token) throw new AppError("Refresh token missing", 401);
-  const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-  const user = await User.findById(decoded.id).lean();
-  if (!user || user.refreshToken !== token) throw new AppError("Invalid refresh token", 401);
-  const accessToken = generateAccessToken({ id: user._id });
-  res.json({ accessToken });
+  res.clearCookie("refreshToken", getCookieOptions());
+  res.status(200).json({ success: true, message: "Logged out successfully" });
 });
-
-export const verifyOtp = asyncHandler(async (req, res) => {
-  const { email, otp } = req.body;
-  const user = await User.findOne({ email });
-  if (!user || user.otp !== otp || !user.otpExpiry || user.otpExpiry < new Date()) throw new AppError("Invalid OTP", 400);
-  user.isVerified = true;
-  user.otp = undefined;
-  user.otpExpiry = undefined;
-  await user.save();
-  res.json({ message: "Account verified" });
-});
-
-export const forgotPassword = asyncHandler(async (req, res) => {
-  const user = await User.findOne({ email: req.body.email });
-  if (!user) throw new AppError("User not found", 404);
-  const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
-  user.otp = otp;
-  user.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-  await user.save();
-  await sendEmail({ to: user.email, subject: "ShopPop reset OTP", html: `<p>Your OTP is ${otp}</p>` });
-  res.json({ message: "OTP sent" });
-});
-
-export const resetPassword = asyncHandler(async (req, res) => {
-  const { email, otp, password } = req.body;
-  const user = await User.findOne({ email }).select("+password");
-  if (!user || user.otp !== otp || !user.otpExpiry || user.otpExpiry < new Date()) throw new AppError("Invalid OTP", 400);
-  user.password = password;
-  user.otp = undefined;
-  user.otpExpiry = undefined;
-  await user.save();
-  res.json({ message: "Password updated" });
-});
-
-export const me = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).select("-password").lean();
-  res.json(user);
-});
-

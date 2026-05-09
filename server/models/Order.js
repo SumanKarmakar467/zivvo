@@ -1,41 +1,41 @@
 import mongoose from "mongoose";
 
+const orderItemSchema = new mongoose.Schema(
+  {
+    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
+    title: { type: String, required: true },
+    image: { type: String, default: "" },
+    quantity: { type: Number, required: true, min: 1 },
+    price: { type: Number, required: true, min: 0 }
+  },
+  { _id: false }
+);
+
 const orderSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    orderNumber: { type: String, unique: true, default: () => `SP${Date.now()}` },
-    items: [{
-      product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
-      name: String,
-      image: String,
-      price: Number,
-      quantity: Number,
-      variant: String,
-      seller: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
-    }],
+    items: { type: [orderItemSchema], required: true },
     shippingAddress: {
-      name: String, phone: String, line1: String, line2: String, city: String, state: String, pincode: String
+      fullName: String,
+      phone: String,
+      line1: String,
+      line2: String,
+      city: String,
+      state: String,
+      postalCode: String,
+      country: String
     },
-    subtotal: Number,
-    discount: Number,
-    deliveryCharge: Number,
-    totalAmount: Number,
-    couponApplied: { code: String, discount: Number },
-    paymentMethod: { type: String, enum: ["UPI", "Card", "NetBanking", "COD", "BNPL"] },
+    subtotal: { type: Number, required: true, min: 0 },
+    shippingFee: { type: Number, default: 0, min: 0 },
+    discount: { type: Number, default: 0, min: 0 },
+    total: { type: Number, required: true, min: 0 },
+    paymentMethod: { type: String, enum: ["cod", "card", "upi", "netbanking"], default: "cod" },
     paymentStatus: { type: String, enum: ["pending", "paid", "failed", "refunded"], default: "pending" },
-    razorpayOrderId: String,
-    razorpayPaymentId: String,
-    orderStatus: {
-      type: String,
-      enum: ["placed", "confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled", "returned"],
-      default: "placed"
-    },
-    trackingId: String,
-    deliverySlot: { date: Date, slot: String },
-    expectedDelivery: Date,
-    cancelReason: String
+    orderStatus: { type: String, enum: ["placed", "processing", "shipped", "delivered", "cancelled"], default: "placed" }
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Order", orderSchema);
+const Order = mongoose.model("Order", orderSchema);
+
+export default Order;
