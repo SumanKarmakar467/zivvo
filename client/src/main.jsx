@@ -7,6 +7,7 @@ import "swiper/css";
 import "./index.css";
 import App from "./App";
 import { store } from "./store/store";
+import { ToastViewport } from "./components/common/Toast";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -15,6 +16,7 @@ createRoot(document.getElementById("root")).render(
         <AnimatePresence mode="wait" initial={false}>
           <App />
         </AnimatePresence>
+        <ToastViewport />
       </BrowserRouter>
     </Provider>
   </StrictMode>

@@ -1,54 +1,114 @@
-﻿import Order from "../models/Order.js";
-import Review from "../models/Review.js";
 import Product from "../models/Product.js";
+import Review from "../models/Review.js";
+import Order from "../models/Order.js";
+import mongoose from "mongoose";
 import { asyncHandler, AppError } from "../middleware/errorHandler.js";
-import { calculateShopPopScore } from "../utils/shoppopScore.js";
 
-const recalc = async (productId) => {
-  const reviews = await Review.find({ product: productId }).lean();
-  const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
+const recalculateProductReviewStats = async (productId) => {
+  const reviews = await Review.find({ product: productId }, { rating: 1 }).lean();
+  const avgRating = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0;
+
   const product = await Product.findById(productId);
-  if (!product) return;
-  product.ratings = { average: Number(avg.toFixed(2)), count: reviews.length };
-  product.shoppopScore = calculateShopPopScore(product, reviews);
+  if (!product) {
+    return;
+  }
+
+  product.rating = Number(avgRating.toFixed(2));
+  product.numReviews = reviews.length;
   await product.save();
 };
 
-export const createReview = asyncHandler(async (req, res) => {
-  const purchased = await Order.findOne({ user: req.user._id, "items.product": req.params.productId, paymentStatus: "paid" }).lean();
-  const review = await Review.create({ ...req.body, product: req.params.productId, user: req.user._id, isVerifiedPurchase: !!purchased });
-  await recalc(req.params.productId);
-  res.status(201).json(review);
-});
-
 export const getReviews = asyncHandler(async (req, res) => {
-  const page = Number(req.query.page || 1);
-  const limit = Number(req.query.limit || 10);
+  const productId = req.query.product;
+  if (!productId) {
+    throw new AppError("Product id is required", 400);
+  }
+
+  const page = Math.max(Number(req.query.page || 1), 1);
+  const limit = Math.max(Number(req.query.limit || 10), 1);
+  const sort = req.query.sort || "recent";
   const skip = (page - 1) * limit;
-  const [reviews, total] = await Promise.all([
-    Review.find({ product: req.params.productId }).populate("user", "name avatar").sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-    Review.countDocuments({ product: req.params.productId })
+
+  const sortOptions = {
+    recent: { createdAt: -1 },
+    rating_high: { rating: -1 },
+    helpful: { helpfulCount: -1, createdAt: -1 }
+  };
+
+  const sortStage = sortOptions[sort] || sortOptions.recent;
+  if (!mongoose.Types.ObjectId.isValid(productId)) {
+    throw new AppError("Invalid product id", 400);
+  }
+  const objectProductId = new mongoose.Types.ObjectId(productId);
+
+  const [reviews, total, breakdownRows] = await Promise.all([
+    Review.aggregate([
+      { $match: { product: objectProductId } },
+      { $addFields: { helpfulCount: { $size: { $ifNull: ["$helpful", []] } } } },
+      { $sort: sortStage },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
+          pipeline: [{ $project: { name: 1, avatar: 1 } }]
+        }
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } }
+    ]),
+    Review.countDocuments({ product: productId }),
+    Review.aggregate([
+      { $match: { product: objectProductId } },
+      { $group: { _id: "$rating", count: { $sum: 1 } } }
+    ])
   ]);
-  res.json({ reviews, total, pages: Math.ceil(total / limit) });
+
+  const ratingBreakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  breakdownRows.forEach((row) => {
+    ratingBreakdown[row._id] = row.count;
+  });
+
+  return res.json({
+    reviews,
+    total,
+    pages: Math.ceil(total / limit),
+    ratingBreakdown
+  });
 });
 
-export const updateReview = asyncHandler(async (req, res) => {
-  const review = await Review.findById(req.params.id);
-  if (!review) throw new AppError("Review not found", 404);
-  if (String(review.user) !== String(req.user._id)) throw new AppError("Forbidden", 403);
-  Object.assign(review, req.body);
-  await review.save();
-  await recalc(review.product);
-  res.json(review);
-});
+export const createReview = asyncHandler(async (req, res) => {
+  const { product, rating, title, body, images } = req.body;
 
-export const deleteReview = asyncHandler(async (req, res) => {
-  const review = await Review.findById(req.params.id);
-  if (!review) throw new AppError("Review not found", 404);
-  if (String(review.user) !== String(req.user._id)) throw new AppError("Forbidden", 403);
-  const productId = review.product;
-  await review.deleteOne();
-  await recalc(productId);
-  res.json({ message: "Review deleted" });
-});
+  if (!product || !rating || !title || !body) {
+    throw new AppError("Product, rating, title and body are required", 400);
+  }
 
+  const existingReview = await Review.findOne({ product, user: req.user._id }).lean();
+  if (existingReview) {
+    throw new AppError("You have already reviewed this product", 409);
+  }
+
+  const deliveredOrder = await Order.findOne({
+    user: req.user._id,
+    orderStatus: "delivered",
+    "items.product": product
+  }).lean();
+
+  const review = await Review.create({
+    product,
+    user: req.user._id,
+    rating,
+    title,
+    body,
+    images: Array.isArray(images) ? images : [],
+    verified: Boolean(deliveredOrder)
+  });
+
+  await recalculateProductReviewStats(product);
+
+  const populatedReview = await Review.findById(review._id).populate("user", "name avatar").lean();
+  return res.status(201).json(populatedReview);
+});
