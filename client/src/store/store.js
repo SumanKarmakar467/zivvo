@@ -3,6 +3,7 @@ import auth from "../features/authSlice";
 import cart from "./slices/cartSlice";
 import product from "../features/productSlice";
 import order from "../features/orderSlice";
+import wishlist from "./slices/wishlistSlice";
 import { authApi } from "../services/authApi";
 import { productApi } from "../services/productApi";
 import { orderApi } from "../services/orderApi";
@@ -16,6 +17,7 @@ export const store = configureStore({
     cart,
     product,
     order,
+    wishlist,
     [authApi.reducerPath]: authApi.reducer,
     [productApi.reducerPath]: productApi.reducer,
     [orderApi.reducerPath]: orderApi.reducer,

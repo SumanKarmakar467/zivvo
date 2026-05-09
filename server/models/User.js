@@ -10,7 +10,8 @@ const addressSchema = new mongoose.Schema(
     city: { type: String, required: true, trim: true },
     state: { type: String, required: true, trim: true },
     pincode: { type: String, required: true, trim: true },
-    country: { type: String, default: "India", trim: true }
+    country: { type: String, default: "India", trim: true },
+    isDefault: { type: Boolean, default: false }
   },
   { _id: true }
 );
@@ -20,14 +21,17 @@ const userSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String, select: false },
-    avatar: { type: String, default: "" },
+    avatar: { type: String, default: null },
+    phone: { type: String, default: "" },
+    addresses: { type: [addressSchema], default: [] },
+    wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
     role: { type: String, enum: ["user", "seller", "admin"], default: "user" },
-    provider: { type: String, enum: ["local", "google"], default: "local" },
-    googleId: { type: String, default: null },
-    refreshToken: { type: String, select: false, default: null },
-    isVerified: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
-    addresses: { type: [addressSchema], default: [] }
+    googleId: { type: String, default: null },
+    refreshTokens: { type: [String], select: false, default: [] },
+    provider: { type: String, enum: ["local", "google"], default: "local" },
+    refreshToken: { type: String, select: false, default: null },
+    isVerified: { type: Boolean, default: false }
   },
   { timestamps: true }
 );
