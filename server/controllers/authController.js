@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import admin from "firebase-admin";
 import User from "../models/User.js";
 import asyncHandler from "../middlewares/asyncHandler.js";
+import { sendPasswordResetEmail, sendWelcomeEmail } from "../utils/emailService.js";
 
 const ACCESS_EXPIRES_IN = "15m";
 const REFRESH_EXPIRES_IN = "7d";
@@ -77,6 +78,7 @@ export const register = asyncHandler(async (req, res) => {
 
   user.refreshToken = refreshToken;
   await user.save();
+  await sendWelcomeEmail(user);
 
   res.cookie("refreshToken", refreshToken, getCookieOptions());
 
@@ -85,6 +87,26 @@ export const register = asyncHandler(async (req, res) => {
     user: sanitizeUser(user),
     accessToken
   });
+});
+
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    res.status(400);
+    throw new Error("email is required");
+  }
+
+  const user = await User.findOne({ email: email.toLowerCase() }).lean();
+  if (!user) {
+    return res.status(200).json({ success: true, message: "If this email exists, a reset link has been sent." });
+  }
+
+  const resetToken = jwt.sign({ id: user._id, purpose: "password_reset" }, process.env.JWT_SECRET, {
+    expiresIn: "1h"
+  });
+
+  await sendPasswordResetEmail(user, resetToken);
+  return res.status(200).json({ success: true, message: "If this email exists, a reset link has been sent." });
 });
 
 export const login = asyncHandler(async (req, res) => {

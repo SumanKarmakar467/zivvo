@@ -3,7 +3,7 @@ import Razorpay from "razorpay";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import User from "../models/User.js";
-import sendEmail from "../utils/sendEmail.js";
+import { sendOrderStatusUpdate } from "../utils/emailService.js";
 import { asyncHandler, AppError } from "../middleware/errorHandler.js";
 
 const razorpay = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
@@ -87,13 +87,7 @@ export const cancelOrder = asyncHandler(async (req, res) => {
   await order.save();
 
   const user = await User.findById(req.user._id).lean();
-  if (user?.email) {
-    await sendEmail({
-      to: user.email,
-      subject: `Order Cancelled: ${order._id}`,
-      html: `<h2>Order Cancelled</h2><p>Your order ${order._id} has been cancelled.</p><p>Reason: ${order.cancelReason}</p>`
-    });
-  }
+  if (user?.email) await sendOrderStatusUpdate(user, order, "cancelled");
 
   return res.json(order);
 });
@@ -134,5 +128,7 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
   }
 
   await order.save();
+  const user = await User.findById(order.user).lean();
+  if (user?.email) await sendOrderStatusUpdate(user, order, status);
   return res.json(order);
 });

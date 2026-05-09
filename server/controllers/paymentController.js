@@ -5,7 +5,7 @@ import Product from "../models/Product.js";
 import Coupon from "../models/Coupon.js";
 import User from "../models/User.js";
 import Order from "../models/Order.js";
-import sendEmail from "../utils/sendEmail.js";
+import { sendOrderConfirmation } from "../utils/emailService.js";
 import { asyncHandler, AppError } from "../middleware/errorHandler.js";
 
 const razorpay = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
@@ -177,11 +177,7 @@ export const createRazorpayOrder = asyncHandler(async (req, res) => {
     total: context.total
   });
 
-  await sendEmail({
-    to: context.user.email,
-    subject: `Order Confirmed: ${order._id}`,
-    html: `<h2>Order Placed</h2><p>Your order ${order._id} has been placed successfully.</p><p>Total: INR ${order.total}</p>`
-  });
+  await sendOrderConfirmation(context.user, order);
 
   return res.json({ orderId: order._id });
 });
@@ -221,11 +217,7 @@ export const verifyPayment = asyncHandler(async (req, res) => {
     total: context.total
   });
 
-  await sendEmail({
-    to: context.user.email,
-    subject: `Payment Successful: ${order._id}`,
-    html: `<h2>Payment Received</h2><p>Your order ${order._id} is confirmed.</p><p>Total: INR ${order.total}</p>`
-  });
+  await sendOrderConfirmation(context.user, order);
 
   return res.json({ orderId: order._id, success: true });
 });

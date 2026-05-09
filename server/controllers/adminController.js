@@ -5,6 +5,7 @@ import Order from "../models/Order.js";
 import Category from "../models/Category.js";
 import Coupon from "../models/Coupon.js";
 import asyncHandler from "../middlewares/asyncHandler.js";
+import { sendOrderStatusUpdate } from "../utils/emailService.js";
 
 const toObjectId = (id) => new mongoose.Types.ObjectId(String(id));
 
@@ -226,6 +227,8 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
   order.orderStatus = status;
   order.statusHistory.push({ status, timestamp: new Date(), note: "Updated by admin" });
   await order.save();
+  const user = await User.findById(order.user).lean();
+  if (user?.email) await sendOrderStatusUpdate(user, order, status);
 
   res.json({ message: "Order status updated", orderStatus: order.orderStatus });
 });

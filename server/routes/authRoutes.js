@@ -4,7 +4,8 @@ import {
   login,
   refreshToken,
   googleFirebaseLogin,
-  logout
+  logout,
+  forgotPassword
 } from "../controllers/authController.js";
 
 const router = express.Router();
@@ -14,5 +15,6 @@ router.post("/login", login);
 router.post("/refresh", refreshToken);
 router.post("/google", googleFirebaseLogin);
 router.post("/logout", logout);
+router.post("/forgot-password", forgotPassword);
 
 export default router;
