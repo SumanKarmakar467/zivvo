@@ -6,8 +6,15 @@ import { AppError, asyncHandler } from "../middleware/errorHandler.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/generateToken.js";
 import sendEmail from "../utils/sendEmail.js";
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000
+};
+
 const setRefreshCookie = (res, token) => {
-  res.cookie("refreshToken", token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 7 * 24 * 60 * 60 * 1000 });
+  res.cookie("refreshToken", token, cookieOptions);
 };
 
 const buildAuthResponse = (user) => ({ id: user._id, name: user.name, email: user.email, role: user.role, isVerified: user.isVerified });
@@ -51,7 +58,11 @@ export const logout = asyncHandler(async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
     await User.findByIdAndUpdate(decoded.id, { refreshToken: null });
   }
-  res.clearCookie("refreshToken");
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+  });
   res.json({ message: "Logged out" });
 });
 
