@@ -8,8 +8,28 @@ import { productApi } from "../services/productApi";
 import { orderApi } from "../services/orderApi";
 import { cartApi } from "../services/cartApi";
 import { paymentApi } from "../services/paymentApi";
+import { productsApi } from "./api/productsApi";
 
 export const store = configureStore({
-  reducer: { auth, cart, product, order, [authApi.reducerPath]: authApi.reducer, [productApi.reducerPath]: productApi.reducer, [orderApi.reducerPath]: orderApi.reducer, [cartApi.reducerPath]: cartApi.reducer, [paymentApi.reducerPath]: paymentApi.reducer },
-  middleware: (gDM) => gDM().concat(authApi.middleware, productApi.middleware, orderApi.middleware, cartApi.middleware, paymentApi.middleware)
+  reducer: {
+    auth,
+    cart,
+    product,
+    order,
+    [authApi.reducerPath]: authApi.reducer,
+    [productApi.reducerPath]: productApi.reducer,
+    [orderApi.reducerPath]: orderApi.reducer,
+    [cartApi.reducerPath]: cartApi.reducer,
+    [paymentApi.reducerPath]: paymentApi.reducer,
+    [productsApi.reducerPath]: productsApi.reducer
+  },
+  middleware: (gDM) =>
+    gDM().concat(
+      authApi.middleware,
+      productApi.middleware,
+      orderApi.middleware,
+      cartApi.middleware,
+      paymentApi.middleware,
+      productsApi.middleware
+    )
 });

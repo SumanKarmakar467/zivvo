@@ -1,32 +1,54 @@
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 export default function ProductCard({ product }) {
-  const id = product?._id || product?.id;
-  const title = product?.title || product?.name || "Untitled Product";
-  const image = product?.images?.[0] || product?.image || "https://via.placeholder.com/600x600?text=Zivvo";
-  const price = product?.discountPrice || product?.price || 0;
-  const originalPrice = product?.price || 0;
-  const rating = Number(product?.ratingAverage || product?.rating || 0).toFixed(1);
+  const [wishlisted, setWishlisted] = useState(false);
+  const hasSecondaryImage = Boolean(product.images?.[1]);
+  const showDiscount = Number(product.mrp) > Number(product.price);
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
-      <Link to={`/product/${id || ""}`} className="relative block overflow-hidden">
-        <img src={image} alt={title} className="h-52 w-full object-cover transition duration-500 group-hover:scale-105" />
-        <button type="button" className="absolute right-3 top-3 rounded-full bg-white/90 p-2 text-zinc-700 shadow dark:bg-zinc-900/90 dark:text-zinc-200">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="m12 21-1.4-1.2C5.6 15.4 2 12.1 2 8A5 5 0 0 1 7 3c2 0 3.2.9 5 2.8C13.8 3.9 15 3 17 3a5 5 0 0 1 5 5c0 4.1-3.6 7.4-8.6 11.8L12 21Z" /></svg>
-        </button>
+    <motion.article
+      whileHover={{ scale: 1.02 }}
+      transition={{ duration: 0.2 }}
+      className="group overflow-hidden rounded-xl border border-zinc-800 bg-zivvo-surface shadow-sm hover:shadow-amber"
+    >
+      <Link to={`/product/${product.slug}`} className="block">
+        <div className="relative aspect-square overflow-hidden">
+          <img src={product.images?.[0]} alt={product.name} className={`h-full w-full object-cover transition duration-500 ${hasSecondaryImage ? "group-hover:-translate-x-full" : ""}`} />
+          {hasSecondaryImage && (
+            <img src={product.images[1]} alt={product.name} className="absolute inset-0 h-full w-full translate-x-full object-cover transition duration-500 group-hover:translate-x-0" />
+          )}
+
+          {showDiscount && <span className="absolute left-2 top-2 rounded-full bg-[#ef9f27] px-2 py-1 text-xs font-bold text-black">{product.discount}% OFF</span>}
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              setWishlisted((prev) => !prev);
+            }}
+            className="absolute right-2 top-2 rounded-full bg-black/40 p-2"
+          >
+            <span className={wishlisted ? "text-red-500" : "text-white"}>?</span>
+          </button>
+        </div>
+
+        <div className="p-3">
+          <p className="text-[11px] uppercase tracking-wide text-zivvo-text-soft">{product.brand || "Zivvo"}</p>
+          <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold text-zivvo-text-base">{product.name}</h3>
+          <div className="mt-1 text-xs text-zivvo-text-muted">? {Number(product.rating || 0).toFixed(1)} ({product.numReviews || 0})</div>
+          <div className="mt-2 flex items-center gap-2 text-sm">
+            <span className="font-bold text-zivvo-text-base">Rs {Number(product.price).toLocaleString()}</span>
+            {showDiscount && <span className="text-zivvo-text-soft line-through">Rs {Number(product.mrp).toLocaleString()}</span>}
+            {showDiscount && <span className="text-[#ef9f27]">{product.discount}% off</span>}
+          </div>
+        </div>
       </Link>
-      <div className="space-y-2 p-4">
-        <h3 className="line-clamp-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{title}</h3>
-        <div className="flex items-center gap-1 text-xs text-zinc-600 dark:text-zinc-300">
-          <svg viewBox="0 0 24 24" className="h-4 w-4 fill-[#ef9f27] text-[#ef9f27]"><path d="m12 2.5 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.3 6.2 20.4l1.1-6.5L2.6 9.3l6.5-.9L12 2.5Z" /></svg>
-          <span>{rating}</span>
-        </div>
-        <div className="flex items-baseline gap-2">
-          <p className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Rs {Number(price).toLocaleString()}</p>
-          {originalPrice > price && <p className="text-xs text-zinc-500 line-through">Rs {Number(originalPrice).toLocaleString()}</p>}
-        </div>
+
+      <div className="translate-y-3 px-3 pb-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+        <button type="button" className="w-full rounded-md bg-[#ef9f27] py-2 text-sm font-semibold text-black">Add to Cart</button>
       </div>
-    </article>
+    </motion.article>
   );
 }

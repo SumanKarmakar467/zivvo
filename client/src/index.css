@@ -65,3 +65,12 @@ body {
 *::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #ffb84d, #ef9f27);
 }
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(110deg, #2a2218 8%, #382f25 18%, #2a2218 33%);
+  background-size: 220% 100%;
+  animation: zivvo-shimmer 1.4s linear infinite;
+}
+
