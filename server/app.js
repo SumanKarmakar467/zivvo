@@ -17,6 +17,8 @@ import orderRoutes from "./routes/orderRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
+import returnRoutes from "./routes/returnRoutes.js";
+import webhookRoutes from "./routes/webhookRoutes.js";
 import { notFound, errorHandler } from "./middlewares/errorMiddleware.js";
 
 const app = express();
@@ -46,6 +48,7 @@ app.use(
 );
 
 app.use(helmet());
+app.use("/api/webhooks/razorpay", express.raw({ type: "application/json" }), webhookRoutes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -68,6 +71,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/coupons", couponRoutes);
+app.use("/api/returns", returnRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

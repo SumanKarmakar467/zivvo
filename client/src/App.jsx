@@ -19,9 +19,11 @@ import Account from "./pages/Account";
 import SellerDashboard from "./pages/SellerDashboard";
 import SellerDashboardPage from "./pages/seller/SellerDashboardPage";
 import SellerCouponsPage from "./pages/seller/SellerCouponsPage";
+import SellerReturnsPage from "./pages/seller/SellerReturnsPage";
 import AdminPanel from "./pages/AdminPanel";
 import WishlistPage from "./pages/WishlistPage";
 import NotificationsPage from "./pages/NotificationsPage";
+import ReturnDetailPage from "./pages/ReturnDetailPage";
 import { setCredentials, setLoading } from "./store/slices/authSlice";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -119,12 +121,14 @@ export default function App() {
           <Route path="/seller" element={<SellerRoute><SellerDashboardPage /></SellerRoute>} />
           <Route path="/seller/manage" element={<SellerRoute><SellerDashboard /></SellerRoute>} />
           <Route path="/seller/coupons" element={<SellerRoute><SellerCouponsPage /></SellerRoute>} />
+          <Route path="/seller/returns" element={<SellerRoute><SellerReturnsPage /></SellerRoute>} />
           <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
           <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
           <Route path="/account" element={<PrivateRoute><Account /></PrivateRoute>} />
           <Route path="/order-success/:orderId" element={<PrivateRoute><OrderSuccess /></PrivateRoute>} />
           <Route path="/account/orders" element={<PrivateRoute><AccountOrders /></PrivateRoute>} />
           <Route path="/orders/:id" element={<PrivateRoute><OrderDetailPage /></PrivateRoute>} />
+          <Route path="/returns/:id" element={<PrivateRoute><ReturnDetailPage /></PrivateRoute>} />
           <Route path="*" element={<Placeholder title="Not Found" />} />
         </Routes>
       </AnimatePresence>

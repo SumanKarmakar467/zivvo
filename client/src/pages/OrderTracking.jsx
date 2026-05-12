@@ -1,9 +1,12 @@
-﻿import { useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import PageTransition from "../components/common/PageTransition";
 import { useCancelOrderMutation, useGetOrderByIdQuery } from "../services/orderApi";
 import { notifyError, notifySuccess } from "../components/common/Toast";
 import OrderTimeline from "../components/OrderTimeline";
+import ReturnRequestForm from "../components/ReturnRequestForm";
+import ReturnStatusTimeline from "../components/ReturnStatusTimeline";
+import api from "../api/axios";
 
 export default function OrderTracking() {
   const { id } = useParams();
@@ -11,6 +14,19 @@ export default function OrderTracking() {
   const [cancelOrder] = useCancelOrderMutation();
   const [showCancel, setShowCancel] = useState(false);
   const [reason, setReason] = useState("Changed my mind");
+  const [returnRequest, setReturnRequest] = useState(null);
+
+  const loadReturnRequest = async () => {
+    try {
+      const res = await api.get("/returns/buyer");
+      const found = (res.data || []).find((row) => String(row.order?._id || row.order) === String(id) && row.status !== "closed");
+      setReturnRequest(found || null);
+    } catch {}
+  };
+
+  useEffect(() => {
+    loadReturnRequest();
+  }, [id]);
 
   const doCancel = async () => {
     try {
@@ -57,6 +73,9 @@ export default function OrderTracking() {
           <div className="mt-6">
             <OrderTimeline statusHistory={order.statusHistory || []} currentStatus={order.orderStatus} />
           </div>
+          <div className="mt-6">
+            {returnRequest ? <ReturnStatusTimeline request={returnRequest} /> : <ReturnRequestForm order={order} onSubmitted={loadReturnRequest} />}
+          </div>
         </section>
 
         <section className="space-y-4">
@@ -85,9 +104,7 @@ export default function OrderTracking() {
                     <p className="truncate text-sm font-medium">{item.name}</p>
                     <p className="text-xs text-zivvo-text-soft">Qty: {item.quantity}</p>
                     {item.variantAttributes && Object.keys(item.variantAttributes).length > 0 && (
-                      <p className="text-xs text-zivvo-text-soft">
-                        {Object.entries(item.variantAttributes).map(([k, v]) => `${k}: ${v}`).join(" · ")}
-                      </p>
+                      <p className="text-xs text-zivvo-text-soft">{Object.entries(item.variantAttributes).map(([k, v]) => `${k}: ${v}`).join(" · ")}</p>
                     )}
                   </div>
                   <p className="text-sm font-semibold">Rs {(item.price * item.quantity).toLocaleString()}</p>

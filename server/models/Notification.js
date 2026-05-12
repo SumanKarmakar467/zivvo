@@ -5,7 +5,7 @@ const notificationSchema = new mongoose.Schema(
     recipient: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     type: {
       type: String,
-      enum: ["new_order", "order_status", "review_received", "low_stock", "promo"],
+      enum: ["new_order", "order_status", "review_received", "low_stock", "promo", "return_requested"],
       required: true
     },
     title: { type: String, required: true, trim: true, maxlength: 120 },
