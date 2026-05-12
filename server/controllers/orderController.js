@@ -93,34 +93,32 @@ export const cancelOrder = asyncHandler(async (req, res) => {
 });
 
 export const updateOrderStatus = asyncHandler(async (req, res) => {
-  const { status, note, trackingNumber } = req.body;
-
-  const validStatuses = [
-    "placed",
-    "confirmed",
-    "packed",
-    "shipped",
-    "out_for_delivery",
-    "delivered",
-    "cancelled",
-    "returned"
-  ];
-
-  if (!validStatuses.includes(status)) {
-    throw new AppError("Invalid order status", 400);
-  }
+  const { status, note, awbNumber, courierName, estimatedDelivery } = req.body;
+  const pipeline = ["placed", "confirmed", "processing", "shipped", "out_for_delivery", "delivered"];
 
   const order = await Order.findById(req.params.id);
   if (!order) {
     throw new AppError("Order not found", 404);
   }
 
+  if (req.user.role === "seller") {
+    const ownsAnyItem = order.items.some((item) => String(item.seller) === String(req.user._id));
+    if (!ownsAnyItem) throw new AppError("Forbidden", 403);
+  }
+
+  if (!pipeline.includes(status)) throw new AppError("Invalid order status", 400);
+  const currentIdx = pipeline.indexOf(order.orderStatus);
+  const newIdx = pipeline.indexOf(status);
+  if (newIdx <= currentIdx) throw new AppError("Invalid status transition", 400);
+
   order.orderStatus = status;
-  order.statusHistory.push({ status, note: note || "Status updated", timestamp: new Date() });
+  order.statusHistory.push({ status, note: note || "Status updated", timestamp: new Date(), updatedBy: req.user._id });
 
   if (status === "shipped") {
-    order.trackingNumber = trackingNumber || order.trackingNumber || `ZIV${Date.now()}`;
-    order.estimatedDelivery = new Date(Date.now() + 4 * 24 * 60 * 60 * 1000);
+    order.awbNumber = awbNumber || order.awbNumber || "";
+    order.courierName = courierName || order.courierName || "";
+    order.estimatedDelivery = estimatedDelivery ? new Date(estimatedDelivery) : order.estimatedDelivery;
+    order.trackingNumber = order.awbNumber || order.trackingNumber || `ZIV${Date.now()}`;
   }
 
   if (status === "delivered" && order.paymentMethod === "cod") {

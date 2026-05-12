@@ -32,5 +32,8 @@ export const errorHandler = (err, req, res, next) => {
     statusCode = 401;
   }
 
-  res.status(statusCode).json({ message });
+  res.status(statusCode).json({
+    message,
+    ...(process.env.NODE_ENV === "development" ? { stack: err.stack } : {})
+  });
 };

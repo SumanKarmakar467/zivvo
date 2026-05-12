@@ -14,9 +14,14 @@ const orderItemSchema = new mongoose.Schema(
 
 const statusHistorySchema = new mongoose.Schema(
   {
-    status: { type: String, required: true },
+    status: {
+      type: String,
+      enum: ["placed", "confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled", "return_requested", "returned"],
+      required: true
+    },
     timestamp: { type: Date, default: Date.now },
-    note: { type: String, default: "" }
+    note: { type: String, default: "" },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
   },
   { _id: false }
 );
@@ -42,7 +47,7 @@ const orderSchema = new mongoose.Schema(
     razorpaySignature: { type: String, default: "" },
     orderStatus: {
       type: String,
-      enum: ["placed", "confirmed", "packed", "shipped", "out_for_delivery", "delivered", "cancelled", "returned"],
+      enum: ["placed", "confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled", "return_requested", "returned"],
       default: "placed"
     },
     statusHistory: { type: [statusHistorySchema], default: [] },
@@ -52,6 +57,8 @@ const orderSchema = new mongoose.Schema(
     couponDiscount: { type: Number, default: 0, min: 0 },
     shipping: { type: Number, default: 0, min: 0 },
     total: { type: Number, required: true, min: 0 },
+    awbNumber: { type: String, default: "" },
+    courierName: { type: String, default: "" },
     estimatedDelivery: { type: Date },
     trackingNumber: { type: String, default: "" },
     cancelReason: { type: String, default: "" }

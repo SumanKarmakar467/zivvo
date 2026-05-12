@@ -1,37 +1,16 @@
-import { useMemo, useState } from "react";
+ï»¿import { useState } from "react";
 import { useParams } from "react-router-dom";
 import PageTransition from "../components/common/PageTransition";
 import { useCancelOrderMutation, useGetOrderByIdQuery } from "../services/orderApi";
 import { notifyError, notifySuccess } from "../components/common/Toast";
-
-const steps = [
-  { key: "placed", title: "Order Placed" },
-  { key: "confirmed", title: "Confirmed" },
-  { key: "packed", title: "Packed" },
-  { key: "shipped", title: "Shipped" },
-  { key: "out_for_delivery", title: "Out for Delivery" },
-  { key: "delivered", title: "Delivered" }
-];
+import OrderTimeline from "../components/OrderTimeline";
 
 export default function OrderTracking() {
   const { id } = useParams();
-  const { data: order, isLoading, refetch } = useGetOrderByIdQuery(id);
+  const { data: order, isLoading, isError, error, refetch } = useGetOrderByIdQuery(id);
   const [cancelOrder] = useCancelOrderMutation();
   const [showCancel, setShowCancel] = useState(false);
   const [reason, setReason] = useState("Changed my mind");
-
-  const currentIndex = useMemo(() => {
-    const idx = steps.findIndex((s) => s.key === order?.orderStatus);
-    return idx === -1 ? 0 : idx;
-  }, [order?.orderStatus]);
-
-  const byStatus = useMemo(() => {
-    const map = {};
-    (order?.statusHistory || []).forEach((item) => {
-      map[item.status] = item;
-    });
-    return map;
-  }, [order?.statusHistory]);
 
   const doCancel = async () => {
     try {
@@ -44,7 +23,27 @@ export default function OrderTracking() {
     }
   };
 
-  if (isLoading) return <PageTransition><div className="p-6 text-zivvo-text-muted">Loading order...</div></PageTransition>;
+  const copyAwb = async () => {
+    if (!order?.awbNumber) return;
+    await navigator.clipboard.writeText(order.awbNumber);
+    notifySuccess("Tracking number copied");
+  };
+
+  if (isLoading) {
+    return <PageTransition><div className="mx-auto max-w-7xl p-6"><div className="h-8 w-40 animate-pulse rounded bg-zinc-800" /><div className="mt-4 h-72 animate-pulse rounded-xl bg-zinc-800" /></div></PageTransition>;
+  }
+
+  if (isError) {
+    return (
+      <PageTransition>
+        <div className="mx-auto max-w-3xl p-6 text-center">
+          <p className="text-sm text-red-300">{error?.data?.message || "Failed to load order"}</p>
+          <button type="button" onClick={refetch} className="mt-3 rounded-md bg-zivvo-amber-brand px-4 py-2 text-sm font-semibold text-black">Retry</button>
+        </div>
+      </PageTransition>
+    );
+  }
+
   if (!order) return <PageTransition><div className="p-6 text-zivvo-text-muted">Order not found.</div></PageTransition>;
 
   const canCancel = ["placed", "confirmed"].includes(order.orderStatus);
@@ -53,29 +52,10 @@ export default function OrderTracking() {
     <PageTransition>
       <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 md:px-6 md:py-8 lg:grid-cols-[1.1fr,1fr]">
         <section className="rounded-xl border border-zivvo-dark-raised bg-zivvo-dark-surface p-5">
-          <h1 className="text-2xl font-bold">Track Order</h1>
+          <h1 className="text-2xl font-bold">Order Detail</h1>
           <p className="mt-1 text-xs text-zivvo-text-soft">Order ID: {order._id}</p>
-
-          <div className="mt-6 space-y-0">
-            {steps.map((step, idx) => {
-              const reached = idx <= currentIndex;
-              const isCurrent = idx === currentIndex;
-              const info = byStatus[step.key];
-
-              return (
-                <div key={step.key} className="relative pl-10 pb-7 last:pb-0">
-                  {idx !== steps.length - 1 && (
-                    <span className={`absolute left-[11px] top-6 h-[calc(100%-6px)] w-0.5 ${idx < currentIndex ? "bg-zivvo-amber-brand" : "bg-zivvo-dark-raised"}`} />
-                  )}
-                  <span className={`absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full text-xs ${reached ? "bg-zivvo-amber-brand text-black" : "bg-zivvo-dark-raised text-zivvo-text-soft"} ${isCurrent ? "animate-pulse" : ""}`}>
-                    {reached ? "?" : ""}
-                  </span>
-                  <p className="text-sm font-semibold">{step.title}</p>
-                  <p className="text-xs text-zivvo-text-soft">{info?.timestamp ? new Date(info.timestamp).toLocaleString() : "Pending"}</p>
-                  {info?.note && <p className="text-xs text-zivvo-text-muted">{info.note}</p>}
-                </div>
-              );
-            })}
+          <div className="mt-6">
+            <OrderTimeline statusHistory={order.statusHistory || []} currentStatus={order.orderStatus} />
           </div>
         </section>
 
@@ -85,6 +65,17 @@ export default function OrderTracking() {
             <p className="text-sm text-zivvo-text-muted">
               {order.shippingAddress?.fullName}, {order.shippingAddress?.phone}, {order.shippingAddress?.addressLine1}, {order.shippingAddress?.addressLine2}, {order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}
             </p>
+
+            {order.awbNumber && (
+              <div className="mt-4 rounded-lg border border-zinc-700 bg-zinc-900 p-3 text-sm">
+                <p>Courier: <span className="font-semibold">{order.courierName || "N/A"}</span></p>
+                <div className="mt-1 flex items-center gap-2">
+                  <p>Tracking: <span className="font-semibold">{order.awbNumber}</span></p>
+                  <button type="button" onClick={copyAwb} className="rounded border border-zinc-600 px-2 py-0.5 text-xs">Copy</button>
+                </div>
+                {order.estimatedDelivery && <p className="mt-1 text-zivvo-text-soft">Expected by {new Date(order.estimatedDelivery).toLocaleDateString()}</p>}
+              </div>
+            )}
 
             <div className="mt-4 space-y-3">
               {(order.items || []).map((item, idx) => (
@@ -105,8 +96,6 @@ export default function OrderTracking() {
               <div className="flex justify-between"><span>Shipping</span><span>Rs {Number(order.shipping || 0).toLocaleString()}</span></div>
               <div className="mt-2 flex justify-between text-lg font-bold"><span>Total</span><span>Rs {Number(order.total || 0).toLocaleString()}</span></div>
             </div>
-
-            <p className="mt-3 text-sm">Payment: <span className="uppercase">{order.paymentMethod}</span> • <span className="uppercase">{order.paymentStatus}</span></p>
           </div>
 
           {canCancel && (

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 import {
   Area,
@@ -20,6 +21,8 @@ import {
 import { useGetReviewsQuery, useRespondToReviewMutation } from "../services/productApi";
 import { useGetCategoriesQuery } from "../store/api/productsApi";
 import useAuth from "../hooks/useAuth";
+import { updateOrderStatus } from "../features/orders/ordersSlice";
+import { notifyError, notifySuccess } from "../components/common/Toast";
 
 const sections = ["overview", "products", "orders", "add"];
 
@@ -206,6 +209,59 @@ function SellerReviewResponder({ order, onClose }) {
   );
 }
 
+const statusPipeline = ["placed", "confirmed", "processing", "shipped", "out_for_delivery", "delivered"];
+
+function SellerStatusUpdater({ order, onClose, onUpdated }) {
+  const dispatch = useDispatch();
+  const updateStatusState = useSelector((state) => state.orders);
+  const [status, setStatus] = useState("");
+  const [note, setNote] = useState("");
+  const [awbNumber, setAwbNumber] = useState("");
+  const [courierName, setCourierName] = useState("");
+  const [estimatedDelivery, setEstimatedDelivery] = useState("");
+
+  const currentIdx = statusPipeline.indexOf(order.orderStatus);
+  const nextStatuses = statusPipeline.slice(Math.max(currentIdx + 1, 1));
+
+  const submit = async () => {
+    if (!status) return notifyError("Please select next status");
+    try {
+      await dispatch(updateOrderStatus({ orderId: order._id, status, note, awbNumber, courierName, estimatedDelivery })).unwrap();
+      notifySuccess("Order status updated");
+      onUpdated();
+      onClose();
+    } catch (error) {
+      notifyError(error || "Failed to update status");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-md rounded-xl border border-zinc-700 bg-[#1f1a14] p-5">
+        <h3 className="mb-3 text-lg font-semibold">Update Status</h3>
+        <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm">
+          <option value="">Select next status</option>
+          {nextStatuses.map((s) => <option key={s} value={s}>{s.replaceAll("_", " ")}</option>)}
+        </select>
+        <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} placeholder="Optional note" className="mt-3 w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm" />
+        {status === "shipped" && (
+          <div className="mt-3 space-y-2">
+            <input value={awbNumber} onChange={(e) => setAwbNumber(e.target.value)} placeholder="AWB number" className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm" />
+            <input value={courierName} onChange={(e) => setCourierName(e.target.value)} placeholder="Courier name" className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm" />
+            <input type="date" value={estimatedDelivery} onChange={(e) => setEstimatedDelivery(e.target.value)} className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm" />
+          </div>
+        )}
+        <div className="mt-4 flex gap-2">
+          <button type="button" onClick={onClose} className="flex-1 rounded-md border border-zinc-700 py-2 text-sm">Close</button>
+          <button type="button" onClick={submit} disabled={updateStatusState.status === "loading"} className="flex-1 rounded-md bg-[#ef9f27] py-2 text-sm font-semibold text-black disabled:opacity-60">
+            {updateStatusState.status === "loading" ? "Updating..." : "Confirm"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SellerDashboard() {
   const { user, isAuthenticated } = useAuth();
   const [active, setActive] = useState("overview");
@@ -216,11 +272,12 @@ export default function SellerDashboard() {
   const [formState, setFormState] = useState(emptyForm);
   const [editTarget, setEditTarget] = useState(null);
   const [responseOrder, setResponseOrder] = useState(null);
+  const [statusOrder, setStatusOrder] = useState(null);
 
   const { data: stats, isLoading: statsLoading } = useGetSellerStatsQuery(undefined, { skip: !isAuthenticated });
   const { data: categoriesData = [] } = useGetCategoriesQuery();
   const { data: productsData, isLoading: productsLoading } = useGetSellerProductsQuery({ page: productsPage, limit: 10, search: productSearch }, { skip: !isAuthenticated });
-  const { data: ordersData, isLoading: ordersLoading } = useGetSellerOrdersQuery({ page: ordersPage, limit: 10, status: statusFilter || undefined }, { skip: !isAuthenticated });
+  const { data: ordersData, isLoading: ordersLoading, refetch: refetchOrders } = useGetSellerOrdersQuery({ page: ordersPage, limit: 10, status: statusFilter || undefined }, { skip: !isAuthenticated });
 
   const [addProduct, { isLoading: isAdding }] = useAddSellerProductMutation();
   const [updateProduct, { isLoading: isUpdating }] = useUpdateSellerProductMutation();
@@ -454,7 +511,9 @@ export default function SellerDashboard() {
                 <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-100">
                   <option value="">All Status</option>
                   <option value="placed">Placed</option>
+                  <option value="processing">Processing</option>
                   <option value="shipped">Shipped</option>
+                  <option value="out_for_delivery">Out for delivery</option>
                   <option value="delivered">Delivered</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
@@ -483,9 +542,14 @@ export default function SellerDashboard() {
                         <td><span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs">{order.orderStatus}</span></td>
                         <td>{new Date(order.createdAt).toLocaleDateString()}</td>
                         <td>
-                          <button type="button" onClick={() => setResponseOrder(order)} className="rounded bg-zinc-800 px-2 py-1 text-xs">
-                            Respond to review
-                          </button>
+                          <div className="flex gap-2">
+                            <button type="button" onClick={() => setStatusOrder(order)} className="rounded bg-[#ef9f27] px-2 py-1 text-xs text-black">
+                              Update status
+                            </button>
+                            <button type="button" onClick={() => setResponseOrder(order)} className="rounded bg-zinc-800 px-2 py-1 text-xs">
+                              Respond to review
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -520,6 +584,7 @@ export default function SellerDashboard() {
         </section>
       </div>
       {responseOrder && <SellerReviewResponder order={responseOrder} onClose={() => setResponseOrder(null)} />}
+      {statusOrder && <SellerStatusUpdater order={statusOrder} onClose={() => setStatusOrder(null)} onUpdated={refetchOrders} />}
     </main>
   );
 }

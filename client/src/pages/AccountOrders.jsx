@@ -15,7 +15,7 @@ const tabs = [
 const statusClass = {
   placed: "bg-amber-500/20 text-amber-300",
   confirmed: "bg-amber-500/20 text-amber-300",
-  packed: "bg-amber-500/20 text-amber-300",
+  processing: "bg-amber-500/20 text-amber-300",
   shipped: "bg-blue-500/20 text-blue-300",
   out_for_delivery: "bg-blue-500/20 text-blue-300",
   delivered: "bg-green-500/20 text-green-300",
@@ -35,7 +35,7 @@ export default function AccountOrders() {
   const orders = useMemo(() => {
     const list = data?.orders || [];
     if (tab !== "active") return list;
-    return list.filter((o) => ["placed", "confirmed", "packed", "shipped", "out_for_delivery"].includes(o.orderStatus));
+    return list.filter((o) => ["placed", "confirmed", "processing", "shipped", "out_for_delivery"].includes(o.orderStatus));
   }, [data, tab]);
 
   const doCancel = async () => {

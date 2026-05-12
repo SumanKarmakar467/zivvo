@@ -13,7 +13,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
-import OrderTracking from "./pages/OrderTracking";
+import OrderDetailPage from "./pages/OrderDetailPage";
 import AccountOrders from "./pages/AccountOrders";
 import Account from "./pages/Account";
 import SellerDashboard from "./pages/SellerDashboard";
@@ -114,7 +114,7 @@ export default function App() {
           <Route path="/account" element={<PrivateRoute><Account /></PrivateRoute>} />
           <Route path="/order-success/:orderId" element={<PrivateRoute><OrderSuccess /></PrivateRoute>} />
           <Route path="/account/orders" element={<PrivateRoute><AccountOrders /></PrivateRoute>} />
-          <Route path="/orders/:id" element={<PrivateRoute><OrderTracking /></PrivateRoute>} />
+          <Route path="/orders/:id" element={<PrivateRoute><OrderDetailPage /></PrivateRoute>} />
           <Route path="*" element={<Placeholder title="Not Found" />} />
         </Routes>
       </AnimatePresence>

@@ -307,7 +307,7 @@ export default function AdminPanel() {
                           <td>{o.paymentStatus}</td>
                           <td>
                             <select value={o.orderStatus} onChange={(e) => updateOrderStatus({ id: o._id, status: e.target.value })} className="rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs" onClick={(e) => e.stopPropagation()}>
-                              <option value="placed">placed</option><option value="confirmed">confirmed</option><option value="packed">packed</option><option value="shipped">shipped</option><option value="out_for_delivery">out_for_delivery</option><option value="delivered">delivered</option><option value="cancelled">cancelled</option>
+                              <option value="placed">placed</option><option value="confirmed">confirmed</option><option value="processing">processing</option><option value="shipped">shipped</option><option value="out_for_delivery">out_for_delivery</option><option value="delivered">delivered</option><option value="cancelled">cancelled</option>
                             </select>
                           </td>
                           <td>{new Date(o.createdAt).toLocaleDateString()}</td>
