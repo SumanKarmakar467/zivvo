@@ -9,6 +9,8 @@ import sellerRoutes from "./routes/sellerRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import wishlistRoutes from "./routes/wishlistRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
+import { protect, isSeller } from "./middlewares/authMiddleware.js";
 import { notFound, errorHandler } from "./middlewares/errorMiddleware.js";
 
 const app = express();
@@ -53,6 +55,7 @@ app.use("/api/seller", sellerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/analytics", protect, isSeller, analyticsRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

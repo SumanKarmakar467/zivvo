@@ -17,6 +17,7 @@ import OrderDetailPage from "./pages/OrderDetailPage";
 import AccountOrders from "./pages/AccountOrders";
 import Account from "./pages/Account";
 import SellerDashboard from "./pages/SellerDashboard";
+import SellerDashboardPage from "./pages/seller/SellerDashboardPage";
 import AdminPanel from "./pages/AdminPanel";
 import WishlistPage from "./pages/WishlistPage";
 import { setCredentials, setLoading } from "./store/slices/authSlice";
@@ -108,7 +109,8 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/seller" element={<SellerRoute><SellerDashboard /></SellerRoute>} />
+          <Route path="/seller" element={<SellerRoute><SellerDashboardPage /></SellerRoute>} />
+          <Route path="/seller/manage" element={<SellerRoute><SellerDashboard /></SellerRoute>} />
           <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
           <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
           <Route path="/account" element={<PrivateRoute><Account /></PrivateRoute>} />
