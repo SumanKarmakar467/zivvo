@@ -24,6 +24,11 @@ import AdminPanel from "./pages/AdminPanel";
 import WishlistPage from "./pages/WishlistPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import ReturnDetailPage from "./pages/ReturnDetailPage";
+import SellerStorefrontPage from "./pages/SellerStorefrontPage";
+import SellerVerificationPage from "./pages/seller/SellerVerificationPage";
+import AdminVerificationPage from "./pages/admin/AdminVerificationPage";
+import AdminVerificationDetailPage from "./pages/admin/AdminVerificationDetailPage";
+import AddressBookPage from "./pages/AddressBookPage";
 import { setCredentials, setLoading } from "./store/slices/authSlice";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -122,12 +127,17 @@ export default function App() {
           <Route path="/seller/manage" element={<SellerRoute><SellerDashboard /></SellerRoute>} />
           <Route path="/seller/coupons" element={<SellerRoute><SellerCouponsPage /></SellerRoute>} />
           <Route path="/seller/returns" element={<SellerRoute><SellerReturnsPage /></SellerRoute>} />
+          <Route path="/seller/verification" element={<SellerRoute><SellerVerificationPage /></SellerRoute>} />
           <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+          <Route path="/admin/verification" element={<AdminRoute><AdminVerificationPage /></AdminRoute>} />
+          <Route path="/admin/verification/:sellerId" element={<AdminRoute><AdminVerificationDetailPage /></AdminRoute>} />
           <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
           <Route path="/account" element={<PrivateRoute><Account /></PrivateRoute>} />
+          <Route path="/account/addresses" element={<PrivateRoute><AddressBookPage /></PrivateRoute>} />
           <Route path="/order-success/:orderId" element={<PrivateRoute><OrderSuccess /></PrivateRoute>} />
           <Route path="/account/orders" element={<PrivateRoute><AccountOrders /></PrivateRoute>} />
           <Route path="/orders/:id" element={<PrivateRoute><OrderDetailPage /></PrivateRoute>} />
+          <Route path="/seller/:sellerId" element={<SellerStorefrontPage />} />
           <Route path="/returns/:id" element={<PrivateRoute><ReturnDetailPage /></PrivateRoute>} />
           <Route path="*" element={<Placeholder title="Not Found" />} />
         </Routes>

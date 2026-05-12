@@ -93,7 +93,7 @@ export const getProducts = asyncHandler(async (req, res) => {
   const [products, total, brands] = await Promise.all([
     Product.find(filter)
       .populate("category", "name slug")
-      .populate("seller", "name avatar")
+      .populate("seller", "name avatar isVerified trustScore")
       .sort(getSortOption(req.query.sort))
       .skip(skip)
       .limit(limit)
@@ -114,7 +114,7 @@ export const getProducts = asyncHandler(async (req, res) => {
 export const getProductBySlug = asyncHandler(async (req, res) => {
   const product = await Product.findOne({ slug: req.params.slug, isActive: true })
     .populate("category", "name slug")
-    .populate("seller", "name avatar")
+    .populate("seller", "name avatar isVerified trustScore")
     .lean();
 
   if (!product) {
@@ -137,7 +137,7 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
 export const getFeaturedProducts = asyncHandler(async (req, res) => {
   const products = await Product.find({ isActive: true, isFeatured: true })
     .populate("category", "name slug")
-    .populate("seller", "name avatar")
+    .populate("seller", "name avatar isVerified trustScore")
     .sort({ createdAt: -1 })
     .limit(12)
     .lean();
@@ -161,7 +161,7 @@ export const getProductsByCategory = asyncHandler(async (req, res) => {
   const [products, total, brands] = await Promise.all([
     Product.find(filter)
       .populate("category", "name slug")
-      .populate("seller", "name avatar")
+      .populate("seller", "name avatar isVerified trustScore")
       .sort(getSortOption(req.query.sort))
       .skip(skip)
       .limit(limit)
@@ -221,6 +221,7 @@ export const searchProducts = asyncHandler(async (req, res) => {
       .skip(skip)
       .limit(limit)
       .populate("seller", "name")
+      .populate("seller", "name isVerified trustScore")
       .populate("category", "name slug")
       .lean(),
     Product.countDocuments(filter)

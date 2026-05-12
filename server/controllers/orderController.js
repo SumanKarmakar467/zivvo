@@ -6,6 +6,7 @@ import User from "../models/User.js";
 import { sendOrderStatusUpdate } from "../utils/emailService.js";
 import { asyncHandler, AppError } from "../middleware/errorHandler.js";
 import { createNotification } from "../utils/notify.js";
+import { recalcTrustScoreAsync } from "../utils/trustScore.js";
 
 const razorpay = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
 
@@ -137,5 +138,9 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
     link: `/orders/${order._id}`,
     meta: { orderId: order._id, status }
   });
+  if (status === "delivered") {
+    const sellerIds = [...new Set(order.items.map((item) => String(item.seller)))];
+    sellerIds.forEach((sellerId) => recalcTrustScoreAsync(sellerId));
+  }
   return res.json(order);
 });

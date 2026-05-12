@@ -31,6 +31,26 @@ const userSchema = new mongoose.Schema(
     refreshTokens: { type: [String], select: false, default: [] },
     provider: { type: String, enum: ["local", "google"], default: "local" },
     refreshToken: { type: String, select: false, default: null },
+    verification: {
+      status: {
+        type: String,
+        enum: ["unverified", "pending", "verified", "rejected"],
+        default: "unverified"
+      },
+      submittedAt: { type: Date },
+      reviewedAt: { type: Date },
+      reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      rejectionNote: { type: String, default: "" },
+      documents: {
+        gstNumber: { type: String, default: "" },
+        panNumber: { type: String, default: "" },
+        aadhaarLast4: { type: String, default: "" },
+        gstCertUrl: { type: String, default: "" },
+        panCardUrl: { type: String, default: "" },
+        bankProofUrl: { type: String, default: "" }
+      }
+    },
+    trustScore: { type: Number, default: 0, min: 0, max: 100 },
     isVerified: { type: Boolean, default: false },
     resetPasswordToken: { type: String, select: false, default: null },
     resetPasswordExpiry: { type: Date, select: false, default: null }

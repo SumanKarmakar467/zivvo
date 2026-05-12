@@ -8,6 +8,7 @@ import search from "../features/search/searchSlice";
 import orders from "../features/orders/ordersSlice";
 import analytics from "../features/analytics/analyticsSlice";
 import notifications from "../features/notifications/notificationsSlice";
+import address from "../features/address/addressSlice";
 import { authApi } from "../services/authApi";
 import { productApi } from "../services/productApi";
 import { orderApi } from "../services/orderApi";
@@ -28,6 +29,7 @@ export const store = configureStore({
     orders,
     analytics,
     notifications,
+    address,
     [authApi.reducerPath]: authApi.reducer,
     [productApi.reducerPath]: productApi.reducer,
     [orderApi.reducerPath]: orderApi.reducer,

@@ -11,6 +11,7 @@ import {
 } from "../store/slices/cartSlice";
 import { notifyError, notifySuccess } from "../components/common/Toast";
 import CouponInput from "../components/CouponInput";
+import api from "../api/axios";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -30,11 +31,37 @@ export default function Cart() {
   const [pulseId, setPulseId] = useState("");
 
   const { items, subtotal, shipping, couponDiscount, total, loading, appliedCoupon } = useSelector((state) => state.cart);
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const itemCount = useSelector(selectCartItemCount);
+  const [deliveryEstimate, setDeliveryEstimate] = useState(null);
 
   useEffect(() => {
     dispatch(fetchCart());
   }, [dispatch]);
+
+  useEffect(() => {
+    const loadEstimate = async () => {
+      if (!isAuthenticated || !items.length) return;
+      try {
+        const addrRes = await api.get("/addresses");
+        const defaultAddress = addrRes.data?.defaultAddress;
+        if (!defaultAddress) {
+          setDeliveryEstimate(null);
+          return;
+        }
+        const firstSellerPincode = items[0]?.product?.seller?.pincode || "700001";
+        const estimateRes = await api.post("/shipping/estimate", {
+          sellerPincode: firstSellerPincode,
+          buyerPincode: defaultAddress.pincode,
+          items: items.map((item) => ({ productId: item.product?._id || item.product, qty: item.quantity }))
+        });
+        setDeliveryEstimate(estimateRes.data);
+      } catch {
+        setDeliveryEstimate(null);
+      }
+    };
+    loadEstimate();
+  }, [isAuthenticated, items]);
 
   const listPrice = useMemo(
     () => items.reduce((sum, item) => sum + Number(item.product?.mrp || item.price || 0) * Number(item.quantity || 0), 0),
@@ -160,6 +187,7 @@ export default function Cart() {
               <div className="flex justify-between text-green-400"><span>Discount</span><span>-Rs {baseDiscount.toLocaleString()}</span></div>
               {couponDiscount > 0 && <div className="flex justify-between text-green-400"><span>Coupon Discount</span><span>-Rs {couponDiscount.toLocaleString()}</span></div>}
               <div className="flex justify-between"><span>Delivery</span><span className={shipping === 0 ? "text-green-400" : ""}>{shipping === 0 ? "FREE" : `Rs ${shipping}`}</span></div>
+              <div className="flex justify-between"><span>Delivery charges</span><span>{deliveryEstimate ? `₹${Number(deliveryEstimate.cost).toLocaleString("en-IN")} (${deliveryEstimate.zone})` : "Add an address to see delivery charges"}</span></div>
             </div>
 
             <div className="my-4 border-t border-zivvo-dark-raised" />

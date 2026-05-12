@@ -14,6 +14,7 @@ import VariantSelector from "../components/VariantSelector";
 import RecommendationsSection from "../components/RecommendationsSection";
 import RecentlyViewedStrip from "../components/RecentlyViewedStrip";
 import { useRecentlyViewed } from "../hooks/useRecentlyViewed";
+import VerifiedBadge from "../components/VerifiedBadge";
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -227,7 +228,13 @@ export default function ProductDetail() {
               showLabel
             />
 
-            <p className="mt-4 text-sm text-zivvo-text-muted">?? Sold by: <span className="text-zivvo-text-base">{product.seller?.name || "Trusted Seller"}</span></p>
+            <p className="mt-4 text-sm text-zivvo-text-muted">
+              Sold by:{" "}
+              <Link to={`/seller/${product.seller?._id}`} className="text-zivvo-text-base hover:text-zivvo-amber-brand">
+                {product.seller?.name || "Trusted Seller"}
+              </Link>
+              {product?.seller?.isVerified && <span className="ml-2"><VerifiedBadge size="sm" /></span>}
+            </p>
           </div>
         </section>
 

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import WishlistButton from "./WishlistButton";
+import VerifiedBadge from "./VerifiedBadge";
 
 const categoryFallbacks = {
   electronics: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=900&q=80&auto=format&fit=crop",
@@ -54,6 +55,11 @@ export default function ProductCard({ product }) {
         <div className="p-3">
           <p className="text-[11px] uppercase tracking-wide text-zivvo-text-soft">{product.brand || "Zivvo"}</p>
           <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold text-zivvo-text-base">{product.name}</h3>
+          {product?.seller?.isVerified && (
+            <div className="mt-1">
+              <VerifiedBadge size="sm" />
+            </div>
+          )}
           <div className="mt-1 text-xs text-zivvo-text-muted">★ {Number(product.averageRating ?? product.rating ?? 0).toFixed(1)} ({product.reviewCount ?? product.numReviews ?? 0})</div>
           <div className="mt-2 flex items-center gap-2 text-sm">
             <span className="font-bold text-zivvo-text-base">Rs {Number(product.price).toLocaleString()}</span>

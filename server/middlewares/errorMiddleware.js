@@ -6,8 +6,11 @@ export const notFound = (req, res, next) => {
 
 export const errorHandler = (err, req, res, next) => {
   const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
-  res.status(statusCode).json({
-    success: false,
+  const payload = {
     message: err.message || "Something went wrong"
-  });
+  };
+  if (process.env.NODE_ENV !== "production") {
+    payload.stack = err.stack;
+  }
+  res.status(statusCode).json(payload);
 };

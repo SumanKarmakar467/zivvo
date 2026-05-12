@@ -3,6 +3,7 @@ import ReturnRequest from "../models/ReturnRequest.js";
 import Order from "../models/Order.js";
 import asyncHandler from "../middlewares/asyncHandler.js";
 import { createNotification } from "../utils/notify.js";
+import { recalcTrustScoreAsync } from "../utils/trustScore.js";
 
 const razorpay = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
 
@@ -70,6 +71,7 @@ export const createReturnRequest = asyncHandler(async (req, res) => {
     link: `/seller/returns/${returnReq._id}`,
     meta: { returnId: returnReq._id }
   });
+  recalcTrustScoreAsync(seller);
 
   res.status(201).json(returnReq);
 });
@@ -166,6 +168,7 @@ export const approveReturn = asyncHandler(async (req, res) => {
     body: `Your refund of Rs ${Number(returnRequest.refundAmount).toLocaleString("en-IN")} has been initiated. It will reflect in 5–7 business days.`,
     link: `/orders/${order._id}`
   });
+  recalcTrustScoreAsync(returnRequest.seller);
 
   res.json(returnRequest);
 });
@@ -197,6 +200,7 @@ export const rejectReturn = asyncHandler(async (req, res) => {
     body: reason,
     link: `/returns/${returnRequest._id}`
   });
+  recalcTrustScoreAsync(returnRequest.seller);
   res.json(returnRequest);
 });
 
@@ -214,6 +218,6 @@ export const closeReturn = asyncHandler(async (req, res) => {
   returnRequest.resolvedAt = new Date();
   returnRequest.statusHistory.push({ status: "closed", note: req.body.note || "Closed by admin", updatedBy: req.user._id });
   await returnRequest.save();
+  recalcTrustScoreAsync(returnRequest.seller);
   res.json(returnRequest);
 });
-

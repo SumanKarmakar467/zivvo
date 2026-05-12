@@ -42,9 +42,10 @@ export default function Navbar() {
   const accountLinks = useMemo(() => {
     const links = [
       { label: "Profile", to: "/account" },
-      { label: "Orders", to: "/account/orders" }
+      { label: "Orders", to: "/account/orders" },
+      { label: "Addresses", to: "/account/addresses" }
     ];
-    if (user?.role === "seller" || user?.role === "admin") links.push({ label: "Seller Dashboard", to: "/seller" });
+    if (user?.role === "seller" || user?.role === "admin") links.push({ label: "Seller Dashboard", to: "/seller" }, { label: "Verification", to: "/seller/verification" });
     if (user?.role === "admin") links.push({ label: "Admin Panel", to: "/admin" });
     return links;
   }, [user]);

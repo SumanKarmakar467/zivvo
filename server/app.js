@@ -19,6 +19,10 @@ import userRoutes from "./routes/userRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
 import returnRoutes from "./routes/returnRoutes.js";
 import webhookRoutes from "./routes/webhookRoutes.js";
+import verificationRoutes from "./routes/verificationRoutes.js";
+import sellerPublicRoutes from "./routes/sellerPublicRoutes.js";
+import addressRoutes from "./routes/addressRoutes.js";
+import shippingRoutes from "./routes/shippingRoutes.js";
 import { notFound, errorHandler } from "./middlewares/errorMiddleware.js";
 
 const app = express();
@@ -72,6 +76,10 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/returns", returnRoutes);
+app.use("/api/verification", verificationRoutes);
+app.use("/api/sellers", sellerPublicRoutes);
+app.use("/api/addresses", addressRoutes);
+app.use("/api/shipping", shippingRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

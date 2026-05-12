@@ -5,6 +5,7 @@ import Product from "../models/Product.js";
 import Coupon from "../models/Coupon.js";
 import User from "../models/User.js";
 import Order from "../models/Order.js";
+import Address from "../models/Address.js";
 import { sendOrderConfirmation } from "../utils/emailService.js";
 import { asyncHandler, AppError } from "../middleware/errorHandler.js";
 import { createNotification } from "../utils/notify.js";
@@ -12,15 +13,17 @@ import { createNotification } from "../utils/notify.js";
 const razorpay = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
 
 const getCheckoutContext = async (userId, addressId) => {
-  const [user, cart] = await Promise.all([
+  const [user, cart, savedAddress] = await Promise.all([
     User.findById(userId).select("name email addresses"),
-    Cart.findOne({ user: userId }).populate("items.product")
+    Cart.findOne({ user: userId }).populate("items.product"),
+    Address.findOne({ _id: addressId, user: userId }).lean()
   ]);
 
   if (!user) throw new AppError("User not found", 404);
   if (!cart || !cart.items.length) throw new AppError("Cart is empty", 400);
 
-  const address = user.addresses.id(addressId);
+  const legacyAddress = user.addresses?.id ? user.addresses.id(addressId) : null;
+  const address = savedAddress || legacyAddress;
   if (!address) throw new AppError("Address not found", 404);
 
   const items = cart.items.map((item) => {
@@ -122,8 +125,8 @@ const createOrderDocument = async ({
     shippingAddress: {
       fullName: address.fullName,
       phone: address.phone,
-      addressLine1: address.addressLine1,
-      addressLine2: address.addressLine2,
+      addressLine1: address.addressLine1 || address.line1,
+      addressLine2: address.addressLine2 || address.line2,
       city: address.city,
       state: address.state,
       pincode: address.pincode,
