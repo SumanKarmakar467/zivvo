@@ -7,6 +7,7 @@ import User from "../models/User.js";
 import Order from "../models/Order.js";
 import { sendOrderConfirmation } from "../utils/emailService.js";
 import { asyncHandler, AppError } from "../middleware/errorHandler.js";
+import { createNotification } from "../utils/notify.js";
 
 const razorpay = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
 
@@ -136,6 +137,20 @@ const createOrderDocument = async ({
       { $inc: { usedCount: 1 }, $addToSet: { usedBy: userId } }
     );
   }
+
+  const sellerIds = [...new Set(items.map((item) => String(item.seller)))];
+  await Promise.all(
+    sellerIds.map((sellerId) =>
+      createNotification({
+        recipient: sellerId,
+        type: "new_order",
+        title: "New order received",
+        body: `Order #${String(order._id).slice(-6).toUpperCase()} - Rs ${Number(total).toLocaleString("en-IN")}`,
+        link: `/seller/orders/${order._id}`,
+        meta: { orderId: order._id }
+      })
+    )
+  );
 
   return order;
 };

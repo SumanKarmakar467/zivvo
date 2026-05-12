@@ -5,6 +5,7 @@ import Product from "../models/Product.js";
 import User from "../models/User.js";
 import { sendOrderStatusUpdate } from "../utils/emailService.js";
 import { asyncHandler, AppError } from "../middleware/errorHandler.js";
+import { createNotification } from "../utils/notify.js";
 
 const razorpay = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
 
@@ -128,5 +129,13 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
   await order.save();
   const user = await User.findById(order.user).lean();
   if (user?.email) await sendOrderStatusUpdate(user, order, status);
+  await createNotification({
+    recipient: order.user,
+    type: "order_status",
+    title: `Order ${status.replace(/_/g, " ")}`,
+    body: `Your order #${String(order._id).slice(-6).toUpperCase()} is now ${status.replace(/_/g, " ")}.`,
+    link: `/orders/${order._id}`,
+    meta: { orderId: order._id, status }
+  });
   return res.json(order);
 });

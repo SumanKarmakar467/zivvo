@@ -20,10 +20,13 @@ import SellerDashboard from "./pages/SellerDashboard";
 import SellerDashboardPage from "./pages/seller/SellerDashboardPage";
 import AdminPanel from "./pages/AdminPanel";
 import WishlistPage from "./pages/WishlistPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import { setCredentials, setLoading } from "./store/slices/authSlice";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { fetchWishlist } from "./features/wishlist/wishlistSlice";
+import { fetchNotifications } from "./features/notifications/notificationsSlice";
+import { useNotificationSocket } from "./hooks/useNotificationSocket";
 
 function Placeholder({ title }) {
   return <main className="min-h-screen bg-zivvo-dark-bg p-8 text-zivvo-text-base">{title}</main>;
@@ -61,6 +64,7 @@ export default function App() {
   const location = useLocation();
   const dispatch = useDispatch();
   const { isAuthenticated, accessToken } = useSelector((state) => state.auth);
+  useNotificationSocket();
 
   useEffect(() => {
     const restore = async () => {
@@ -92,6 +96,7 @@ export default function App() {
   useEffect(() => {
     if (!isAuthenticated || !accessToken) return;
     dispatch(fetchWishlist());
+    dispatch(fetchNotifications({ page: 1, limit: 20 }));
   }, [dispatch, isAuthenticated, accessToken]);
 
   return (
@@ -105,6 +110,7 @@ export default function App() {
           <Route path="/product/:slug" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/wishlist" element={<PrivateRoute><WishlistPage /></PrivateRoute>} />
+          <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />

@@ -7,6 +7,7 @@ import wishlist from "../features/wishlist/wishlistSlice";
 import search from "../features/search/searchSlice";
 import orders from "../features/orders/ordersSlice";
 import analytics from "../features/analytics/analyticsSlice";
+import notifications from "../features/notifications/notificationsSlice";
 import { authApi } from "../services/authApi";
 import { productApi } from "../services/productApi";
 import { orderApi } from "../services/orderApi";
@@ -26,6 +27,7 @@ export const store = configureStore({
     search,
     orders,
     analytics,
+    notifications,
     [authApi.reducerPath]: authApi.reducer,
     [productApi.reducerPath]: productApi.reducer,
     [orderApi.reducerPath]: orderApi.reducer,

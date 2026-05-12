@@ -9,17 +9,20 @@ import App from "./App";
 import { store } from "./store/store";
 import { ToastViewport } from "./components/common/Toast";
 import { ThemeProvider } from "./context/ThemeContext";
+import { SocketProvider } from "./context/SocketContext";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
       <ThemeProvider>
-        <BrowserRouter>
-          <AnimatePresence mode="wait" initial={false}>
-            <App />
-          </AnimatePresence>
-          <ToastViewport />
-        </BrowserRouter>
+        <SocketProvider>
+          <BrowserRouter>
+            <AnimatePresence mode="wait" initial={false}>
+              <App />
+            </AnimatePresence>
+            <ToastViewport />
+          </BrowserRouter>
+        </SocketProvider>
       </ThemeProvider>
     </Provider>
   </StrictMode>

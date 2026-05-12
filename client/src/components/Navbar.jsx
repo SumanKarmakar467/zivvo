@@ -5,6 +5,7 @@ import ThemeToggle from "./ThemeToggle";
 import { logout as logoutAction } from "../store/slices/authSlice";
 import { useLogoutApiMutation } from "../services/authApi";
 import { selectWishlistCount } from "../features/wishlist/wishlistSlice";
+import NotificationBell from "./NotificationBell";
 
 function Icon({ children, className = "" }) {
   return (
@@ -74,6 +75,7 @@ export default function Navbar() {
 
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
+            {isAuthenticated && <NotificationBell />}
             <NavLink to="/wishlist" className="relative rounded-full border border-zinc-700 p-2 text-zinc-200 hover:text-[#ef9f27]"><Icon className="h-4 w-4"><path d="m12 21-1.4-1.2C5.6 15.4 2 12.1 2 8A5 5 0 0 1 7 3c2 0 3.2.9 5 2.8C13.8 3.9 15 3 17 3a5 5 0 0 1 5 5c0 4.1-3.6 7.4-8.6 11.8L12 21Z" /></Icon>{wishlistCount > 0 && <span className="absolute -right-1 -top-1 rounded-full bg-[#ef9f27] px-1.5 text-[10px] font-bold text-black">{wishlistCount}</span>}</NavLink>
             <NavLink to="/cart" className="relative rounded-full border border-zinc-700 p-2 text-zinc-200 hover:text-[#ef9f27]"><Icon className="h-4 w-4"><circle cx="9" cy="20" r="1" /><circle cx="18" cy="20" r="1" /><path d="M2 3h3l2.5 12h11L21 6H7" /></Icon>{cartCount > 0 && <span className={`absolute -right-1 -top-1 rounded-full bg-[#ef9f27] px-1.5 text-[10px] font-bold text-black ${cartPulse ? "animate-bounce" : ""}`}>{cartCount}</span>}</NavLink>
 
