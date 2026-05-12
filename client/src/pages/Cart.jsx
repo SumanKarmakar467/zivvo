@@ -4,14 +4,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import PageTransition from "../components/common/PageTransition";
 import {
-  applyCoupon,
   fetchCart,
-  removeCoupon,
   removeFromCart,
   selectCartItemCount,
   updateCartItem
 } from "../store/slices/cartSlice";
 import { notifyError, notifySuccess } from "../components/common/Toast";
+import CouponInput from "../components/CouponInput";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -28,11 +27,9 @@ const cartImageFallback = "https://placehold.co/120x120/1f1a14/efe0d3?text=Zivvo
 
 export default function Cart() {
   const dispatch = useDispatch();
-  const [couponInput, setCouponInput] = useState("");
-  const [couponError, setCouponError] = useState("");
   const [pulseId, setPulseId] = useState("");
 
-  const { items, subtotal, shipping, couponDiscount, total, couponCode, loading } = useSelector((state) => state.cart);
+  const { items, subtotal, shipping, couponDiscount, total, loading, appliedCoupon } = useSelector((state) => state.cart);
   const itemCount = useSelector(selectCartItemCount);
 
   useEffect(() => {
@@ -59,24 +56,6 @@ export default function Cart() {
   const onRemove = async (itemId) => {
     await dispatch(removeFromCart(itemId));
     notifySuccess("Item removed");
-  };
-
-  const onApplyCoupon = async () => {
-    setCouponError("");
-    try {
-      await dispatch(applyCoupon(couponInput));
-      notifySuccess("Coupon applied");
-      setCouponInput("");
-    } catch (error) {
-      const message = error?.message || "Invalid coupon";
-      setCouponError(message);
-      notifyError(message);
-    }
-  };
-
-  const onRemoveCoupon = async () => {
-    await dispatch(removeCoupon());
-    notifySuccess("Coupon removed");
   };
 
   if (!items.length && !loading) {
@@ -187,32 +166,17 @@ export default function Cart() {
             <p className="mt-2 text-sm text-green-400">You save Rs {Math.max(0, totalSavings).toLocaleString()} on this order</p>
 
             <div className="mt-5">
-              {!couponCode ? (
-                <div>
-                  <div className="flex gap-2">
-                    <input
-                      value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                      placeholder="Enter coupon code"
-                      className="w-full rounded-md border border-zivvo-dark-raised bg-zivvo-dark-bg px-3 py-2 text-sm outline-none focus:border-zivvo-amber-brand"
-                    />
-                    <button type="button" onClick={onApplyCoupon} className="rounded-md bg-zivvo-amber-brand px-4 py-2 text-sm font-semibold text-black">
-                      Apply
-                    </button>
-                  </div>
-                  {couponError && <p className="mt-2 text-xs text-red-400">{couponError}</p>}
-                </div>
-              ) : (
-                <div className="flex items-center justify-between rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-sm text-green-300">
-                  <span>Coupon Applied: {couponCode}</span>
-                  <button type="button" onClick={onRemoveCoupon}>x</button>
-                </div>
+              <CouponInput cartTotal={Number(subtotal || 0)} items={items} />
+              {appliedCoupon && (
+                <p className="mt-2 text-xs text-green-400">
+                  Coupon {appliedCoupon.code}: -₹{Number(appliedCoupon.discount || 0).toLocaleString("en-IN")}
+                </p>
               )}
             </div>
 
-            <button type="button" className="mt-5 w-full rounded-lg bg-zivvo-amber-brand py-3 text-sm font-semibold text-black">
+            <Link to="/checkout" className="mt-5 block w-full rounded-lg bg-zivvo-amber-brand py-3 text-center text-sm font-semibold text-black">
               Proceed to Checkout
-            </button>
+            </Link>
           </aside>
         </div>
       </div>

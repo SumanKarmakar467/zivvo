@@ -46,17 +46,27 @@ const getCheckoutContext = async (userId, addressId) => {
 
   if (couponCode) {
     const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
-    if (!coupon || (coupon.expiresAt && coupon.expiresAt < new Date())) {
+    const now = new Date();
+    if (!coupon || (coupon.validFrom && coupon.validFrom > now) || (coupon.validUntil && coupon.validUntil < now)) {
       couponCode = "";
     } else {
-      if (subtotal < coupon.minOrder) throw new AppError(`Minimum order value is Rs ${coupon.minOrder}`, 400);
+      if (subtotal < coupon.minOrderValue) throw new AppError(`Minimum order value is Rs ${coupon.minOrderValue}`, 400);
+      const sellerIds = [...new Set(items.map((item) => String(item.seller)))];
+      if (coupon.scope === "seller" && !sellerIds.includes(String(coupon.seller))) {
+        throw new AppError("Coupon not valid for this seller", 400);
+      }
+      const usedCountByUser = await Order.countDocuments({ user: userId, couponCode });
+      if (usedCountByUser >= Number(coupon.perUserLimit || 1)) {
+        throw new AppError("You have already used this coupon", 400);
+      }
+      if (coupon.usageLimit !== null && coupon.usedCount >= coupon.usageLimit) {
+        throw new AppError("Coupon usage limit reached", 400);
+      }
       if (coupon.type === "percent") {
         const raw = (subtotal * coupon.value) / 100;
         couponDiscount = coupon.maxDiscount ? Math.min(raw, coupon.maxDiscount) : raw;
-      } else if (coupon.type === "flat") {
+      } else {
         couponDiscount = Math.min(coupon.value, subtotal);
-      } else if (coupon.type === "freeship") {
-        shipping = 0;
       }
     }
   }
@@ -117,9 +127,11 @@ const createOrderDocument = async ({
     subtotal,
     discount,
     couponCode,
+    discountAmount: couponDiscount,
     couponDiscount,
     shipping,
     total,
+    totalAmount: total,
     estimatedDelivery
   });
 
@@ -134,7 +146,7 @@ const createOrderDocument = async ({
   if (couponCode) {
     await Coupon.findOneAndUpdate(
       { code: couponCode },
-      { $inc: { usedCount: 1 }, $addToSet: { usedBy: userId } }
+      { $inc: { usedCount: 1 } }
     );
   }
 

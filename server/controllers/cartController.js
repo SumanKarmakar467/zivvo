@@ -14,10 +14,6 @@ const populateCart = async (userId) => {
 const calculateCouponDiscount = (coupon, subtotal) => {
   if (!coupon || !subtotal) return 0;
 
-  if (coupon.type === "freeship") {
-    return 0;
-  }
-
   if (coupon.type === "flat") {
     return Math.min(coupon.value, subtotal);
   }
@@ -54,13 +50,11 @@ const formatCartResponse = async (cartDoc) => {
 
   if (couponCode) {
     const coupon = await Coupon.findOne({ code: couponCode, isActive: true }).lean();
-    if (!coupon || (coupon.expiresAt && new Date(coupon.expiresAt) < new Date())) {
+    const now = new Date();
+    if (!coupon || (coupon.validFrom && new Date(coupon.validFrom) > now) || (coupon.validUntil && new Date(coupon.validUntil) < now)) {
       couponCode = "";
     } else {
       couponDiscount = calculateCouponDiscount(coupon, subtotal);
-      if (coupon.type === "freeship") {
-        shipping = 0;
-      }
     }
   }
 
@@ -180,7 +174,8 @@ export const applyCoupon = asyncHandler(async (req, res) => {
     throw new AppError("Invalid or inactive coupon", 400);
   }
 
-  if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
+  const now = new Date();
+  if ((coupon.validFrom && new Date(coupon.validFrom) > now) || (coupon.validUntil && new Date(coupon.validUntil) < now)) {
     throw new AppError("Coupon expired", 400);
   }
 
@@ -188,15 +183,11 @@ export const applyCoupon = asyncHandler(async (req, res) => {
     throw new AppError("Coupon usage limit reached", 400);
   }
 
-  if ((coupon.usedBy || []).some((id) => String(id) === String(req.user._id))) {
-    throw new AppError("Coupon already used by this user", 400);
-  }
-
   const populated = await populateCart(req.user._id);
   const payload = await formatCartResponse(populated);
 
-  if (payload.subtotal < coupon.minOrder) {
-    throw new AppError(`Minimum order value is Rs ${coupon.minOrder}`, 400);
+  if (payload.subtotal < coupon.minOrderValue) {
+    throw new AppError(`Minimum order value is Rs ${coupon.minOrderValue}`, 400);
   }
 
   cart.coupon = code;

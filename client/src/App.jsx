@@ -18,6 +18,7 @@ import AccountOrders from "./pages/AccountOrders";
 import Account from "./pages/Account";
 import SellerDashboard from "./pages/SellerDashboard";
 import SellerDashboardPage from "./pages/seller/SellerDashboardPage";
+import SellerCouponsPage from "./pages/seller/SellerCouponsPage";
 import AdminPanel from "./pages/AdminPanel";
 import WishlistPage from "./pages/WishlistPage";
 import NotificationsPage from "./pages/NotificationsPage";
@@ -117,6 +118,7 @@ export default function App() {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/seller" element={<SellerRoute><SellerDashboardPage /></SellerRoute>} />
           <Route path="/seller/manage" element={<SellerRoute><SellerDashboard /></SellerRoute>} />
+          <Route path="/seller/coupons" element={<SellerRoute><SellerCouponsPage /></SellerRoute>} />
           <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
           <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
           <Route path="/account" element={<PrivateRoute><Account /></PrivateRoute>} />

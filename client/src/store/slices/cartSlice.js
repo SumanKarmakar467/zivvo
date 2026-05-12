@@ -9,6 +9,7 @@ const initialState = {
   couponDiscount: 0,
   total: 0,
   couponCode: "",
+  appliedCoupon: null,
   itemCount: 0,
   loading: false
 };
@@ -74,10 +75,36 @@ const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    setCart: (state, action) => withComputed(action.payload),
+    setCart: (state, action) => {
+      const next = withComputed(action.payload);
+      if (next.couponCode) {
+        next.appliedCoupon = {
+          code: next.couponCode,
+          discount: Number(next.couponDiscount || 0),
+          finalTotal: Number(next.total || 0)
+        };
+      } else {
+        next.appliedCoupon = null;
+      }
+      return next;
+    },
     clearCart: () => {
       localStorage.removeItem(STORAGE_KEY);
       return withComputed();
+    },
+    setCoupon: (state, action) => {
+      state.appliedCoupon = action.payload;
+      state.couponCode = action.payload?.code || "";
+      state.couponDiscount = Number(action.payload?.discount || 0);
+      if (typeof action.payload?.finalTotal === "number") {
+        state.total = action.payload.finalTotal;
+      }
+    },
+    clearCoupon: (state) => {
+      state.appliedCoupon = null;
+      state.couponCode = "";
+      state.couponDiscount = 0;
+      state.total = Math.max(0, Number(state.subtotal || 0) + Number(state.shipping || 0));
     },
     setLoading: (state, action) => {
       state.loading = action.payload;
@@ -85,7 +112,7 @@ const cartSlice = createSlice({
   }
 });
 
-export const { setCart, clearCart, setLoading } = cartSlice.actions;
+export const { setCart, clearCart, setLoading, setCoupon, clearCoupon } = cartSlice.actions;
 
 export const fetchCart = () => async (dispatch, getState) => {
   dispatch(setLoading(true));
