@@ -3,7 +3,7 @@ import { AnimatePresence } from "framer-motion";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Home from "./pages/Home";
-import SearchResults from "./pages/SearchResults";
+import SearchResultsPage from "./pages/SearchResultsPage";
 import CategoryPage from "./pages/CategoryPage";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
@@ -108,7 +108,7 @@ export default function App() {
       <AnimatePresence mode="wait" initial={false}>
         <Routes location={location} key={location.pathname + location.search}>
           <Route path="/" element={<Home />} />
-          <Route path="/search" element={<SearchResults />} />
+          <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/category/:slug" element={<CategoryPage />} />
           <Route path="/product/:slug" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />

@@ -32,6 +32,11 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+productSchema.index(
+  { name: "text", description: "text", brand: "text", tags: "text" },
+  { weights: { name: 10, brand: 5, description: 2, tags: 1 } }
+);
+
 productSchema.pre("validate", function preValidate(next) {
   if (this.name) {
     this.slug = slugify(this.name, { lower: true, strict: true, trim: true });

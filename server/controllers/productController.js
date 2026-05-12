@@ -179,3 +179,69 @@ export const getProductsByCategory = asyncHandler(async (req, res) => {
     brands: brands.filter(Boolean)
   });
 });
+
+export const searchProducts = asyncHandler(async (req, res) => {
+  const q = String(req.query.q || "").trim();
+  const category = String(req.query.category || "").trim();
+  const brand = String(req.query.brand || "").trim();
+  const minPrice = req.query.minPrice;
+  const maxPrice = req.query.maxPrice;
+  const minRating = req.query.minRating;
+  const page = Math.max(Number(req.query.page || 1), 1);
+  const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 50);
+
+  const filter = { isActive: true };
+  if (q) filter.$text = { $search: q };
+  if (category) {
+    const categoryDoc = await Category.findOne({ slug: category, isActive: true }).lean();
+    if (!categoryDoc) {
+      return res.json({ products: [], total: 0, page, pages: 0 });
+    }
+    filter.category = categoryDoc._id;
+  }
+  if (brand) filter.brand = new RegExp(brand, "i");
+  if (minPrice || maxPrice) filter.price = {};
+  if (minPrice) filter.price.$gte = Number(minPrice);
+  if (maxPrice) filter.price.$lte = Number(maxPrice);
+  if (minRating) filter.rating = { $gte: Number(minRating) };
+
+  const sortMap = {
+    newest: { createdAt: -1 },
+    price_asc: { price: 1 },
+    price_desc: { price: -1 },
+    popular: { sold: -1 }
+  };
+
+  const sort = sortMap[req.query.sort] || sortMap.newest;
+  const skip = (page - 1) * limit;
+
+  const [products, total] = await Promise.all([
+    Product.find(filter)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .populate("seller", "name")
+      .populate("category", "name slug")
+      .lean(),
+    Product.countDocuments(filter)
+  ]);
+
+  return res.json({ products, total, page, pages: Math.ceil(total / limit) });
+});
+
+export const getProductFacets = asyncHandler(async (_req, res) => {
+  const [categoryIds, brands] = await Promise.all([
+    Product.distinct("category", { isActive: true }),
+    Product.distinct("brand", { isActive: true })
+  ]);
+
+  const categoryDocs = await Category.find({ _id: { $in: categoryIds }, isActive: true })
+    .select("name slug")
+    .sort({ name: 1 })
+    .lean();
+
+  return res.json({
+    categories: categoryDocs.map((cat) => ({ name: cat.name, slug: cat.slug })),
+    brands: brands.filter((b) => typeof b === "string" && b.trim()).sort((a, b) => a.localeCompare(b))
+  });
+});

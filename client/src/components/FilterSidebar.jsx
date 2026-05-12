@@ -1,105 +1,87 @@
 import { useMemo } from "react";
-import { useGetCategoriesQuery } from "../store/api/productsApi";
 
-export default function FilterSidebar({ filters, onChange, brands = [], onClose }) {
-  const { data: categories = [] } = useGetCategoriesQuery();
+const sortOptions = [
+  { label: "Newest", value: "newest" },
+  { label: "Price: Low to High", value: "price_asc" },
+  { label: "Price: High to Low", value: "price_desc" },
+  { label: "Most Popular", value: "popular" }
+];
 
-  const selectedBrands = useMemo(() => {
-    if (!filters.brand) return [];
-    return String(filters.brand)
-      .split(",")
-      .map((b) => b.trim())
-      .filter(Boolean);
-  }, [filters.brand]);
+export default function FilterSidebar({ searchParams, facets, onParamChange, onClear }) {
+  const minRating = Number(searchParams.get("minRating") || 0);
 
-  const setPrice = (key, value) => {
-    onChange({ ...filters, [key]: value || undefined });
-  };
+  const selectedCategory = searchParams.get("category") || "";
+  const selectedBrand = searchParams.get("brand") || "";
+  const sort = searchParams.get("sort") || "newest";
+  const minPrice = searchParams.get("minPrice") || "";
+  const maxPrice = searchParams.get("maxPrice") || "";
 
-  const toggleBrand = (brand) => {
-    const next = selectedBrands.includes(brand)
-      ? selectedBrands.filter((b) => b !== brand)
-      : [...selectedBrands, brand];
-
-    onChange({ ...filters, brand: next.length ? next.join(",") : undefined });
-  };
+  const stars = useMemo(() => [1, 2, 3, 4, 5], []);
 
   return (
-    <aside className="bg-zivvo-surface rounded-xl p-4 sticky top-20 max-h-[calc(100vh-5rem)] overflow-y-auto border border-zinc-800">
+    <aside className="rounded-xl border border-zinc-800 bg-zivvo-surface p-4">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-bold uppercase tracking-wide text-zivvo-text-base">Filters</h3>
-        <button type="button" onClick={() => onChange({})} className="text-xs font-semibold text-[#ef9f27]">Clear All</button>
+        <h2 className="text-sm font-semibold uppercase tracking-wide">Filters</h2>
+        <button type="button" onClick={onClear} className="text-xs font-semibold text-[#ef9f27]">Clear filters</button>
       </div>
 
-      <section className="mb-5">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zivvo-text-muted">Categories</p>
-        <div className="flex flex-wrap gap-2">
-          {categories.map((cat) => {
-            const active = filters.category === cat.slug;
-            return (
-              <button
-                type="button"
-                key={cat._id}
-                onClick={() => onChange({ ...filters, category: active ? undefined : cat.slug })}
-                className={`rounded-full px-3 py-1 text-xs font-medium ${active ? "bg-[#ef9f27] text-black" : "bg-zinc-800 text-zivvo-text-base"}`}
-              >
-                {cat.name}
-              </button>
-            );
-          })}
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="category-filter" className="mb-1 block text-xs uppercase tracking-wide text-zivvo-text-muted">Category</label>
+          <select id="category-filter" value={selectedCategory} onChange={(e) => onParamChange("category", e.target.value)} className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm">
+            <option value="">All categories</option>
+            {(facets.categories || []).map((category) => (
+              <option key={category.slug} value={category.slug}>{category.name}</option>
+            ))}
+          </select>
         </div>
-      </section>
 
-      <section className="mb-5">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zivvo-text-muted">Price Range</p>
-        <div className="grid grid-cols-2 gap-2">
-          <input type="number" placeholder="Min Rs" value={filters.minPrice || ""} onChange={(e) => setPrice("minPrice", e.target.value)} className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm text-zivvo-text-base" />
-          <input type="number" placeholder="Max Rs" value={filters.maxPrice || ""} onChange={(e) => setPrice("maxPrice", e.target.value)} className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm text-zivvo-text-base" />
+        <div>
+          <label htmlFor="brand-filter" className="mb-1 block text-xs uppercase tracking-wide text-zivvo-text-muted">Brand</label>
+          <select id="brand-filter" value={selectedBrand} onChange={(e) => onParamChange("brand", e.target.value)} className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm">
+            <option value="">All brands</option>
+            {(facets.brands || []).map((brand) => (
+              <option key={brand} value={brand}>{brand}</option>
+            ))}
+          </select>
         </div>
-        <input
-          type="range"
-          min="0"
-          max="200000"
-          step="500"
-          value={filters.maxPrice || 200000}
-          onChange={(e) => onChange({ ...filters, maxPrice: e.target.value })}
-          className="mt-3 w-full accent-[#ef9f27]"
-        />
-      </section>
 
-      <section className="mb-5">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zivvo-text-muted">Brand</p>
-        <div className="space-y-2">
-          {brands.map((brand) => (
-            <label key={brand} className="flex items-center gap-2 text-sm text-zivvo-text-base">
-              <input type="checkbox" checked={selectedBrands.includes(brand)} onChange={() => toggleBrand(brand)} className="accent-[#ef9f27]" />
-              {brand}
-            </label>
-          ))}
+        <div>
+          <p className="mb-1 text-xs uppercase tracking-wide text-zivvo-text-muted">Price range</p>
+          <div className="grid grid-cols-2 gap-2">
+            <input type="number" min="0" value={minPrice} placeholder="Min" onChange={(e) => onParamChange("minPrice", e.target.value)} className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm" />
+            <input type="number" min="0" value={maxPrice} placeholder="Max" onChange={(e) => onParamChange("maxPrice", e.target.value)} className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm" />
+          </div>
         </div>
-      </section>
 
-      <section>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zivvo-text-muted">Rating</p>
-        {[4, 3, 2, 1].map((r) => (
-          <label key={r} className="mb-2 flex items-center gap-2 text-sm text-zivvo-text-base">
-            <input
-              type="radio"
-              name="rating"
-              checked={Number(filters.rating) === r}
-              onChange={() => onChange({ ...filters, rating: r })}
-              className="accent-[#ef9f27]"
-            />
-            {r}? & above
-          </label>
-        ))}
-      </section>
+        <div>
+          <p className="mb-1 text-xs uppercase tracking-wide text-zivvo-text-muted">Minimum rating</p>
+          <div className="flex gap-1">
+            {stars.map((star) => {
+              const active = star <= minRating;
+              return (
+                <button
+                  type="button"
+                  key={star}
+                  onClick={() => onParamChange("minRating", minRating === star ? "" : String(star))}
+                  className={`text-lg ${active ? "text-[#ef9f27]" : "text-zinc-500"}`}
+                >
+                  ★
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-      {onClose && (
-        <button type="button" onClick={onClose} className="mt-4 w-full rounded-md bg-zinc-800 py-2 text-sm text-zivvo-text-base md:hidden">
-          Close Filters
-        </button>
-      )}
+        <div>
+          <label htmlFor="sort-filter" className="mb-1 block text-xs uppercase tracking-wide text-zivvo-text-muted">Sort</label>
+          <select id="sort-filter" value={sort} onChange={(e) => onParamChange("sort", e.target.value)} className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm">
+            {sortOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
     </aside>
   );
 }
