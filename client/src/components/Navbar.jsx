@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import ThemeToggle from "./ThemeToggle";
 import { logout as logoutAction } from "../store/slices/authSlice";
 import { useLogoutApiMutation } from "../services/authApi";
+import { selectWishlistCount } from "../features/wishlist/wishlistSlice";
 
 function Icon({ children, className = "" }) {
   return (
@@ -22,7 +23,7 @@ export default function Navbar() {
   const [cartPulse, setCartPulse] = useState(false);
 
   const { user, isAuthenticated } = useSelector((s) => s.auth);
-  const wishlistCount = useSelector((s) => s.wishlist.items.length);
+  const wishlistCount = useSelector(selectWishlistCount);
   const cartCount = useSelector((s) => s.cart.itemCount || 0);
 
   useEffect(() => {

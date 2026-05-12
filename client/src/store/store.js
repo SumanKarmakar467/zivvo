@@ -3,7 +3,7 @@ import auth from "./slices/authSlice";
 import cart from "./slices/cartSlice";
 import product from "../features/productSlice";
 import order from "../features/orderSlice";
-import wishlist from "./slices/wishlistSlice";
+import wishlist from "../features/wishlist/wishlistSlice";
 import search from "../features/search/searchSlice";
 import { authApi } from "../services/authApi";
 import { productApi } from "../services/productApi";

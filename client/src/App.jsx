@@ -18,10 +18,11 @@ import AccountOrders from "./pages/AccountOrders";
 import Account from "./pages/Account";
 import SellerDashboard from "./pages/SellerDashboard";
 import AdminPanel from "./pages/AdminPanel";
-import { setWishlist } from "./store/slices/wishlistSlice";
+import WishlistPage from "./pages/WishlistPage";
 import { setCredentials, setLoading } from "./store/slices/authSlice";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import { fetchWishlist } from "./features/wishlist/wishlistSlice";
 
 function Placeholder({ title }) {
   return <main className="min-h-screen bg-zivvo-dark-bg p-8 text-zivvo-text-base">{title}</main>;
@@ -89,17 +90,7 @@ export default function App() {
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken) return;
-    const syncWishlist = async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/wishlist`, {
-        credentials: "include",
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      const data = await res.json();
-      if (res.ok) {
-        dispatch(setWishlist((data.wishlist || []).map((item) => String(item._id))));
-      }
-    };
-    syncWishlist();
+    dispatch(fetchWishlist());
   }, [dispatch, isAuthenticated, accessToken]);
 
   return (
@@ -112,6 +103,7 @@ export default function App() {
           <Route path="/category/:slug" element={<CategoryPage />} />
           <Route path="/product/:slug" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/wishlist" element={<PrivateRoute><WishlistPage /></PrivateRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />

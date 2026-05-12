@@ -10,6 +10,7 @@ import { notifySuccess } from "../components/common/Toast";
 import StarRating from "../components/StarRating";
 import ReviewForm from "../components/ReviewForm";
 import ReviewList from "../components/ReviewList";
+import WishlistButton from "../components/WishlistButton";
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -27,7 +28,6 @@ export default function ProductDetail() {
 
   const [activeImage, setActiveImage] = useState(0);
   const [qty, setQty] = useState(1);
-  const [wishlist, setWishlist] = useState(false);
   const [pincode, setPincode] = useState("");
   const [deliveryText, setDeliveryText] = useState("");
   const [activeTab, setActiveTab] = useState("description");
@@ -192,10 +192,12 @@ export default function ProductDetail() {
               </button>
             </div>
 
-            <button type="button" className="mt-4 inline-flex items-center gap-2 text-sm text-zivvo-text-muted hover:text-zivvo-amber-brand" onClick={() => setWishlist((prev) => !prev)}>
-              <span className={wishlist ? "text-red-400" : "text-zivvo-text-muted"}>?</span>
-              <span>{wishlist ? "Wishlisted" : "Add to Wishlist"}</span>
-            </button>
+            <WishlistButton
+              product={product}
+              className="mt-4 inline-flex items-center gap-2 text-sm text-zivvo-text-muted hover:text-zivvo-amber-brand"
+              iconClassName="text-base"
+              showLabel
+            />
 
             <p className="mt-4 text-sm text-zivvo-text-muted">?? Sold by: <span className="text-zivvo-text-base">{product.seller?.name || "Trusted Seller"}</span></p>
           </div>

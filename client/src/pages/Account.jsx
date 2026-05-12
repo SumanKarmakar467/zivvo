@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import PageTransition from "../components/common/PageTransition";
 import ProductCard from "../components/ProductCard";
 import { notifyError, notifySuccess } from "../components/common/Toast";
-import { setWishlist, toggleWishlistItem } from "../store/slices/wishlistSlice";
+import { fetchWishlist, removeFromWishlist, selectWishlistItems } from "../features/wishlist/wishlistSlice";
 
 const sections = ["Profile", "My Orders", "Wishlist", "Addresses", "Change Password"];
 const baseAddress = { fullName: "", phone: "", addressLine1: "", addressLine2: "", city: "", state: "", pincode: "", country: "India", isDefault: false };
@@ -16,7 +16,7 @@ export default function Account() {
   const [active, setActive] = useState("Profile");
   const [profile, setProfile] = useState({ name: "", phone: "", email: "", avatar: "" });
   const [addresses, setAddresses] = useState([]);
-  const [wishlistProducts, setWishlistProducts] = useState([]);
+  const wishlistProducts = useSelector(selectWishlistItems);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [addressForm, setAddressForm] = useState(baseAddress);
   const [editAddressId, setEditAddressId] = useState("");
@@ -27,20 +27,15 @@ export default function Account() {
   useEffect(() => {
     if (!isAuthenticated || !accessToken) return;
     const load = async () => {
-      const [pRes, aRes, wRes] = await Promise.all([
+      const [pRes, aRes] = await Promise.all([
         fetch(`${import.meta.env.VITE_API_URL}/users/profile`, { credentials: "include", headers: authHeaders }),
-        fetch(`${import.meta.env.VITE_API_URL}/users/addresses`, { credentials: "include", headers: authHeaders }),
-        fetch(`${import.meta.env.VITE_API_URL}/users/wishlist`, { credentials: "include", headers: authHeaders })
+        fetch(`${import.meta.env.VITE_API_URL}/users/addresses`, { credentials: "include", headers: authHeaders })
       ]);
       const pData = await pRes.json();
       const aData = await aRes.json();
-      const wData = await wRes.json();
       if (pRes.ok) setProfile({ name: pData.name || "", phone: pData.phone || "", email: pData.email || "", avatar: pData.avatar || "" });
       if (aRes.ok) setAddresses(aData.addresses || []);
-      if (wRes.ok) {
-        setWishlistProducts(wData.wishlist || []);
-        dispatch(setWishlist((wData.wishlist || []).map((x) => String(x._id))));
-      }
+      dispatch(fetchWishlist());
     };
     load();
   }, [isAuthenticated, accessToken, authHeaders, dispatch]);
@@ -96,12 +91,12 @@ export default function Account() {
   };
 
   const removeWish = async (id) => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/users/wishlist/${id}`, { method: "POST", credentials: "include", headers: authHeaders });
-    const data = await res.json();
-    if (!res.ok) return notifyError(data?.message || "Failed");
-    dispatch(toggleWishlistItem(id));
-    setWishlistProducts((s) => s.filter((p) => String(p._id) !== String(id)));
-    if (!data.wishlisted) notifySuccess("Removed from wishlist");
+    try {
+      await dispatch(removeFromWishlist(id)).unwrap();
+      notifySuccess("Removed from wishlist");
+    } catch (error) {
+      notifyError(error?.message || "Failed");
+    }
   };
 
   const changePassword = async () => {
