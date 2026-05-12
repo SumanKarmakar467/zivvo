@@ -245,3 +245,76 @@ export const getProductFacets = asyncHandler(async (_req, res) => {
     brands: brands.filter((b) => typeof b === "string" && b.trim()).sort((a, b) => a.localeCompare(b))
   });
 });
+
+export const getProductRecommendations = asyncHandler(async (req, res) => {
+  const productId = String(req.query.productId || "").trim();
+  const category = String(req.query.category || "").trim();
+  const sellerId = String(req.query.sellerId || "").trim();
+  const limit = Math.min(Math.max(Number(req.query.limit || 8), 1), 20);
+
+  const [sameCat, sameSeller, topRated] = await Promise.all([
+    category
+      ? Product.find({ category, _id: { $ne: productId }, isActive: true })
+          .sort({ sold: -1 })
+          .limit(limit)
+          .select("name slug price images averageRating reviewCount seller category sold")
+          .populate("category", "name slug")
+          .populate("seller", "name avatar")
+          .lean()
+      : Promise.resolve([]),
+    sellerId
+      ? Product.find({ seller: sellerId, _id: { $ne: productId }, isActive: true })
+          .sort({ sold: -1 })
+          .limit(4)
+          .select("name slug price images averageRating reviewCount seller category sold")
+          .populate("category", "name slug")
+          .populate("seller", "name avatar")
+          .lean()
+      : Promise.resolve([]),
+    Product.find({ _id: { $ne: productId }, isActive: true, averageRating: { $gte: 4 } })
+      .sort({ averageRating: -1, reviewCount: -1 })
+      .limit(4)
+      .select("name slug price images averageRating reviewCount seller category sold")
+      .populate("category", "name slug")
+      .populate("seller", "name avatar")
+      .lean()
+  ]);
+
+  const merged = [...sameCat, ...sameSeller, ...topRated];
+  const seen = new Set();
+  const deduped = [];
+
+  for (const product of merged) {
+    const id = String(product._id);
+    if (seen.has(id)) continue;
+    seen.add(id);
+    deduped.push(product);
+    if (deduped.length >= limit) break;
+  }
+
+  return res.json({ products: deduped });
+});
+
+export const getRecentlyViewedProducts = asyncHandler(async (req, res) => {
+  const ids = String(req.query.ids || "").trim();
+  if (!ids) return res.json([]);
+
+  const idList = ids
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean)
+    .slice(0, 10);
+
+  if (!idList.length) return res.json([]);
+
+  const products = await Product.find({ _id: { $in: idList }, isActive: true })
+    .select("name slug price images averageRating reviewCount seller category")
+    .populate("category", "name slug")
+    .populate("seller", "name avatar")
+    .lean();
+
+  const byId = new Map(products.map((product) => [String(product._id), product]));
+  const ordered = idList.map((id) => byId.get(id)).filter(Boolean);
+
+  return res.json(ordered);
+});

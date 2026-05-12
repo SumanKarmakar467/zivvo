@@ -64,6 +64,20 @@ export const productApi = createApi({
       invalidatesTags: (result) => [{ type: "Review", id: result?.product }]
     }),
     getFeaturedProducts: b.query({ query: () => "/products/featured", providesTags: ["Product"] }),
+    getRecommendations: b.query({
+      query: ({ productId, category, sellerId, limit = 8 }) => ({
+        url: "/products/recommendations",
+        params: { productId, category, sellerId, limit }
+      }),
+      providesTags: ["Product"]
+    }),
+    getRecentlyViewedProducts: b.query({
+      query: (ids) => ({
+        url: "/products/recently-viewed",
+        params: { ids: Array.isArray(ids) ? ids.join(",") : ids }
+      }),
+      providesTags: ["Product"]
+    }),
     getDeals: b.query({ query: () => "/products/deals", providesTags: ["Product"] }),
     createProduct: b.mutation({ query: (body) => ({ url: "/products", method: "POST", body }), invalidatesTags: ["Product"] }),
     updateProduct: b.mutation({ query: ({ id, ...body }) => ({ url: `/products/${id}`, method: "PUT", body }), invalidatesTags: ["Product"] }),
@@ -82,6 +96,8 @@ export const {
   useMarkReviewHelpfulMutation,
   useRespondToReviewMutation,
   useGetFeaturedProductsQuery,
+  useGetRecommendationsQuery,
+  useGetRecentlyViewedProductsQuery,
   useGetDealsQuery,
   useCreateProductMutation,
   useUpdateProductMutation,

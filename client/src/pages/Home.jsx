@@ -6,6 +6,8 @@ import PageTransition from "../components/PageTransition";
 import ProductCard from "../components/ProductCard";
 import ProductCardSkeleton from "../components/ProductCardSkeleton";
 import { useGetFeaturedProductsQuery, useGetProductsQuery } from "../store/api/productsApi";
+import RecentlyViewedStrip from "../components/RecentlyViewedStrip";
+import HomepageTrending from "../components/HomepageTrending";
 
 const categories = [
   { name: "Electronics", icon: "💻", slug: "electronics" },
@@ -141,6 +143,9 @@ export default function Home() {
             {isLoading ? Array.from({ length: 12 }).map((_, i) => <ProductCardSkeleton key={i} />) : featured.map((p) => <ProductCard key={p._id} product={p} />)}
           </div>
         </section>
+
+        <RecentlyViewedStrip />
+        <HomepageTrending />
 
         {flashSaleProducts.length > 0 && (
           <section className="mx-auto mt-10 max-w-7xl px-4 md:px-6">

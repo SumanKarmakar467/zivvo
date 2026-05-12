@@ -1,8 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import PageTransition from "../components/common/PageTransition";
-import ProductCard from "../components/ProductCard";
 import { formatPrice } from "../utils/formatPrice";
 import { addToCart } from "../store/slices/cartSlice";
 import { useGetProductBySlugQuery, useGetReviewEligibilityQuery } from "../services/productApi";
@@ -12,6 +11,9 @@ import ReviewForm from "../components/ReviewForm";
 import ReviewList from "../components/ReviewList";
 import WishlistButton from "../components/WishlistButton";
 import VariantSelector from "../components/VariantSelector";
+import RecommendationsSection from "../components/RecommendationsSection";
+import RecentlyViewedStrip from "../components/RecentlyViewedStrip";
+import { useRecentlyViewed } from "../hooks/useRecentlyViewed";
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -21,7 +23,6 @@ export default function ProductDetail() {
 
   const { data, isLoading } = useGetProductBySlugQuery(slug);
   const product = data?.product;
-  const relatedProducts = data?.relatedProducts || [];
 
   const { data: eligibility } = useGetReviewEligibilityQuery(product?._id, {
     skip: !product?._id || !isAuthenticated
@@ -33,11 +34,18 @@ export default function ProductDetail() {
   const [pincode, setPincode] = useState("");
   const [deliveryText, setDeliveryText] = useState("");
   const [activeTab, setActiveTab] = useState("description");
+  const { addProduct } = useRecentlyViewed();
 
   const avgRating = Number(product?.averageRating ?? product?.rating ?? 0);
   const reviewCount = Number(product?.reviewCount ?? product?.numReviews ?? 0);
   const stock = Number(product?.hasVariants ? (selectedVariant?.stock || 0) : (product?.stock || 0));
   const specsEntries = useMemo(() => Object.entries(product?.specs || {}), [product]);
+
+  useEffect(() => {
+    if (product?._id) {
+      addProduct(product._id);
+    }
+  }, [product?._id, addProduct]);
 
   const handleAddToCart = () => {
     if (!product || stock <= 0) return;
@@ -278,16 +286,14 @@ export default function ProductDetail() {
           <ReviewList productId={product._id} />
         </section>
 
-        <section className="mt-10">
-          <h3 className="mb-4 text-xl font-bold">You may also like</h3>
-          <div className="flex gap-4 overflow-x-auto pb-2">
-            {relatedProducts.map((item) => (
-              <div key={item._id} className="w-[220px] shrink-0">
-                <ProductCard product={item} />
-              </div>
-            ))}
-          </div>
-        </section>
+        <RecommendationsSection
+          productId={product._id}
+          category={product.category?._id}
+          sellerId={product.seller?._id}
+        />
+
+        <RecentlyViewedStrip />
+
       </div>
 
     </PageTransition>
