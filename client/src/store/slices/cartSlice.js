@@ -131,7 +131,7 @@ export const fetchCart = () => async (dispatch, getState) => {
   }
 };
 
-export const addToCart = ({ productId, quantity = 1, productData }) => async (dispatch, getState) => {
+export const addToCart = ({ productId, quantity = 1, productData, variantSku = "", variantAttributes = {}, priceOverride = null }) => async (dispatch, getState) => {
   dispatch(setLoading(true));
   try {
     const isAuthenticated = getState().auth.isAuthenticated;
@@ -146,7 +146,9 @@ export const addToCart = ({ productId, quantity = 1, productData }) => async (di
           _id: `guest-${Date.now()}`,
           product: productData,
           quantity,
-          price: Number(productData?.price || 0)
+          price: Number((priceOverride ?? productData?.price) || 0),
+          variantSku: variantSku || "",
+          variantAttributes: variantAttributes || {}
         });
       }
       const next = guestTotals(items);
@@ -155,7 +157,7 @@ export const addToCart = ({ productId, quantity = 1, productData }) => async (di
       return;
     }
 
-    const data = await apiCall("/cart/add", "POST", { productId, quantity }, getState);
+    const data = await apiCall("/cart/add", "POST", { productId, quantity, variantSku, variantAttributes }, getState);
     dispatch(setCart(data));
   } finally {
     dispatch(setLoading(false));

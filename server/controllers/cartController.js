@@ -4,7 +4,7 @@ import Product from "../models/Product.js";
 import { asyncHandler, AppError } from "../middleware/errorHandler.js";
 
 const populateCart = async (userId) => {
-  const cart = await Cart.findOne({ user: userId }).populate("items.product", "name images price mrp stock slug seller");
+  const cart = await Cart.findOne({ user: userId }).populate("items.product", "name images price mrp stock slug seller category hasVariants variants");
   if (!cart) {
     return null;
   }
@@ -37,6 +37,8 @@ const formatCartResponse = async (cartDoc) => {
       product,
       quantity: item.quantity,
       price: item.price,
+      variantSku: item.variantSku || "",
+      variantAttributes: item.variantAttributes || {},
       isDeleted: isMissing,
       isOutOfStock
     };
@@ -70,7 +72,7 @@ export const getCart = asyncHandler(async (req, res) => {
 });
 
 export const addToCart = asyncHandler(async (req, res) => {
-  const { productId, quantity = 1 } = req.body;
+  const { productId, quantity = 1, variantSku = "", variantAttributes = {} } = req.body;
 
   if (!productId) {
     throw new AppError("productId is required", 400);
@@ -86,15 +88,30 @@ export const addToCart = asyncHandler(async (req, res) => {
     cart = await Cart.create({ user: req.user._id, items: [] });
   }
 
-  const existing = cart.items.find((item) => String(item.product) === String(productId));
+  let variant = null;
+  if (variantSku) {
+    variant = (product.variants || []).find((row) => row.sku === String(variantSku).toUpperCase() && row.isActive);
+    if (!variant) throw new AppError("Variant not found", 404);
+  }
+
+  const existing = cart.items.find((item) =>
+    String(item.product) === String(productId) &&
+    String(item.variantSku || "") === String(variantSku || "").toUpperCase()
+  );
+  const maxStock = variant ? Number(variant.stock || 0) : Number(product.stock || 0);
+  const unitPrice = variant ? Number(product.price + Number(variant.priceDelta || 0)) : Number(product.price);
   if (existing) {
-    existing.quantity = Math.min(existing.quantity + Number(quantity || 1), product.stock || 1);
-    existing.price = product.price;
+    existing.quantity = Math.min(existing.quantity + Number(quantity || 1), maxStock || 1);
+    existing.price = unitPrice;
+    existing.variantSku = variant ? variant.sku : "";
+    existing.variantAttributes = variant ? (variant.attributes || {}) : (variantAttributes || {});
   } else {
     cart.items.push({
       product: product._id,
-      quantity: Math.min(Math.max(Number(quantity || 1), 1), product.stock || 1),
-      price: product.price
+      quantity: Math.min(Math.max(Number(quantity || 1), 1), maxStock || 1),
+      price: unitPrice,
+      variantSku: variant ? variant.sku : "",
+      variantAttributes: variant ? (variant.attributes || {}) : (variantAttributes || {})
     });
   }
 
@@ -131,12 +148,21 @@ export const updateCartItem = asyncHandler(async (req, res) => {
     throw new AppError("Product no longer available", 404);
   }
 
-  if (qty > product.stock) {
+  const variant = item.variantSku
+    ? (product.variants || []).find((row) => row.sku === item.variantSku && row.isActive)
+    : null;
+  const availableStock = variant ? Number(variant.stock || 0) : Number(product.stock || 0);
+
+  if (item.variantSku && !variant) {
+    throw new AppError("Selected variant is no longer available", 400);
+  }
+
+  if (qty > availableStock) {
     throw new AppError("Insufficient stock", 400);
   }
 
   item.quantity = Math.max(1, qty);
-  item.price = product.price;
+  item.price = variant ? Number(product.price + Number(variant.priceDelta || 0)) : product.price;
   await cart.save();
 
   const populated = await populateCart(req.user._id);

@@ -37,6 +37,48 @@ const parseTags = (tagsInput) => {
     .filter(Boolean);
 };
 
+const normalizeToken = (value) =>
+  String(value || "")
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-zA-Z0-9_-]/g, "")
+    .toUpperCase();
+
+const buildVariants = (variantsInput, productIdFragment) => {
+  let parsed = variantsInput;
+  if (typeof variantsInput === "string") {
+    try { parsed = JSON.parse(variantsInput); } catch { parsed = []; }
+  }
+  if (!Array.isArray(parsed)) return [];
+
+  return parsed.map((variant, idx) => {
+    const attrs = variant?.attributes && typeof variant.attributes === "object" ? variant.attributes : {};
+    const color = normalizeToken(attrs.color);
+    const size = normalizeToken(attrs.size);
+    const material = normalizeToken(attrs.material);
+    const autoSkuParts = [productIdFragment, color, size, material].filter(Boolean);
+    const autoSku = autoSkuParts.join("-");
+    return {
+      sku: normalizeToken(variant?.sku) || autoSku || `${productIdFragment}-VAR${idx + 1}`,
+      attributes: attrs,
+      stock: Math.max(Number(variant?.stock || 0), 0),
+      priceDelta: Number(variant?.priceDelta || 0),
+      images: Array.isArray(variant?.images) ? variant.images : [],
+      isActive: variant?.isActive === undefined ? true : Boolean(variant.isActive)
+    };
+  });
+};
+
+const ensureUniqueSku = (variants = []) => {
+  const seen = new Set();
+  for (const variant of variants) {
+    const sku = String(variant.sku || "").toUpperCase();
+    if (!sku) throw new Error("Each variant must have a SKU");
+    if (seen.has(sku)) throw new Error("Duplicate variant SKU found");
+    seen.add(sku);
+  }
+};
+
 const uploadImages = async (files = []) => {
   const uploaded = [];
   for (const file of files) {
@@ -168,7 +210,7 @@ export const getSellerProducts = asyncHandler(async (req, res) => {
 });
 
 export const addProduct = asyncHandler(async (req, res) => {
-  const { name, description, price, mrp, category, brand, stock, specs, tags, isFeatured, isActive } = req.body;
+  const { name, description, price, mrp, category, brand, stock, specs, tags, isFeatured, isActive, hasVariants, attributeOptions, variants } = req.body;
 
   if (!name || !description || !price || !category) {
     res.status(400);
@@ -183,7 +225,7 @@ export const addProduct = asyncHandler(async (req, res) => {
 
   const images = await uploadImages(files);
 
-  const product = await Product.create({
+  const baseDraft = new Product({
     name,
     slug: slugify(name, { lower: true, strict: true, trim: true }),
     description,
@@ -196,11 +238,27 @@ export const addProduct = asyncHandler(async (req, res) => {
     stock: stock ? Number(stock) : 0,
     specs: parseSpecs(specs),
     tags: parseTags(tags),
+    hasVariants: hasVariants === "true" || hasVariants === true,
+    attributeOptions: parseSpecs(attributeOptions),
     isFeatured: isFeatured === "true" || isFeatured === true,
     isActive: isActive === undefined ? true : isActive === "true" || isActive === true
   });
 
-  const created = await Product.findById(product._id).populate("category", "name slug").lean();
+  if (baseDraft.hasVariants) {
+    const variantRows = buildVariants(variants, String(baseDraft._id).slice(-4).toUpperCase());
+    if (!variantRows.length) {
+      res.status(400);
+      throw new Error("At least one variant is required when hasVariants is true");
+    }
+    ensureUniqueSku(variantRows);
+    baseDraft.variants = variantRows;
+  } else {
+    baseDraft.variants = [];
+  }
+
+  await baseDraft.save();
+
+  const created = await Product.findById(baseDraft._id).populate("category", "name slug").lean();
   res.status(201).json(created);
 });
 
@@ -228,7 +286,10 @@ export const updateProduct = asyncHandler(async (req, res) => {
     "specs",
     "tags",
     "isFeatured",
-    "isActive"
+    "isActive",
+    "hasVariants",
+    "attributeOptions",
+    "variants"
   ];
 
   for (const field of allowedFields) {
@@ -240,11 +301,26 @@ export const updateProduct = asyncHandler(async (req, res) => {
       product.specs = parseSpecs(req.body.specs);
     } else if (field === "tags") {
       product.tags = parseTags(req.body.tags);
-    } else if (field === "isFeatured" || field === "isActive") {
+    } else if (field === "isFeatured" || field === "isActive" || field === "hasVariants") {
       product[field] = req.body[field] === "true" || req.body[field] === true;
+    } else if (field === "attributeOptions") {
+      product.attributeOptions = parseSpecs(req.body.attributeOptions);
+    } else if (field === "variants") {
+      const variantRows = buildVariants(req.body.variants, String(product._id).slice(-4).toUpperCase());
+      if (product.hasVariants && !variantRows.length) {
+        res.status(400);
+        throw new Error("At least one variant is required when hasVariants is true");
+      }
+      ensureUniqueSku(variantRows);
+      product.variants = variantRows;
     } else {
       product[field] = req.body[field];
     }
+  }
+
+  if (!product.hasVariants) {
+    product.variants = [];
+    product.attributeOptions = {};
   }
 
   if (Array.isArray(req.files) && req.files.length > 0) {

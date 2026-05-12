@@ -103,6 +103,11 @@ export default function Cart() {
                             {product.name || "Unavailable Product"}
                           </Link>
                           <p className="mt-1 text-xs text-zivvo-text-soft">Seller: {product.seller?.name || "Seller"}</p>
+                          {item.variantAttributes && Object.keys(item.variantAttributes).length > 0 && (
+                            <p className="mt-1 text-xs text-zivvo-text-soft">
+                              {Object.entries(item.variantAttributes).map(([k, v]) => `${k}: ${v}`).join(" · ")}
+                            </p>
+                          )}
 
                           <motion.div animate={pulseId === item._id ? { scale: [1, 1.05, 1] } : { scale: 1 }} transition={{ duration: 0.22 }} className="mt-2 flex items-center gap-2">
                             <span className="text-lg font-bold text-zivvo-amber-brand">Rs {price.toLocaleString()}</span>

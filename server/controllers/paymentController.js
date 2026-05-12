@@ -26,15 +26,27 @@ const getCheckoutContext = async (userId, addressId) => {
   const items = cart.items.map((item) => {
     const p = item.product;
     if (!p || !p.isActive) throw new AppError("One or more products are unavailable", 400);
-    if (item.quantity > p.stock) throw new AppError(`Insufficient stock for ${p.name}`, 400);
+
+    let selectedVariant = null;
+    if (item.variantSku) {
+      selectedVariant = (p.variants || []).find((row) => row.sku === item.variantSku && row.isActive);
+      if (!selectedVariant) throw new AppError(`Selected variant unavailable for ${p.name}`, 400);
+      if (item.quantity > Number(selectedVariant.stock || 0)) throw new AppError(`Insufficient variant stock for ${p.name}`, 400);
+    } else if (item.quantity > p.stock) {
+      throw new AppError(`Insufficient stock for ${p.name}`, 400);
+    }
+
+    const unitPrice = selectedVariant ? Number(p.price + Number(selectedVariant.priceDelta || 0)) : (item.price || p.price);
 
     return {
       product: p._id,
       name: p.name,
-      image: p.images?.[0] || "",
-      price: item.price || p.price,
+      image: selectedVariant?.images?.[0] || p.images?.[0] || "",
+      price: unitPrice,
       quantity: item.quantity,
-      seller: p.seller
+      seller: p.seller,
+      variantSku: selectedVariant?.sku || "",
+      variantAttributes: selectedVariant?.attributes || item.variantAttributes || {}
     };
   });
 
@@ -136,9 +148,16 @@ const createOrderDocument = async ({
   });
 
   for (const item of items) {
-    await Product.findByIdAndUpdate(item.product, {
-      $inc: { stock: -item.quantity, sold: item.quantity }
-    });
+    if (item.variantSku) {
+      await Product.findOneAndUpdate(
+        { _id: item.product, "variants.sku": item.variantSku },
+        { $inc: { "variants.$.stock": -item.quantity, sold: item.quantity } }
+      );
+    } else {
+      await Product.findByIdAndUpdate(item.product, {
+        $inc: { stock: -item.quantity, sold: item.quantity }
+      });
+    }
   }
 
   await Cart.findOneAndUpdate({ user: userId }, { items: [], coupon: "" });

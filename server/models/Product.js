@@ -1,6 +1,18 @@
 import mongoose from "mongoose";
 import slugify from "slugify";
 
+const variantSchema = new mongoose.Schema(
+  {
+    sku: { type: String, required: true, trim: true, uppercase: true },
+    attributes: { type: Map, of: String, default: {} },
+    stock: { type: Number, required: true, min: 0 },
+    priceDelta: { type: Number, default: 0 },
+    images: { type: [String], default: [] },
+    isActive: { type: Boolean, default: true }
+  },
+  { _id: false }
+);
+
 const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
@@ -28,16 +40,20 @@ const productSchema = new mongoose.Schema(
     reviewCount: { type: Number, default: 0, min: 0 },
     specs: { type: Map, of: String, default: {} },
     tags: { type: [String], default: [] },
+    variants: { type: [variantSchema], default: [] },
+    hasVariants: { type: Boolean, default: false },
+    attributeOptions: { type: Map, of: [String], default: {} },
     isFeatured: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true }
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
 productSchema.index(
   { name: "text", description: "text", brand: "text", tags: "text" },
   { weights: { name: 10, brand: 5, description: 2, tags: 1 } }
 );
+productSchema.index({ _id: 1, "variants.sku": 1 }, { unique: true, sparse: true });
 
 productSchema.pre("validate", function preValidate(next) {
   if (this.name) {
@@ -51,6 +67,11 @@ productSchema.pre("validate", function preValidate(next) {
   }
 
   next();
+});
+
+productSchema.virtual("totalStock").get(function getTotalStock() {
+  if (!this.hasVariants) return Number(this.stock || 0);
+  return (this.variants || []).reduce((sum, variant) => sum + (variant.isActive ? Number(variant.stock || 0) : 0), 0);
 });
 
 const Product = mongoose.model("Product", productSchema);

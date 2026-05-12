@@ -84,6 +84,11 @@ export default function OrderTracking() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{item.name}</p>
                     <p className="text-xs text-zivvo-text-soft">Qty: {item.quantity}</p>
+                    {item.variantAttributes && Object.keys(item.variantAttributes).length > 0 && (
+                      <p className="text-xs text-zivvo-text-soft">
+                        {Object.entries(item.variantAttributes).map(([k, v]) => `${k}: ${v}`).join(" · ")}
+                      </p>
+                    )}
                   </div>
                   <p className="text-sm font-semibold">Rs {(item.price * item.quantity).toLocaleString()}</p>
                 </div>

@@ -34,6 +34,9 @@ const emptyForm = {
   mrp: "",
   price: "",
   stock: "",
+  hasVariants: false,
+  attributeOptions: [{ name: "", values: "" }],
+  variants: [],
   tags: "",
   specs: [{ key: "", value: "" }],
   images: []
@@ -50,6 +53,41 @@ function ProductForm({ value, categories, onChange, onSubmit, submitting, submit
   const updateSpec = (index, field, nextVal) => {
     const nextSpecs = value.specs.map((spec, i) => (i === index ? { ...spec, [field]: nextVal } : spec));
     onChange({ ...value, specs: nextSpecs });
+  };
+
+  const updateAttr = (index, field, nextVal) => {
+    const next = value.attributeOptions.map((row, i) => (i === index ? { ...row, [field]: nextVal } : row));
+    onChange({ ...value, attributeOptions: next });
+  };
+
+  const generateCombinations = () => {
+    const attrs = value.attributeOptions
+      .map((row) => ({
+        name: row.name.trim(),
+        values: row.values.split(",").map((v) => v.trim()).filter(Boolean)
+      }))
+      .filter((row) => row.name && row.values.length);
+
+    if (!attrs.length) return;
+    const combos = attrs.reduce((acc, attr) => {
+      if (!acc.length) return attr.values.map((val) => ({ [attr.name]: val }));
+      return acc.flatMap((combo) => attr.values.map((val) => ({ ...combo, [attr.name]: val })));
+    }, []);
+
+    const nextVariants = combos.map((attributes, idx) => {
+      const existing = (value.variants || []).find((variant) =>
+        Object.entries(attributes).every(([k, v]) => String(variant.attributes?.[k] || "") === String(v))
+      );
+      return existing || {
+        sku: "",
+        attributes,
+        stock: 0,
+        priceDelta: 0,
+        isActive: true
+      };
+    });
+
+    onChange({ ...value, variants: nextVariants });
   };
 
   return (
@@ -91,10 +129,55 @@ function ProductForm({ value, categories, onChange, onSubmit, submitting, submit
 
       <p className="text-sm text-[#ef9f27]">Discount: {discount}%</p>
 
-      <div>
-        <label className="mb-1 block text-sm text-zinc-300">Stock</label>
-        <input type="number" min="0" value={value.stock} onChange={(e) => onChange({ ...value, stock: e.target.value })} className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-100" />
-      </div>
+      <label className="flex items-center gap-2 text-sm text-zinc-300">
+        <input type="checkbox" checked={Boolean(value.hasVariants)} onChange={(e) => onChange({ ...value, hasVariants: e.target.checked })} />
+        This product has variants
+      </label>
+
+      {!value.hasVariants ? (
+        <div>
+          <label className="mb-1 block text-sm text-zinc-300">Stock</label>
+          <input type="number" min="0" value={value.stock} onChange={(e) => onChange({ ...value, stock: e.target.value })} className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-100" />
+        </div>
+      ) : (
+        <div className="space-y-3 rounded-lg border border-zinc-800 bg-zinc-900/30 p-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-zinc-200">Attribute Builder</p>
+            <button type="button" onClick={() => onChange({ ...value, attributeOptions: [...value.attributeOptions, { name: "", values: "" }] })} className="text-xs text-[#ef9f27]">Add attribute</button>
+          </div>
+          {value.attributeOptions.map((row, index) => (
+            <div key={`${index}-${row.name}`} className="grid gap-2 md:grid-cols-[1fr,2fr,auto]">
+              <input value={row.name} onChange={(e) => updateAttr(index, "name", e.target.value)} placeholder="Attribute name (e.g. Color)" className="rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm" />
+              <input value={row.values} onChange={(e) => updateAttr(index, "values", e.target.value)} placeholder="Values comma-separated (e.g. Red, Blue)" className="rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm" />
+              <button type="button" onClick={() => onChange({ ...value, attributeOptions: value.attributeOptions.filter((_, i) => i !== index) })} className="rounded bg-zinc-800 px-2 py-1 text-xs">Remove</button>
+            </div>
+          ))}
+          <button type="button" onClick={generateCombinations} className="rounded bg-[#ef9f27] px-3 py-2 text-xs font-semibold text-black">Generate all combinations</button>
+
+          {value.variants.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-xs">
+                <thead>
+                  <tr className="text-left text-zinc-400">
+                    <th className="py-2">Combination</th><th>SKU</th><th>Stock</th><th>Price Delta</th><th>Active</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {value.variants.map((variant, index) => (
+                    <tr key={`${index}-${JSON.stringify(variant.attributes)}`} className="border-t border-zinc-800">
+                      <td className="py-2">{Object.entries(variant.attributes || {}).map(([k, v]) => `${k}: ${v}`).join(" · ")}</td>
+                      <td><input value={variant.sku || ""} onChange={(e) => onChange({ ...value, variants: value.variants.map((v, i) => (i === index ? { ...v, sku: e.target.value.toUpperCase() } : v)) })} className="w-32 rounded border border-zinc-700 bg-zinc-900 px-2 py-1" /></td>
+                      <td><input type="number" min="0" value={variant.stock} onChange={(e) => onChange({ ...value, variants: value.variants.map((v, i) => (i === index ? { ...v, stock: Number(e.target.value || 0) } : v)) })} className="w-20 rounded border border-zinc-700 bg-zinc-900 px-2 py-1" /></td>
+                      <td><input type="number" value={variant.priceDelta} onChange={(e) => onChange({ ...value, variants: value.variants.map((v, i) => (i === index ? { ...v, priceDelta: Number(e.target.value || 0) } : v)) })} className="w-24 rounded border border-zinc-700 bg-zinc-900 px-2 py-1" /></td>
+                      <td><input type="checkbox" checked={variant.isActive !== false} onChange={(e) => onChange({ ...value, variants: value.variants.map((v, i) => (i === index ? { ...v, isActive: e.target.checked } : v)) })} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
@@ -297,7 +380,18 @@ export default function SellerDashboard() {
     payload.append("mrp", formState.mrp);
     payload.append("price", formState.price);
     payload.append("stock", formState.stock || "0");
+    payload.append("hasVariants", String(Boolean(formState.hasVariants)));
     payload.append("tags", formState.tags || "");
+    if (formState.hasVariants) {
+      const attrOptionsMap = formState.attributeOptions
+        .filter((row) => row.name.trim())
+        .reduce((acc, row) => ({
+          ...acc,
+          [row.name.trim()]: row.values.split(",").map((v) => v.trim()).filter(Boolean)
+        }), {});
+      payload.append("attributeOptions", JSON.stringify(attrOptionsMap));
+      payload.append("variants", JSON.stringify(formState.variants));
+    }
 
     const specsPayload = formState.specs
       .filter((spec) => spec.key && spec.value)
@@ -327,6 +421,17 @@ export default function SellerDashboard() {
       mrp: product.mrp || "",
       price: product.price || "",
       stock: product.stock || "",
+      hasVariants: Boolean(product.hasVariants),
+      attributeOptions: product.attributeOptions
+        ? Object.entries(product.attributeOptions).map(([name, values]) => ({ name, values: Array.isArray(values) ? values.join(", ") : "" }))
+        : [{ name: "", values: "" }],
+      variants: Array.isArray(product.variants) ? product.variants.map((v) => ({
+        sku: v.sku || "",
+        attributes: v.attributes || {},
+        stock: Number(v.stock || 0),
+        priceDelta: Number(v.priceDelta || 0),
+        isActive: v.isActive !== false
+      })) : [],
       tags: Array.isArray(product.tags) ? product.tags.join(", ") : "",
       specs: Object.entries(product.specs || {}).length
         ? Object.entries(product.specs).map(([key, value]) => ({ key, value }))

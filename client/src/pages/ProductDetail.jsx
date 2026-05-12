@@ -11,6 +11,7 @@ import StarRating from "../components/StarRating";
 import ReviewForm from "../components/ReviewForm";
 import ReviewList from "../components/ReviewList";
 import WishlistButton from "../components/WishlistButton";
+import VariantSelector from "../components/VariantSelector";
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -28,18 +29,28 @@ export default function ProductDetail() {
 
   const [activeImage, setActiveImage] = useState(0);
   const [qty, setQty] = useState(1);
+  const [selectedVariant, setSelectedVariant] = useState(null);
   const [pincode, setPincode] = useState("");
   const [deliveryText, setDeliveryText] = useState("");
   const [activeTab, setActiveTab] = useState("description");
 
   const avgRating = Number(product?.averageRating ?? product?.rating ?? 0);
   const reviewCount = Number(product?.reviewCount ?? product?.numReviews ?? 0);
-  const stock = Number(product?.stock || 0);
+  const stock = Number(product?.hasVariants ? (selectedVariant?.stock || 0) : (product?.stock || 0));
   const specsEntries = useMemo(() => Object.entries(product?.specs || {}), [product]);
 
   const handleAddToCart = () => {
     if (!product || stock <= 0) return;
-    dispatch(addToCart({ productId: product._id, quantity: qty, productData: product }));
+    if (product.hasVariants && !selectedVariant) return;
+    const finalPrice = product.hasVariants ? Number(product.price + Number(selectedVariant?.priceDelta || 0)) : Number(product.price);
+    dispatch(addToCart({
+      productId: product._id,
+      quantity: qty,
+      productData: product,
+      variantSku: selectedVariant?.sku || "",
+      variantAttributes: selectedVariant?.attributes || {},
+      priceOverride: finalPrice
+    }));
     notifySuccess("Added to cart");
   };
 
@@ -144,7 +155,7 @@ export default function ProductDetail() {
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <span className="text-3xl font-bold text-zivvo-amber-brand">?{formatPrice(product.price)}</span>
+              <span className="text-3xl font-bold text-zivvo-amber-brand">₹{Number(product.hasVariants ? (product.price + Number(selectedVariant?.priceDelta || 0)) : product.price).toLocaleString("en-IN")}</span>
               {Number(product.mrp) > Number(product.price) && (
                 <>
                   <span className="text-lg text-zivvo-text-soft line-through">?{formatPrice(product.mrp)}</span>
@@ -160,6 +171,15 @@ export default function ProductDetail() {
                 {stock > 0 ? "In Stock" : "Out of Stock"}
               </span>
             </div>
+
+            {product.hasVariants && (
+              <VariantSelector
+                attributeOptions={product.attributeOptions || {}}
+                variants={product.variants || []}
+                onSelect={setSelectedVariant}
+                basePrice={Number(product.price || 0)}
+              />
+            )}
 
             <div className="mt-5 rounded-xl border border-zivvo-dark-raised bg-zivvo-dark-surface p-4">
               <p className="text-sm font-medium text-zivvo-text-muted">Check delivery by pincode</p>
@@ -184,10 +204,10 @@ export default function ProductDetail() {
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <button type="button" onClick={handleAddToCart} className="w-full rounded-lg border border-zivvo-amber-brand py-3 text-sm font-semibold text-zivvo-amber-brand">
+              <button type="button" disabled={product.hasVariants && !selectedVariant} onClick={handleAddToCart} className="w-full rounded-lg border border-zivvo-amber-brand py-3 text-sm font-semibold text-zivvo-amber-brand disabled:opacity-50">
                 Add to Cart
               </button>
-              <button type="button" onClick={handleBuyNow} className="w-full rounded-lg bg-zivvo-amber-brand py-3 text-sm font-semibold text-black">
+              <button type="button" disabled={product.hasVariants && !selectedVariant} onClick={handleBuyNow} className="w-full rounded-lg bg-zivvo-amber-brand py-3 text-sm font-semibold text-black disabled:opacity-50">
                 Buy Now
               </button>
             </div>
