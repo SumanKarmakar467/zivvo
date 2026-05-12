@@ -81,7 +81,7 @@ export default function ProductCard({ product }) {
         <div className="p-3">
           <p className="text-[11px] uppercase tracking-wide text-zivvo-text-soft">{product.brand || "Zivvo"}</p>
           <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold text-zivvo-text-base">{product.name}</h3>
-          <div className="mt-1 text-xs text-zivvo-text-muted">? {Number(product.rating || 0).toFixed(1)} ({product.numReviews || 0})</div>
+          <div className="mt-1 text-xs text-zivvo-text-muted">★ {Number(product.averageRating ?? product.rating ?? 0).toFixed(1)} ({product.reviewCount ?? product.numReviews ?? 0})</div>
           <div className="mt-2 flex items-center gap-2 text-sm">
             <span className="font-bold text-zivvo-text-base">Rs {Number(product.price).toLocaleString()}</span>
             {showDiscount && <span className="text-zivvo-text-soft line-through">Rs {Number(product.mrp).toLocaleString()}</span>}

@@ -29,9 +29,13 @@ export const productApi = createApi({
           : ["Product"]
     }),
     getReviews: b.query({
-      query: ({ product, page = 1, limit = 10, sort = "recent" }) =>
-        `/reviews?product=${product}&page=${page}&limit=${limit}&sort=${sort}`,
+      query: ({ product, page = 1, limit = 10, sort = "most_recent" }) =>
+        `/reviews/product/${product}?page=${page}&limit=${limit}&sort=${sort}`,
       providesTags: (result, error, args) => [{ type: "Review", id: args.product }]
+    }),
+    getReviewEligibility: b.query({
+      query: (productId) => `/reviews/eligibility/${productId}`,
+      providesTags: (result, error, productId) => [{ type: "Review", id: productId }]
     }),
     createReview: b.mutation({
       query: (body) => ({ url: "/reviews", method: "POST", body }),
@@ -39,6 +43,25 @@ export const productApi = createApi({
         { type: "Review", id: args.product },
         { type: "Product", id: args.product }
       ]
+    }),
+    updateReview: b.mutation({
+      query: ({ id, body }) => ({ url: `/reviews/${id}`, method: "PATCH", body }),
+      invalidatesTags: (result) => [
+        { type: "Review", id: result?.product },
+        { type: "Product", id: result?.product }
+      ]
+    }),
+    deleteReview: b.mutation({
+      query: ({ id }) => ({ url: `/reviews/${id}`, method: "DELETE" }),
+      invalidatesTags: ["Review", "Product"]
+    }),
+    markReviewHelpful: b.mutation({
+      query: (id) => ({ url: `/reviews/${id}/helpful`, method: "POST" }),
+      invalidatesTags: (result) => [{ type: "Review", id: result?.product }]
+    }),
+    respondToReview: b.mutation({
+      query: ({ id, text }) => ({ url: `/reviews/${id}/respond`, method: "POST", body: { text } }),
+      invalidatesTags: (result) => [{ type: "Review", id: result?.product }]
     }),
     getFeaturedProducts: b.query({ query: () => "/products/featured", providesTags: ["Product"] }),
     getDeals: b.query({ query: () => "/products/deals", providesTags: ["Product"] }),
@@ -52,7 +75,12 @@ export const {
   useGetProductsQuery,
   useGetProductBySlugQuery,
   useGetReviewsQuery,
+  useGetReviewEligibilityQuery,
   useCreateReviewMutation,
+  useUpdateReviewMutation,
+  useDeleteReviewMutation,
+  useMarkReviewHelpfulMutation,
+  useRespondToReviewMutation,
   useGetFeaturedProductsQuery,
   useGetDealsQuery,
   useCreateProductMutation,

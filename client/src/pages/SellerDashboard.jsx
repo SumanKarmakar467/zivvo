@@ -17,6 +17,7 @@ import {
   useGetSellerStatsQuery,
   useUpdateSellerProductMutation
 } from "../store/api/sellerApi";
+import { useGetReviewsQuery, useRespondToReviewMutation } from "../services/productApi";
 import { useGetCategoriesQuery } from "../store/api/productsApi";
 import useAuth from "../hooks/useAuth";
 
@@ -138,6 +139,73 @@ function ProductForm({ value, categories, onChange, onSubmit, submitting, submit
   );
 }
 
+function SellerReviewResponder({ order, onClose }) {
+  const [selectedProduct, setSelectedProduct] = useState(order?.items?.[0]?.product || "");
+  const [responseText, setResponseText] = useState({});
+  const { data, isLoading } = useGetReviewsQuery(
+    { product: selectedProduct, page: 1, limit: 50, sort: "most_recent" },
+    { skip: !selectedProduct }
+  );
+  const [respondToReview, { isLoading: responding }] = useRespondToReviewMutation();
+
+  const reviews = (data?.reviews || []).filter((review) => String(review.order) === String(order?._id));
+
+  const submitResponse = async (reviewId) => {
+    const text = (responseText[reviewId] || "").trim();
+    if (!text) return;
+    await respondToReview({ id: reviewId, text }).unwrap();
+    setResponseText((prev) => ({ ...prev, [reviewId]: "" }));
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-3xl rounded-xl border border-zinc-700 bg-[#1f1a14] p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Respond to Reviews (Order #{String(order._id).slice(-6)})</h3>
+          <button type="button" onClick={onClose} className="rounded border border-zinc-700 px-2 py-1 text-sm">Close</button>
+        </div>
+
+        <select value={selectedProduct} onChange={(e) => setSelectedProduct(e.target.value)} className="mb-4 w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm">
+          {(order?.items || []).map((item) => (
+            <option key={`${item.product}-${item.name}`} value={item.product}>{item.name}</option>
+          ))}
+        </select>
+
+        {isLoading ? (
+          <p className="text-sm text-zinc-400">Loading reviews...</p>
+        ) : reviews.length === 0 ? (
+          <p className="text-sm text-zinc-400">No reviews yet for this order item.</p>
+        ) : (
+          <div className="max-h-[60vh] space-y-3 overflow-y-auto">
+            {reviews.map((review) => (
+              <div key={review._id} className="rounded-lg border border-zinc-800 bg-zinc-900 p-3">
+                <p className="text-sm font-semibold">{review.buyer?.name || "Buyer"} • {review.rating}★</p>
+                <p className="mt-1 text-sm text-zinc-300">{review.body}</p>
+                {review.sellerResponse?.text && <p className="mt-2 rounded bg-zinc-800 p-2 text-xs text-zinc-300">Existing response: {review.sellerResponse.text}</p>}
+                <textarea
+                  value={responseText[review._id] || ""}
+                  onChange={(e) => setResponseText((prev) => ({ ...prev, [review._id]: e.target.value }))}
+                  placeholder="Write your response"
+                  rows={3}
+                  className="mt-2 w-full rounded-md border border-zinc-700 bg-[#1f1a14] px-3 py-2 text-sm"
+                />
+                <button
+                  type="button"
+                  disabled={responding}
+                  onClick={() => submitResponse(review._id)}
+                  className="mt-2 rounded-md bg-[#ef9f27] px-3 py-1 text-sm font-semibold text-black disabled:opacity-60"
+                >
+                  {responding ? "Submitting..." : "Submit response"}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function SellerDashboard() {
   const { user, isAuthenticated } = useAuth();
   const [active, setActive] = useState("overview");
@@ -147,6 +215,7 @@ export default function SellerDashboard() {
   const [statusFilter, setStatusFilter] = useState("");
   const [formState, setFormState] = useState(emptyForm);
   const [editTarget, setEditTarget] = useState(null);
+  const [responseOrder, setResponseOrder] = useState(null);
 
   const { data: stats, isLoading: statsLoading } = useGetSellerStatsQuery(undefined, { skip: !isAuthenticated });
   const { data: categoriesData = [] } = useGetCategoriesQuery();
@@ -401,6 +470,7 @@ export default function SellerDashboard() {
                       <th>Total</th>
                       <th>Status</th>
                       <th>Date</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -412,6 +482,11 @@ export default function SellerDashboard() {
                         <td>Rs {Number(order.sellerTotal || 0).toLocaleString()}</td>
                         <td><span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs">{order.orderStatus}</span></td>
                         <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                        <td>
+                          <button type="button" onClick={() => setResponseOrder(order)} className="rounded bg-zinc-800 px-2 py-1 text-xs">
+                            Respond to review
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -444,6 +519,7 @@ export default function SellerDashboard() {
           {(statsLoading || productsLoading || ordersLoading) && <p className="text-sm text-zinc-400">Loading seller data...</p>}
         </section>
       </div>
+      {responseOrder && <SellerReviewResponder order={responseOrder} onClose={() => setResponseOrder(null)} />}
     </main>
   );
 }
