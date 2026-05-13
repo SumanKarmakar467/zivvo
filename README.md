@@ -5,6 +5,7 @@ React 18 · Vite · Redux Toolkit · Node.js · Express · MongoDB · Mongoose
 Tailwind CSS · Framer Motion · Swiper.js · Firebase Auth · Razorpay · Cloudinary
 
 ## Quick Start
+npm run dev
 
 ### Prerequisites
 Node.js 18+ · MongoDB (local/Atlas) · Cloudinary · Razorpay test account
