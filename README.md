@@ -40,4 +40,3 @@ cd ../client && npm run dev
 - Frontend: Netlify (`npm run build`, publish `dist`)
 - Backend: Render (`node server.js`)
 
-## This is a Web apllication like flipkart & amzon
