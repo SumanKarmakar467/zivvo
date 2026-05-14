@@ -1,4 +1,5 @@
 import StarRating from "./StarRating";
+import { avatarImageFallback, productImageFallback } from "../utils/imageFallbacks";
 
 export default function ReviewCard({ review, onHelpful }) {
   return (
@@ -6,8 +7,9 @@ export default function ReviewCard({ review, onHelpful }) {
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <img
-            src={review?.buyer?.avatar || "https://via.placeholder.com/80?text=U"}
+            src={review?.buyer?.avatar || avatarImageFallback}
             alt={review?.buyer?.name || "User"}
+            onError={(e) => { e.currentTarget.src = avatarImageFallback; }}
             className="h-10 w-10 rounded-full object-cover"
           />
           <div>
@@ -27,7 +29,7 @@ export default function ReviewCard({ review, onHelpful }) {
       {Array.isArray(review.images) && review.images.length > 0 && (
         <div className="mt-3 grid grid-cols-3 gap-2">
           {review.images.slice(0, 3).map((image) => (
-            <img key={image} src={image} alt="review" className="h-20 w-full rounded-md object-cover" />
+            <img key={image} src={image} alt="review" onError={(e) => { e.currentTarget.src = productImageFallback; }} className="h-20 w-full rounded-md object-cover" />
           ))}
         </div>
       )}

@@ -28,6 +28,12 @@ const sanitizeUser = (user) => ({
   avatar: user.avatar
 });
 
+const createHttpError = (statusCode, message) => {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+};
+
 const ensureFirebaseAdmin = () => {
   if (admin.apps.length) return;
 
@@ -39,7 +45,13 @@ const ensureFirebaseAdmin = () => {
       .replace(/\\n/g, "\n");
 
   if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-    const parsed = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+    let parsed;
+    try {
+      parsed = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+    } catch (error) {
+      throw createHttpError(503, "Firebase Admin service account JSON is invalid");
+    }
+
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId: parsed.project_id,
@@ -61,7 +73,7 @@ const ensureFirebaseAdmin = () => {
     return;
   }
 
-  throw new Error("Firebase Admin is not configured. Set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY in server/.env");
+  throw createHttpError(503, "Google login is not configured on the server. Set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY in server/.env");
 };
 
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -154,7 +166,7 @@ export const googleLogin = asyncHandler(async (req, res) => {
   try {
     ensureFirebaseAdmin();
   } catch (error) {
-    res.status(500);
+    res.status(error.statusCode || 503);
     throw new Error(error.message);
   }
 
@@ -172,17 +184,38 @@ export const googleLogin = asyncHandler(async (req, res) => {
     throw new Error("Google account email not found");
   }
 
-  let user = await User.findOne({ $or: [{ email: email.toLowerCase() }, { googleId: uid }] }).select("+refreshTokens");
+  const lowerEmail = String(email).toLowerCase();
+  const googleUserFields = {
+    googleId: uid,
+    provider: "google",
+    isVerified: true
+  };
 
-  if (!user) {
-    user = await User.create({
-      name: name || email.split("@")[0],
-      email: email.toLowerCase(),
-      avatar: picture || "",
-      googleId: uid,
-      provider: "google",
-      isVerified: true
-    });
+  if (picture) googleUserFields.avatar = picture;
+
+  let user;
+  try {
+    user = await User.findOneAndUpdate(
+      { $or: [{ email: lowerEmail }, { googleId: uid }] },
+      {
+        $set: googleUserFields,
+        $setOnInsert: {
+          name: name || lowerEmail.split("@")[0],
+          email: lowerEmail
+        }
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    ).select("+refreshTokens");
+  } catch (error) {
+    if (error?.code === 11000) {
+      user = await User.findOne({ email: lowerEmail }).select("+refreshTokens");
+      if (user) {
+        Object.assign(user, googleUserFields);
+      }
+    } else {
+      res.status(500);
+      throw new Error("Could not complete Google login. Please try again.");
+    }
   }
 
   if (!user.isActive) {

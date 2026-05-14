@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { thumbnailImageFallback } from "../../utils/imageFallbacks";
 
 export default function LowStockAlert({ products }) {
   const [open, setOpen] = useState(false);
@@ -16,7 +17,7 @@ export default function LowStockAlert({ products }) {
         <div className="mt-3 space-y-2">
           {products.map((product) => (
             <div key={product._id} className="flex items-center gap-3 rounded-lg bg-zinc-900 p-2">
-              <img src={product.images?.[0] || "https://via.placeholder.com/40"} alt={product.name} className="h-10 w-10 rounded object-cover" />
+              <img src={product.images?.[0] || thumbnailImageFallback} alt={product.name} onError={(e) => { e.currentTarget.src = thumbnailImageFallback; }} className="h-10 w-10 rounded object-cover" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm">{product.name}</p>
                 <p className={`text-xs font-bold ${product.stock <= 2 ? "text-red-400" : "text-zinc-300"}`}>Stock: {product.stock}</p>

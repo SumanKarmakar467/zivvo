@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import WishlistButton from "./WishlistButton";
 import VerifiedBadge from "./VerifiedBadge";
+import { productImageFallback } from "../utils/imageFallbacks";
 
 const categoryFallbacks = {
   electronics: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=900&q=80&auto=format&fit=crop",
@@ -14,7 +15,7 @@ const categoryFallbacks = {
   toys: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=900&q=80&auto=format&fit=crop"
 };
 
-const genericFallback = "https://via.placeholder.com/600x600?text=Zivvo+Product";
+const genericFallback = productImageFallback;
 
 export default function ProductCard({ product }) {
   const hasSecondaryImage = Boolean(product.images?.[1]);

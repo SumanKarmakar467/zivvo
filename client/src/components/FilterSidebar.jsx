@@ -7,7 +7,7 @@ const sortOptions = [
   { label: "Most Popular", value: "popular" }
 ];
 
-export default function FilterSidebar({ searchParams, facets, onParamChange, onClear }) {
+export default function FilterSidebar({ searchParams = new URLSearchParams(), facets = {}, onParamChange, onClear }) {
   const minRating = Number(searchParams.get("minRating") || 0);
 
   const selectedCategory = searchParams.get("category") || "";

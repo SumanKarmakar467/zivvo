@@ -6,6 +6,15 @@ import { auth, googleProvider, hasFirebaseConfig } from "../config/firebase";
 import { setCredentials } from "../store/slices/authSlice";
 import { useGoogleLoginMutation, useLoginMutation } from "../services/authApi";
 
+const getAuthErrorMessage = (err, fallback) => {
+  if (err?.data?.message) return err.data.message;
+  if (err?.error) return err.error;
+  if (err?.code === "auth/popup-closed-by-user") return "Google sign-in was cancelled";
+  if (err?.code === "auth/popup-blocked") return "Allow popups for this site to continue with Google";
+  if (err?.message) return err.message;
+  return fallback;
+};
+
 export default function Login() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -24,7 +33,7 @@ export default function Login() {
       dispatch(setCredentials(data));
       navigate("/");
     } catch (err) {
-      setError(err?.data?.message || "Login failed");
+      setError(getAuthErrorMessage(err, "Login failed"));
     }
   };
 
@@ -41,7 +50,7 @@ export default function Login() {
       dispatch(setCredentials(data));
       navigate("/");
     } catch (err) {
-      setError(err?.data?.message || err?.message || "Google sign-in failed");
+      setError(getAuthErrorMessage(err, "Google sign-in failed"));
     }
   };
 

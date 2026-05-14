@@ -6,7 +6,7 @@ import ProductCard from "../components/ProductCard";
 import ProductCardSkeleton from "../components/ProductCardSkeleton";
 import { useGetCategoriesQuery, useGetProductsByCategoryQuery } from "../store/api/productsApi";
 
-const FILTER_KEYS = ["brand", "minPrice", "maxPrice", "rating", "sort", "page", "limit"];
+const FILTER_KEYS = ["brand", "minPrice", "maxPrice", "minRating", "sort", "page", "limit"];
 
 export default function CategoryPage() {
   const { slug } = useParams();
@@ -34,6 +34,18 @@ export default function CategoryPage() {
   const total = data?.total || 0;
   const pages = data?.pages || 0;
   const brands = data?.brands || [];
+  const facets = useMemo(() => ({
+    categories,
+    brands
+  }), [categories, brands]);
+
+  const setParam = (key, value) => {
+    const params = new URLSearchParams(searchParams);
+    if (value === undefined || value === "" || value === null) params.delete(key);
+    else params.set(key, String(value));
+    if (key !== "page") params.set("page", "1");
+    navigate(`/category/${slug}?${params.toString()}`, { replace: true });
+  };
 
   const updateParams = (next) => {
     const params = new URLSearchParams(searchParams);
@@ -43,6 +55,10 @@ export default function CategoryPage() {
     });
     if (!next.page) params.set("page", "1");
     navigate(`/category/${slug}?${params.toString()}`, { replace: true });
+  };
+
+  const clearFilters = () => {
+    navigate(`/category/${slug}?sort=newest`, { replace: true });
   };
 
   return (
@@ -59,7 +75,7 @@ export default function CategoryPage() {
 
         <div className="grid gap-5 md:grid-cols-[16rem_1fr]">
           <div className="hidden md:block">
-            <FilterSidebar filters={filters} onChange={updateParams} brands={brands} />
+            <FilterSidebar searchParams={searchParams} facets={facets} onParamChange={setParam} onClear={clearFilters} />
           </div>
 
           <section>
