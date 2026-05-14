@@ -1,5 +1,19 @@
 const svgDataUri = (svg) => `data:image/svg+xml,${encodeURIComponent(svg)}`;
 
+export const isRemotePlaceholderImage = (src) => {
+  if (!src || typeof src !== "string") return true;
+  return /\/\/(via\.placeholder\.com|placehold\.co|picsum\.photos)\b/i.test(src);
+};
+
+export const getUsableImage = (src, fallback) => {
+  return isRemotePlaceholderImage(src) ? fallback : src;
+};
+
+export const getUsableImages = (images, fallback) => {
+  const usable = (Array.isArray(images) ? images : []).filter((src) => !isRemotePlaceholderImage(src));
+  return usable.length ? usable : [fallback];
+};
+
 export const productImageFallback = svgDataUri(`
 <svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
   <rect width="600" height="600" fill="#1f1a14"/>

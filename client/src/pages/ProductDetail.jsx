@@ -15,6 +15,7 @@ import RecommendationsSection from "../components/RecommendationsSection";
 import RecentlyViewedStrip from "../components/RecentlyViewedStrip";
 import { useRecentlyViewed } from "../hooks/useRecentlyViewed";
 import VerifiedBadge from "../components/VerifiedBadge";
+import { getUsableImages, productImageFallback } from "../utils/imageFallbacks";
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -96,7 +97,7 @@ export default function ProductDetail() {
     );
   }
 
-  const images = product.images?.length ? product.images : ["https://picsum.photos/600/750"];
+  const images = getUsableImages(product.images, productImageFallback);
 
   return (
     <PageTransition>

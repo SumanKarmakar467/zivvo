@@ -6,7 +6,7 @@ import ProductCard from "../components/ProductCard";
 import ProductCardSkeleton from "../components/ProductCardSkeleton";
 import { useGetProductsQuery } from "../store/api/productsApi";
 
-const FILTER_KEYS = ["category", "brand", "minPrice", "maxPrice", "rating", "sort", "page", "limit"];
+const FILTER_KEYS = ["category", "brand", "minPrice", "maxPrice", "minRating", "sort", "page", "limit"];
 
 export default function SearchResults() {
   const navigate = useNavigate();
@@ -31,6 +31,15 @@ export default function SearchResults() {
   const total = data?.total || 0;
   const pages = data?.pages || 0;
   const brands = data?.brands || [];
+  const facets = useMemo(() => ({ categories: [], brands }), [brands]);
+
+  const setParam = (key, value) => {
+    const params = new URLSearchParams(searchParams);
+    if (value === undefined || value === "" || value === null) params.delete(key);
+    else params.set(key, String(value));
+    if (key !== "page") params.set("page", "1");
+    navigate(`/search?${params.toString()}`, { replace: true });
+  };
 
   const updateParams = (next) => {
     const params = new URLSearchParams(searchParams);
@@ -45,11 +54,18 @@ export default function SearchResults() {
     navigate(`/search?${params.toString()}`, { replace: true });
   };
 
+  const clearFilters = () => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    params.set("sort", "newest");
+    navigate(`/search?${params.toString()}`, { replace: true });
+  };
+
   return (
     <main className="min-h-screen bg-zivvo-dark-bg px-4 py-6 text-zivvo-text-base md:px-6">
       <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-[16rem_1fr]">
         <div className="hidden md:block">
-          <FilterSidebar filters={filters} onChange={updateParams} brands={brands} />
+          <FilterSidebar searchParams={searchParams} facets={facets} onParamChange={setParam} onClear={clearFilters} />
         </div>
 
         <section>

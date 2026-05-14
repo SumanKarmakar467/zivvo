@@ -19,6 +19,36 @@ const getSortOption = (sort) => {
   }
 };
 
+const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const getSearchTerms = (value) => {
+  const rawSearch = String(value || "").trim();
+  if (!rawSearch) return [];
+
+  const singularized = rawSearch
+    .split(/\s+/)
+    .map((word) => (word.length > 3 && word.endsWith("s") ? word.slice(0, -1) : word))
+    .join(" ");
+
+  const terms = new Set([rawSearch]);
+  if (singularized !== rawSearch) terms.add(singularized);
+
+  const normalized = rawSearch.toLowerCase();
+  const footwearTerms = ["shoe", "shoes", "sneaker", "sneakers", "footwear", "sandals", "boots"];
+  if (footwearTerms.some((term) => normalized.includes(term))) {
+    ["fashion", "shirt", "jeans", "apparel"].forEach((term) => terms.add(term));
+  }
+
+  return Array.from(terms);
+};
+
+const buildSearchConditions = (value) => {
+  return getSearchTerms(value).flatMap((term) => {
+    const regex = new RegExp(escapeRegex(term), "i");
+    return [{ name: regex }, { description: regex }, { brand: regex }, { tags: regex }];
+  });
+};
+
 const buildCommonFilters = async (query, forceCategoryId) => {
   const filter = { isActive: true };
 
@@ -51,8 +81,9 @@ const buildCommonFilters = async (query, forceCategoryId) => {
     if (query.maxPrice) filter.price.$lte = Number(query.maxPrice);
   }
 
-  if (query.rating) {
-    filter.rating = { $gte: Number(query.rating) };
+  const minRating = query.minRating || query.rating;
+  if (minRating) {
+    filter.rating = { $gte: Number(minRating) };
   }
 
   if (query.featured === "true") {
@@ -60,20 +91,7 @@ const buildCommonFilters = async (query, forceCategoryId) => {
   }
 
   if (query.search) {
-    const rawSearch = String(query.search).trim();
-    const singularized = rawSearch
-      .split(/\s+/)
-      .map((word) => (word.length > 3 && word.endsWith("s") ? word.slice(0, -1) : word))
-      .join(" ");
-
-    const primaryRegex = new RegExp(rawSearch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
-    const secondaryRegex = singularized !== rawSearch
-      ? new RegExp(singularized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i")
-      : null;
-
-    filter.$or = secondaryRegex
-      ? [{ name: primaryRegex }, { description: primaryRegex }, { name: secondaryRegex }, { description: secondaryRegex }]
-      : [{ name: primaryRegex }, { description: primaryRegex }];
+    filter.$or = buildSearchConditions(query.search);
   }
 
   return { filter, categoryMissing: false };
@@ -191,7 +209,7 @@ export const searchProducts = asyncHandler(async (req, res) => {
   const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 50);
 
   const filter = { isActive: true };
-  if (q) filter.$text = { $search: q };
+  if (q) filter.$or = buildSearchConditions(q);
   if (category) {
     const categoryDoc = await Category.findOne({ slug: category, isActive: true }).lean();
     if (!categoryDoc) {

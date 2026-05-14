@@ -13,7 +13,17 @@ const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + mi
 const randomFloat = (min, max) => Number((Math.random() * (max - min) + min).toFixed(1));
 const oneYearFromNow = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
 
-const makeImage = (name) => `https://via.placeholder.com/500x500?text=${encodeURIComponent(name)}`;
+const makeImage = (name) => {
+  const label = String(name).replace(/[<>&"']/g, "");
+  return `data:image/svg+xml,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500">
+  <rect width="500" height="500" fill="#1f1a14"/>
+  <rect x="70" y="110" width="360" height="250" rx="28" fill="#2b241b" stroke="#ef9f27" stroke-width="8"/>
+  <text x="250" y="245" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#efe0d3">Zivvo</text>
+  <text x="250" y="295" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#ef9f27">${label}</text>
+</svg>
+`)}`;
+};
 
 const productSeed = [
   { name: "boAt Rockerz 450 Headphones", category: "Electronics", brand: "boAt", price: 1599, mrp: 2999 },
@@ -27,6 +37,9 @@ const productSeed = [
   { name: "Allen Solly Slim Fit Shirt", category: "Fashion", brand: "Allen Solly", price: 1299, mrp: 2199 },
   { name: "Peter England Formal Shirt", category: "Fashion", brand: "Peter England", price: 1399, mrp: 2499 },
   { name: "Levi's 511 Blue Jeans", category: "Fashion", brand: "Levi's", price: 2499, mrp: 3999 },
+  { name: "Campus Running Shoes", category: "Fashion", brand: "Campus", price: 1799, mrp: 2999 },
+  { name: "Bata Comfort Sandals", category: "Fashion", brand: "Bata", price: 899, mrp: 1499 },
+  { name: "Puma Smash Sneakers", category: "Fashion", brand: "Puma", price: 2999, mrp: 4999 },
   { name: "Lakme Matte Lipstick", category: "Beauty", brand: "Lakme", price: 449, mrp: 699 },
   { name: "Mamaearth Ubtan Face Wash", category: "Beauty", brand: "Mamaearth", price: 269, mrp: 399 },
   { name: "Prestige 5L Pressure Cooker", category: "Home & Kitchen", brand: "Prestige", price: 2099, mrp: 3199 },
@@ -207,4 +220,3 @@ const runSeed = async () => {
 };
 
 runSeed();
-

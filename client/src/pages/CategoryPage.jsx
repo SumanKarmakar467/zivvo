@@ -38,8 +38,19 @@ export default function CategoryPage() {
     categories,
     brands
   }), [categories, brands]);
+  const sidebarSearchParams = useMemo(() => {
+    const params = new URLSearchParams(searchParams);
+    if (slug) params.set("category", slug);
+    return params;
+  }, [searchParams, slug]);
 
   const setParam = (key, value) => {
+    if (key === "category") {
+      if (value) navigate(`/category/${value}`, { replace: true });
+      else navigate("/search?sort=newest", { replace: true });
+      return;
+    }
+
     const params = new URLSearchParams(searchParams);
     if (value === undefined || value === "" || value === null) params.delete(key);
     else params.set(key, String(value));
@@ -75,7 +86,7 @@ export default function CategoryPage() {
 
         <div className="grid gap-5 md:grid-cols-[16rem_1fr]">
           <div className="hidden md:block">
-            <FilterSidebar searchParams={searchParams} facets={facets} onParamChange={setParam} onClear={clearFilters} />
+            <FilterSidebar searchParams={sidebarSearchParams} facets={facets} onParamChange={setParam} onClear={clearFilters} />
           </div>
 
           <section>

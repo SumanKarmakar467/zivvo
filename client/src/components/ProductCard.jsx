@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import WishlistButton from "./WishlistButton";
 import VerifiedBadge from "./VerifiedBadge";
-import { productImageFallback } from "../utils/imageFallbacks";
+import { getUsableImage, productImageFallback } from "../utils/imageFallbacks";
 
 const categoryFallbacks = {
   electronics: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=900&q=80&auto=format&fit=crop",
@@ -18,12 +18,12 @@ const categoryFallbacks = {
 const genericFallback = productImageFallback;
 
 export default function ProductCard({ product }) {
-  const hasSecondaryImage = Boolean(product.images?.[1]);
   const showDiscount = Number(product.mrp) > Number(product.price);
   const categorySlug = product?.category?.slug || product?.categorySlug || "";
   const fallbackImage = categoryFallbacks[categorySlug] || genericFallback;
-  const primaryImage = product?.images?.[0] || fallbackImage;
-  const secondaryImage = product?.images?.[1] || fallbackImage;
+  const primaryImage = getUsableImage(product?.images?.[0], fallbackImage);
+  const secondaryImage = getUsableImage(product?.images?.[1], fallbackImage);
+  const hasSecondaryImage = secondaryImage !== fallbackImage;
 
   return (
     <motion.article
