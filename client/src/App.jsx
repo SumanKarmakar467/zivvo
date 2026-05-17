@@ -72,12 +72,11 @@ export default function App() {
   const location = useLocation();
   const dispatch = useDispatch();
   const { isAuthenticated, accessToken } = useSelector((state) => state.auth);
-  const darkMode = useSelector((state) => state.ui.darkMode);
+  const { darkMode } = useSelector((state) => state.ui);
   useNotificationSocket();
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("zivvo-theme", darkMode ? "dark" : "light");
   }, [darkMode]);
 
   useEffect(() => {

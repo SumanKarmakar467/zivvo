@@ -1,10 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit";
 import auth from "./slices/authSlice";
 import cart from "./slices/cartSlice";
-import ui from "./slices/uiSlice";
+import uiReducer from "./uiSlice";
+import wishlistReducer from "./wishlistSlice";
 import product from "../features/productSlice";
 import order from "../features/orderSlice";
-import wishlist from "../features/wishlist/wishlistSlice";
 import search from "../features/search/searchSlice";
 import orders from "../features/orders/ordersSlice";
 import analytics from "../features/analytics/analyticsSlice";
@@ -23,10 +23,10 @@ export const store = configureStore({
   reducer: {
     auth,
     cart,
-    ui,
+    ui: uiReducer,
     product,
     order,
-    wishlist,
+    wishlist: wishlistReducer,
     search,
     orders,
     analytics,

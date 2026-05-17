@@ -1,36 +1,50 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
-export default function CategoryRow({ categories = [] }) {
-  const [active, setActive] = useState(categories[0]?.slug || "");
+const defaultCategories = [
+  { icon: "📱", label: "Electronics" },
+  { icon: "👕", label: "Fashion" },
+  { icon: "🛋️", label: "Home & Living" },
+  { icon: "💄", label: "Beauty" },
+  { icon: "📚", label: "Books" },
+  { icon: "🏋️", label: "Sports" },
+  { icon: "🧸", label: "Toys & Kids" },
+  { icon: "🍳", label: "Kitchen" },
+  { icon: "🌿", label: "Garden" }
+];
+
+export default function CategoryRow({ categories = defaultCategories }) {
+  const [active, setActive] = useState(categories[0]?.label || "");
 
   return (
-    <div className="scrollbar-none flex gap-3 overflow-x-auto pb-2">
-      {categories.map((category) => {
-        const isActive = active === category.slug;
+    <section>
+      <h2 className="font-display text-2xl font-black text-brand-ink dark:text-white">Shop by Category</h2>
+      <div className="scrollbar-none mt-5 flex gap-3 overflow-x-auto pb-2">
+        {categories.map((category) => {
+          const isActive = active === category.label;
 
-        return (
-          <motion.div key={category.slug} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} className="relative shrink-0">
-            {isActive && (
-              <motion.span
-                layoutId="activeCat"
-                className="absolute inset-0 rounded-2xl border-2 border-accent"
-                transition={{ type: "spring", stiffness: 420, damping: 32 }}
-              />
-            )}
-            <Link
-              to={`/category/${category.slug}`}
-              onClick={() => setActive(category.slug)}
-              className="group relative z-10 flex items-center gap-2 overflow-hidden rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm font-bold text-ink transition dark:border-white/10 dark:bg-dark-card dark:text-zivvo-text-base"
+          return (
+            <motion.button
+              key={category.label}
+              type="button"
+              onClick={() => setActive(category.label)}
+              whileHover={{ scale: 1.05, y: -3 }}
+              whileTap={{ scale: 0.97 }}
+              className={`relative min-w-[110px] cursor-pointer rounded-2xl border-2 p-3 text-center transition ${
+                isActive
+                  ? "border-accent bg-accent text-white"
+                  : "border-transparent bg-brand-muted text-brand-ink dark:bg-night-muted dark:text-white"
+              }`}
             >
-              <span className="absolute inset-y-0 left-0 w-0 bg-accent transition-all duration-300 group-hover:w-full" />
-              <span className="relative text-lg">{category.icon}</span>
-              <span className="relative whitespace-nowrap transition group-hover:text-white">{category.name}</span>
-            </Link>
-          </motion.div>
-        );
-      })}
-    </div>
+              {isActive && <motion.span layoutId="activeCatBorder" className="absolute inset-0 rounded-2xl border-2 border-accent" />}
+              <span className={`relative mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl text-2xl ${isActive ? "bg-white/20" : "bg-brand-card dark:bg-night-card"}`}>
+                {category.icon}
+              </span>
+              <span className="relative block text-xs font-bold">{category.label}</span>
+            </motion.button>
+          );
+        })}
+      </div>
+    </section>
   );
 }

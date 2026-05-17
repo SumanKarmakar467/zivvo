@@ -17,17 +17,22 @@ body,
   min-height: 100%;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
-  background-color: #f8f5f0;
+  background: #f8f5f0;
   color: #1a1208;
+  transition: background 0.3s, color 0.3s;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
 .dark body {
-  background-color: #0e0a06;
-  color: #efe0d3;
+  background: #0e0a06;
+  color: #f5ede0;
 }
 
 * {
@@ -35,12 +40,8 @@ body {
 }
 
 ::selection {
-  background: rgba(239, 159, 39, 0.35);
-  color: #1a1208;
-}
-
-.dark ::selection {
-  color: #efe0d3;
+  background: rgba(232, 115, 10, 0.25);
+  color: inherit;
 }
 
 .scrollbar-none {
@@ -50,6 +51,11 @@ body {
 
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .skeleton-shimmer {

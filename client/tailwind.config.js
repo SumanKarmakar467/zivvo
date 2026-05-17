@@ -5,14 +5,29 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', "system-ui", "sans-serif"],
-        display: ['"Syne"', "ui-sans-serif", "system-ui", "sans-serif"]
+        sans: ['"Plus Jakarta Sans"', "sans-serif"],
+        display: ['"Syne"', "sans-serif"]
       },
       colors: {
         accent: {
           DEFAULT: "#e8730a",
           dark: "#c45c00",
-          light: "#fff3e8"
+          light: "#fff3e8",
+          muted: "rgba(232,115,10,0.12)"
+        },
+        brand: {
+          bg: "#f8f5f0",
+          card: "#ffffff",
+          muted: "#f0ebe3",
+          ink: "#1a1208",
+          inkMid: "#5c4d3a",
+          inkFaint: "#9c8a74"
+        },
+        night: {
+          bg: "#0e0a06",
+          card: "#1c1408",
+          muted: "#241a0f",
+          border: "rgba(255,255,255,0.08)"
         },
         bg: {
           warm: "#f8f5f0",
@@ -33,6 +48,8 @@ export default {
           DEFAULT: "#2d6a4f",
           light: "#52b788"
         },
+        success: "#2d6a4f",
+        successLight: "#52b788",
         zivvo: {
           surface: "#1f1a14",
           dark: {
