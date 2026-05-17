@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { selectIsWishlisted, toggleWishlist } from "../store/wishlistSlice";
 
 const fallbackImage = "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80";
-const formatRupees = (value) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
+const formatRupees = (value) => `\u20B9${Number(value || 0).toLocaleString("en-IN")}`;
 
 export default function ProductCard({ product }) {
   const dispatch = useDispatch();
@@ -18,8 +18,8 @@ export default function ProductCard({ product }) {
 
   return (
     <motion.div
-      className="group relative overflow-hidden rounded-2xl border border-black/8 bg-brand-card dark:border-night-border dark:bg-night-card"
-      whileHover={{ y: -6, boxShadow: "0 16px 40px rgba(0,0,0,0.10)" }}
+      className="group relative overflow-hidden rounded-2xl border border-black/8 bg-brand-card shadow-sm dark:border-night-border dark:bg-night-card"
+      whileHover={{ y: -6, boxShadow: "0 16px 40px rgba(0,0,0,0.14)" }}
       transition={{ duration: 0.22 }}
     >
       <Link to={product.slug ? `/product/${product.slug}` : "/search"} className="block">
@@ -30,7 +30,7 @@ export default function ProductCard({ product }) {
             loading="lazy"
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
           />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/25 opacity-0 transition group-hover:opacity-100">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition group-hover:opacity-100">
             <span className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-brand-ink shadow-lg">Quick View</span>
           </div>
 
@@ -44,14 +44,14 @@ export default function ProductCard({ product }) {
         <div className="p-4 pb-16">
           <div className="mb-2 flex items-center justify-between gap-2">
             <span className="rounded-full bg-accent-light px-2.5 py-1 text-xs font-bold text-accent">{category}</span>
-            <span className="text-xs text-amber-400">★★★★★</span>
+            <span className="text-xs text-amber-400">{"\u2605\u2605\u2605\u2605\u2605"}</span>
           </div>
           <h3 className="line-clamp-2 text-[15px] font-semibold text-brand-ink dark:text-white">{product.name}</h3>
           <div className="mt-2 flex items-center justify-between gap-2">
             <p className="text-lg font-bold text-accent">{formatRupees(price)}</p>
-            <p className="text-xs font-semibold text-brand-inkFaint">★ {rating}</p>
+            <p className="text-xs font-semibold text-brand-inkFaint dark:text-zivvo-text-soft">{"\u2605"} {rating}</p>
           </div>
-          {oldPrice && <p className="text-xs text-brand-inkFaint line-through">{formatRupees(oldPrice)}</p>}
+          {oldPrice && <p className="text-xs text-brand-inkFaint line-through dark:text-zivvo-text-soft">{formatRupees(oldPrice)}</p>}
         </div>
       </Link>
 
@@ -64,7 +64,7 @@ export default function ProductCard({ product }) {
         }`}
         aria-label="Toggle wishlist"
       >
-        {wishlisted ? "♥" : "♡"}
+        {wishlisted ? "\u2665" : "\u2661"}
       </motion.button>
 
       <button

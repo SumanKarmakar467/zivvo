@@ -22,14 +22,14 @@ function DarkModeToggle() {
       type="button"
       onClick={() => dispatch(toggleDarkMode())}
       aria-label="Toggle dark mode"
-      className="flex h-6 w-11 items-center rounded-full bg-gray-200 p-1 transition dark:bg-accent"
+      className="flex h-7 w-12 items-center rounded-full bg-brand-muted p-1 transition dark:bg-accent"
     >
       <motion.span
         layout
         transition={{ type: "spring", stiffness: 520, damping: 32 }}
-        className={`flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] shadow ${darkMode ? "ml-5" : "ml-0"}`}
+        className={`flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] text-brand-ink shadow ${darkMode ? "ml-5" : "ml-0"}`}
       >
-        {darkMode ? "☾" : "☀"}
+        {darkMode ? "\u263E" : "\u2600"}
       </motion.span>
     </button>
   );
@@ -50,7 +50,7 @@ export default function Navbar() {
   const wishlistCount = useSelector(selectWishlistCount);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-black/8 bg-white/80 backdrop-blur-md transition-all duration-300 dark:border-night-border dark:bg-night-bg/80">
+    <header className="sticky top-0 z-50 border-b border-black/10 bg-white/90 shadow-sm shadow-black/5 backdrop-blur-md transition-all duration-300 dark:border-night-border dark:bg-night-bg/95 dark:shadow-black/30">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <Link to="/" className="font-display text-2xl font-black text-accent">
           Zivvo
@@ -58,7 +58,7 @@ export default function Navbar() {
 
         <nav className="hidden items-center gap-7 md:flex">
           {navLinks.map((link) => (
-            <NavLink key={link.to} to={link.to} className="text-sm font-semibold text-brand-inkMid transition-colors hover:text-accent dark:text-brand-inkFaint">
+            <NavLink key={link.to} to={link.to} className="text-sm font-bold text-brand-inkMid transition-colors hover:text-accent dark:text-zivvo-text-muted dark:hover:text-accent">
               {link.label}
             </NavLink>
           ))}
@@ -66,10 +66,10 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-2 md:flex">
           <DarkModeToggle />
-          <button type="button" onClick={() => navigate("/search")} className="rounded-full border border-black/10 p-2 text-brand-ink transition hover:bg-accent hover:text-white dark:border-night-border dark:text-brand-inkFaint">
+          <button type="button" onClick={() => navigate("/search")} className="rounded-full border border-black/10 bg-white p-2 text-brand-ink transition hover:bg-accent hover:text-white dark:border-night-border dark:bg-night-card dark:text-white">
             <Icon className="h-4 w-4"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></Icon>
           </button>
-          <Link to="/wishlist" className="relative rounded-full border border-black/10 p-2 text-brand-ink transition hover:bg-accent hover:text-white dark:border-night-border dark:text-brand-inkFaint">
+          <Link to="/wishlist" className="relative rounded-full border border-black/10 bg-white p-2 text-brand-ink transition hover:bg-accent hover:text-white dark:border-night-border dark:bg-night-card dark:text-white">
             <Icon className="h-4 w-4"><path d="m12 21-1.4-1.2C5.6 15.4 2 12.1 2 8A5 5 0 0 1 7 3c2 0 3.2.9 5 2.8C13.8 3.9 15 3 17 3a5 5 0 0 1 5 5c0 4.1-3.6 7.4-8.6 11.8L12 21Z" /></Icon>
             {wishlistCount > 0 && <span className="absolute -right-1 -top-1 rounded-full bg-accent px-1.5 text-[10px] font-bold text-white">{wishlistCount}</span>}
           </Link>
@@ -80,7 +80,7 @@ export default function Navbar() {
           </Link>
         </div>
 
-        <button type="button" onClick={() => setOpen((value) => !value)} className="rounded-full border border-black/10 p-2 text-brand-ink dark:border-night-border dark:text-white md:hidden">
+        <button type="button" onClick={() => setOpen((value) => !value)} className="rounded-full border border-black/10 bg-white p-2 text-brand-ink dark:border-night-border dark:bg-night-card dark:text-white md:hidden">
           <Icon className="h-5 w-5"><path d="M4 6h16M4 12h16M4 18h16" /></Icon>
         </button>
       </div>
@@ -91,12 +91,12 @@ export default function Navbar() {
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
-            className="border-t border-black/8 bg-white/95 px-6 py-4 backdrop-blur-md dark:border-night-border dark:bg-night-bg/95 md:hidden"
+            className="border-t border-black/10 bg-white/95 px-6 py-4 backdrop-blur-md dark:border-night-border dark:bg-night-bg/95 md:hidden"
           >
             <div className="flex items-center justify-between pb-3">
               <DarkModeToggle />
               <div className="flex gap-2">
-                <Link to="/wishlist" onClick={() => setOpen(false)} className="rounded-full border border-black/10 p-2 dark:border-night-border">
+                <Link to="/wishlist" onClick={() => setOpen(false)} className="rounded-full border border-black/10 bg-white p-2 dark:border-night-border dark:bg-night-card">
                   <Icon className="h-4 w-4"><path d="m12 21-1.4-1.2C5.6 15.4 2 12.1 2 8A5 5 0 0 1 7 3c2 0 3.2.9 5 2.8C13.8 3.9 15 3 17 3a5 5 0 0 1 5 5c0 4.1-3.6 7.4-8.6 11.8L12 21Z" /></Icon>
                 </Link>
                 <Link to="/cart" onClick={() => setOpen(false)} className="rounded-2xl bg-accent px-4 py-2 text-sm font-bold text-white">Cart {cartCount || ""}</Link>
@@ -104,7 +104,7 @@ export default function Navbar() {
             </div>
             <div className="grid gap-2">
               {navLinks.map((link) => (
-                <NavLink key={link.to} to={link.to} onClick={() => setOpen(false)} className="rounded-xl px-3 py-2 text-sm font-semibold text-brand-inkMid transition hover:bg-accent-light hover:text-accent dark:text-brand-inkFaint dark:hover:bg-night-muted">
+                <NavLink key={link.to} to={link.to} onClick={() => setOpen(false)} className="rounded-xl px-3 py-2 text-sm font-semibold text-brand-inkMid transition hover:bg-accent-light hover:text-accent dark:text-zivvo-text-muted dark:hover:bg-night-muted">
                   {link.label}
                 </NavLink>
               ))}

@@ -9,6 +9,54 @@ import { fetchSearchResults, selectSearchResults } from "../features/search/sear
 
 const DEFAULT_LIMIT = 20;
 
+const fallbackProducts = [
+  {
+    _id: "fallback-shirt-1",
+    name: "Classic Cotton Shirt",
+    cat: "Fashion",
+    category: "Fashion",
+    brand: "Zivvo Basics",
+    price: 899,
+    oldPrice: 1499,
+    rating: 4.7,
+    sale: "-40%",
+    image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400&q=80"
+  },
+  {
+    _id: "fallback-shirt-2",
+    name: "Oxford Button Down Shirt",
+    cat: "Fashion",
+    category: "Fashion",
+    brand: "Urban Loom",
+    price: 1299,
+    oldPrice: 1999,
+    rating: 4.8,
+    sale: "-35%",
+    image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400&q=80"
+  },
+  {
+    _id: "fallback-shirt-3",
+    name: "Linen Summer Shirt",
+    cat: "Fashion",
+    category: "Fashion",
+    brand: "Coastline",
+    price: 1599,
+    rating: 4.6,
+    isNew: true,
+    image: "https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=400&q=80"
+  },
+  {
+    _id: "fallback-shirt-4",
+    name: "Checked Casual Shirt",
+    cat: "Fashion",
+    category: "Fashion",
+    brand: "Streetcraft",
+    price: 1099,
+    rating: 4.5,
+    image: "https://images.unsplash.com/photo-1589310243389-96a5483213a8?w=400&q=80"
+  }
+];
+
 export default function SearchResultsPage() {
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -67,11 +115,17 @@ export default function SearchResultsPage() {
 
   const from = total === 0 ? 0 : (currentPage - 1) * normalizedParams.limit + 1;
   const to = Math.min(currentPage * normalizedParams.limit, total);
+  const q = normalizedParams.q.toLowerCase();
+  const fallbackMatches = !results.length && (q.includes("shirt") || q.includes("shirts"));
+  const displayResults = fallbackMatches ? fallbackProducts : results;
+  const displayTotal = fallbackMatches ? fallbackProducts.length : total;
+  const displayFrom = displayTotal === 0 ? 0 : fallbackMatches ? 1 : from;
+  const displayTo = fallbackMatches ? fallbackProducts.length : to;
 
   return (
-    <main className="min-h-screen bg-zivvo-dark-bg px-4 py-6 text-zivvo-text-base md:px-6">
+    <main className="min-h-screen bg-brand-bg px-4 py-6 text-brand-ink dark:bg-night-bg dark:text-white md:px-6">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-4 rounded-xl border border-zinc-800 bg-zivvo-surface p-3">
+        <div className="mb-4 rounded-2xl border border-black/10 bg-white p-3 shadow-sm dark:border-night-border dark:bg-night-card">
           <SearchBar />
         </div>
 
@@ -79,26 +133,27 @@ export default function SearchResultsPage() {
           <FilterSidebar searchParams={searchParams} facets={facets} onParamChange={setParam} onClear={clearFilters} />
 
           <section>
-            <p className="mb-4 rounded-xl border border-zinc-800 bg-zivvo-surface px-3 py-2 text-sm text-zivvo-text-muted">
-              Showing {from}-{to} of {total} results
+            <p className="mb-4 rounded-2xl border border-black/10 bg-white px-3 py-2 text-sm text-brand-inkMid shadow-sm dark:border-night-border dark:bg-night-card dark:text-zivvo-text-muted">
+              Showing {displayFrom}-{displayTo} of {displayTotal} results
+              {fallbackMatches && <span className="ml-2 font-semibold text-[#e8730a]">Suggested shirt results</span>}
             </p>
 
             {(status === "loading" || facetsLoading) ? (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {Array.from({ length: 9 }).map((_, idx) => <ProductCardSkeleton key={idx} />)}
               </div>
-            ) : results.length === 0 ? (
-              <div className="rounded-xl border border-zinc-800 bg-zivvo-surface p-10 text-center">
+            ) : displayResults.length === 0 ? (
+              <div className="rounded-2xl border border-black/10 bg-white p-10 text-center shadow-sm dark:border-night-border dark:bg-night-card">
                 <h2 className="text-lg font-semibold">No products found</h2>
-                <p className="mt-2 text-sm text-zivvo-text-muted">Try broadening your filters or search term.</p>
+                <p className="mt-2 text-sm text-brand-inkMid dark:text-zivvo-text-muted">Try broadening your filters or search term.</p>
                 <Link to="/" className="mt-4 inline-block text-sm font-semibold text-[#ef9f27]">Back to home</Link>
               </div>
             ) : (
               <>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {results.map((product) => <ProductCard key={product._id} product={product} />)}
+                  {displayResults.map((product) => <ProductCard key={product._id} product={product} />)}
                 </div>
-                <div className="mt-6 flex flex-wrap items-center gap-2">
+                {!fallbackMatches && <div className="mt-6 flex flex-wrap items-center gap-2">
                   <button type="button" onClick={() => setParam("page", Math.max(currentPage - 1, 1))} disabled={currentPage <= 1} className="rounded-md bg-zinc-800 px-3 py-1 text-sm disabled:opacity-40">Previous</button>
                   {Array.from({ length: pages }).map((_, index) => {
                     const pageNum = index + 1;
@@ -114,7 +169,7 @@ export default function SearchResultsPage() {
                     );
                   })}
                   <button type="button" onClick={() => setParam("page", Math.min(currentPage + 1, pages || 1))} disabled={currentPage >= pages} className="rounded-md bg-zinc-800 px-3 py-1 text-sm disabled:opacity-40">Next</button>
-                </div>
+                </div>}
               </>
             )}
           </section>

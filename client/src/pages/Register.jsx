@@ -22,6 +22,8 @@ export default function Register() {
 
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const strength = useMemo(() => strengthLabel(form.password), [form.password]);
 
@@ -66,13 +68,23 @@ export default function Register() {
           </div>
 
           <div>
-            <input type="password" placeholder="Password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2" required />
+            <div className="relative">
+              <input type={showPassword ? "text" : "password"} placeholder="Password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 pr-20 text-[#efe0d3] outline-none placeholder:text-zinc-400 focus:border-[#ef9f27]" required />
+              <button type="button" onClick={() => setShowPassword((value) => !value)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-xs font-semibold text-[#ef9f27] transition hover:bg-[#ef9f27]/10">
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
             <div className="mt-1 text-xs">Strength: <span className={strength === "strong" ? "text-green-400" : strength === "medium" ? "text-yellow-400" : "text-red-400"}>{strength}</span></div>
             {errors.password && <p className="mt-1 text-xs text-red-400">{errors.password}</p>}
           </div>
 
           <div>
-            <input type="password" placeholder="Confirm Password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2" required />
+            <div className="relative">
+              <input type={showConfirmPassword ? "text" : "password"} placeholder="Confirm Password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 pr-20 text-[#efe0d3] outline-none placeholder:text-zinc-400 focus:border-[#ef9f27]" required />
+              <button type="button" onClick={() => setShowConfirmPassword((value) => !value)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-xs font-semibold text-[#ef9f27] transition hover:bg-[#ef9f27]/10">
+                {showConfirmPassword ? "Hide" : "Show"}
+              </button>
+            </div>
             {errors.confirmPassword && <p className="mt-1 text-xs text-red-400">{errors.confirmPassword}</p>}
           </div>
 
