@@ -72,7 +72,13 @@ export default function App() {
   const location = useLocation();
   const dispatch = useDispatch();
   const { isAuthenticated, accessToken } = useSelector((state) => state.auth);
+  const darkMode = useSelector((state) => state.ui.darkMode);
   useNotificationSocket();
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("zivvo-theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
 
   useEffect(() => {
     const restore = async () => {
@@ -108,7 +114,7 @@ export default function App() {
   }, [dispatch, isAuthenticated, accessToken]);
 
   return (
-    <div className="min-h-screen bg-zivvo-dark-bg text-zivvo-text-base">
+    <div className="min-h-screen bg-bg-warm text-ink transition-colors duration-300 dark:bg-dark-bg dark:text-zivvo-text-base">
       <Navbar />
       <AnimatePresence mode="wait" initial={false}>
         <Routes location={location} key={location.pathname + location.search}>

@@ -4,8 +4,37 @@ export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', "system-ui", "sans-serif"],
+        display: ['"Syne"', "ui-sans-serif", "system-ui", "sans-serif"]
+      },
       colors: {
+        accent: {
+          DEFAULT: "#e8730a",
+          dark: "#c45c00",
+          light: "#fff3e8"
+        },
+        bg: {
+          warm: "#f8f5f0",
+          card: "#ffffff",
+          muted: "#f0ebe3"
+        },
+        ink: {
+          DEFAULT: "#1a1208",
+          muted: "#5c4d3a",
+          faint: "#9c8a74"
+        },
+        dark: {
+          bg: "#0e0a06",
+          card: "#1c1408",
+          muted: "#241a0f"
+        },
+        green: {
+          DEFAULT: "#2d6a4f",
+          light: "#52b788"
+        },
         zivvo: {
+          surface: "#1f1a14",
           dark: {
             bg: "#19120b",
             surface: "#1f1a14",

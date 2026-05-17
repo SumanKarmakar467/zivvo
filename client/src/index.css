@@ -1,12 +1,14 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
+  color-scheme: light;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+:root.dark {
   color-scheme: dark;
-  font-family: "Inter", system-ui, -apple-system, Segoe UI, sans-serif;
 }
 
 html,
@@ -17,11 +19,15 @@ body,
 
 body {
   margin: 0;
-  background-color: #19120b;
-  color: #efe0d3;
-  background-image: radial-gradient(circle at 92% 8%, rgba(239, 159, 39, 0.18), transparent 34%);
+  background-color: #f8f5f0;
+  color: #1a1208;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+.dark body {
+  background-color: #0e0a06;
+  color: #efe0d3;
 }
 
 * {
@@ -30,7 +36,20 @@ body {
 
 ::selection {
   background: rgba(239, 159, 39, 0.35);
+  color: #1a1208;
+}
+
+.dark ::selection {
   color: #efe0d3;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 .skeleton-shimmer {

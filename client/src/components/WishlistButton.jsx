@@ -30,7 +30,7 @@ export default function WishlistButton({ product, className = "", iconClassName 
   };
 
   return (
-    <button type="button" onClick={onToggle} className={className}>
+    <button type="button" onClick={onToggle} className={className} aria-pressed={wishlisted}>
       <span className={`${wishlisted ? "text-red-500" : "text-white"} ${iconClassName}`}>{wishlisted ? "♥" : "♡"}</span>
       {showLabel && <span className="ml-2">{wishlisted ? "Wishlisted" : "Add to Wishlist"}</span>}
     </button>

@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import auth from "./slices/authSlice";
 import cart from "./slices/cartSlice";
+import ui from "./slices/uiSlice";
 import product from "../features/productSlice";
 import order from "../features/orderSlice";
 import wishlist from "../features/wishlist/wishlistSlice";
@@ -22,6 +23,7 @@ export const store = configureStore({
   reducer: {
     auth,
     cart,
+    ui,
     product,
     order,
     wishlist,
