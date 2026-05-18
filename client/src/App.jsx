@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import LandingPage from "./pages/LandingPage";
 import SearchResultsPage from "./pages/SearchResultsPage";
 import CategoryPage from "./pages/CategoryPage";
-import ProductDetail from "./pages/ProductDetail";
+import ProductDetailPage from "./pages/ProductDetailPage";
 import Cart from "./pages/Cart";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -150,7 +150,7 @@ export default function App() {
           <Route path="/" element={<RouteTransition><LandingPage /></RouteTransition>} />
           <Route path="/search" element={<RouteTransition><SearchResultsPage /></RouteTransition>} />
           <Route path="/category/:slug" element={<RouteTransition><CategoryPage /></RouteTransition>} />
-          <Route path="/product/:slug" element={<RouteTransition><ProductDetail /></RouteTransition>} />
+          <Route path="/product/:slug" element={<RouteTransition><ProductDetailPage /></RouteTransition>} />
           <Route path="/cart" element={<RouteTransition><Cart /></RouteTransition>} />
           <Route path="/wishlist" element={<RouteTransition><PrivateRoute><WishlistPage /></PrivateRoute></RouteTransition>} />
           <Route path="/notifications" element={<RouteTransition><PrivateRoute><NotificationsPage /></PrivateRoute></RouteTransition>} />

@@ -1,6 +1,8 @@
 import Product from "../models/Product.js";
 import Category from "../models/Category.js";
+import Review from "../models/Review.js";
 import asyncHandler from "../middlewares/asyncHandler.js";
+import mongoose from "mongoose";
 
 const getSortOption = (sort) => {
   switch (sort) {
@@ -130,9 +132,14 @@ export const getProducts = asyncHandler(async (req, res) => {
 });
 
 export const getProductBySlug = asyncHandler(async (req, res) => {
-  const product = await Product.findOne({ slug: req.params.slug, isActive: true })
+  const identifier = String(req.params.slug || req.params.id || "").trim();
+  const productQuery = mongoose.Types.ObjectId.isValid(identifier)
+    ? { _id: identifier, isActive: true }
+    : { slug: identifier, isActive: true };
+
+  const product = await Product.findOne(productQuery)
     .populate("category", "name slug")
-    .populate("seller", "name avatar isVerified trustScore")
+    .populate("seller", "name avatar isVerified trustScore rating totalSales")
     .lean();
 
   if (!product) {
@@ -140,16 +147,56 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
     throw new Error("Product not found");
   }
 
-  const relatedProducts = await Product.find({
+  const [reviews, relatedProducts] = await Promise.all([
+    Review.find({ product: product._id })
+      .populate("buyer", "name avatar")
+      .sort({ helpfulVotes: -1, createdAt: -1 })
+      .limit(5)
+      .lean(),
+    Product.find({
+      isActive: true,
+      category: product.category?._id,
+      _id: { $ne: product._id }
+    })
+      .populate("category", "name slug")
+      .populate("seller", "name avatar isVerified trustScore")
+      .sort({ sold: -1, createdAt: -1 })
+      .limit(10)
+      .lean()
+  ]);
+
+  return res.json({ product: { ...product, reviews }, relatedProducts });
+});
+
+export const getSimilarProducts = asyncHandler(async (req, res) => {
+  const identifier = String(req.params.id || "").trim();
+  const productQuery = mongoose.Types.ObjectId.isValid(identifier)
+    ? { _id: identifier, isActive: true }
+    : { slug: identifier, isActive: true };
+
+  const product = await Product.findOne(productQuery).select("_id category price").lean();
+  if (!product) {
+    res.status(404);
+    throw new Error("Product not found");
+  }
+
+  const price = Number(product.price || 0);
+  const minPrice = Math.max(0, Math.floor(price * 0.7));
+  const maxPrice = Math.ceil(price * 1.3);
+
+  const products = await Product.find({
     isActive: true,
-    category: product.category?._id,
-    _id: { $ne: product._id }
+    category: product.category,
+    _id: { $ne: product._id },
+    price: { $gte: minPrice, $lte: maxPrice }
   })
-    .sort({ createdAt: -1 })
-    .limit(8)
+    .populate("category", "name slug")
+    .populate("seller", "name avatar isVerified trustScore")
+    .sort({ sold: -1, averageRating: -1, createdAt: -1 })
+    .limit(10)
     .lean();
 
-  return res.json({ product, relatedProducts });
+  return res.json({ products });
 });
 
 export const getFeaturedProducts = asyncHandler(async (req, res) => {
