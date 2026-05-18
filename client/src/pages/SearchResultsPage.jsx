@@ -6,56 +6,21 @@ import SearchBar from "../components/SearchBar";
 import ProductCard from "../components/ProductCard";
 import ProductCardSkeleton from "../components/ProductCardSkeleton";
 import { fetchSearchResults, selectSearchResults } from "../features/search/searchSlice";
+import { getDemoFacets, searchDemoProducts } from "../data/demoProducts";
 
 const DEFAULT_LIMIT = 20;
 
-const fallbackProducts = [
-  {
-    _id: "fallback-shirt-1",
-    name: "Classic Cotton Shirt",
-    cat: "Fashion",
-    category: "Fashion",
-    brand: "Zivvo Basics",
-    price: 899,
-    oldPrice: 1499,
-    rating: 4.7,
-    sale: "-40%",
-    image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400&q=80"
-  },
-  {
-    _id: "fallback-shirt-2",
-    name: "Oxford Button Down Shirt",
-    cat: "Fashion",
-    category: "Fashion",
-    brand: "Urban Loom",
-    price: 1299,
-    oldPrice: 1999,
-    rating: 4.8,
-    sale: "-35%",
-    image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400&q=80"
-  },
-  {
-    _id: "fallback-shirt-3",
-    name: "Linen Summer Shirt",
-    cat: "Fashion",
-    category: "Fashion",
-    brand: "Coastline",
-    price: 1599,
-    rating: 4.6,
-    isNew: true,
-    image: "https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=400&q=80"
-  },
-  {
-    _id: "fallback-shirt-4",
-    name: "Checked Casual Shirt",
-    cat: "Fashion",
-    category: "Fashion",
-    brand: "Streetcraft",
-    price: 1099,
-    rating: 4.5,
-    image: "https://images.unsplash.com/photo-1589310243389-96a5483213a8?w=400&q=80"
-  }
-];
+const mergeProducts = (primary, supplemental, targetCount = 16) => {
+  const seen = new Set();
+  return [...primary, ...supplemental]
+    .filter((product) => {
+      const key = product._id || product.slug || product.name;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, targetCount);
+};
 
 export default function SearchResultsPage() {
   const dispatch = useDispatch();
@@ -89,7 +54,19 @@ export default function SearchResultsPage() {
       try {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/products/facets`);
         const data = await res.json();
-        if (res.ok) setFacets(data);
+        if (res.ok) {
+          const demoFacets = getDemoFacets();
+          setFacets({
+            categories: [...data.categories, ...demoFacets.categories].filter(
+              (category, index, all) => all.findIndex((item) => item.slug === category.slug) === index
+            ),
+            brands: Array.from(new Set([...(data.brands || []), ...demoFacets.brands])).sort((a, b) => a.localeCompare(b))
+          });
+        } else {
+          setFacets(getDemoFacets());
+        }
+      } catch {
+        setFacets(getDemoFacets());
       } finally {
         setFacetsLoading(false);
       }
@@ -115,12 +92,15 @@ export default function SearchResultsPage() {
 
   const from = total === 0 ? 0 : (currentPage - 1) * normalizedParams.limit + 1;
   const to = Math.min(currentPage * normalizedParams.limit, total);
-  const q = normalizedParams.q.toLowerCase();
-  const fallbackMatches = !results.length && (q.includes("shirt") || q.includes("shirts"));
-  const displayResults = fallbackMatches ? fallbackProducts : results;
-  const displayTotal = fallbackMatches ? fallbackProducts.length : total;
-  const displayFrom = displayTotal === 0 ? 0 : fallbackMatches ? 1 : from;
-  const displayTo = fallbackMatches ? fallbackProducts.length : to;
+  const demoSearch = useMemo(
+    () => searchDemoProducts({ ...normalizedParams, limit: 16 }),
+    [normalizedParams]
+  );
+  const shouldBoostResults = (normalizedParams.q || normalizedParams.category) && results.length < 12;
+  const displayResults = shouldBoostResults ? mergeProducts(results, demoSearch.products) : results;
+  const displayTotal = shouldBoostResults ? Math.max(total, displayResults.length) : total;
+  const displayFrom = displayTotal === 0 ? 0 : shouldBoostResults ? 1 : from;
+  const displayTo = shouldBoostResults ? displayResults.length : to;
 
   return (
     <main className="min-h-screen bg-brand-bg px-4 py-6 text-brand-ink dark:bg-night-bg dark:text-white md:px-6">
@@ -135,7 +115,7 @@ export default function SearchResultsPage() {
           <section>
             <p className="mb-4 rounded-2xl border border-black/10 bg-white px-3 py-2 text-sm text-brand-inkMid shadow-sm dark:border-night-border dark:bg-night-card dark:text-zivvo-text-muted">
               Showing {displayFrom}-{displayTo} of {displayTotal} results
-              {fallbackMatches && <span className="ml-2 font-semibold text-[#e8730a]">Suggested shirt results</span>}
+              {shouldBoostResults && <span className="ml-2 font-semibold text-[#e8730a]">Related product suggestions</span>}
             </p>
 
             {(status === "loading" || facetsLoading) ? (
@@ -153,7 +133,7 @@ export default function SearchResultsPage() {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {displayResults.map((product) => <ProductCard key={product._id} product={product} />)}
                 </div>
-                {!fallbackMatches && <div className="mt-6 flex flex-wrap items-center gap-2">
+                {!shouldBoostResults && <div className="mt-6 flex flex-wrap items-center gap-2">
                   <button type="button" onClick={() => setParam("page", Math.max(currentPage - 1, 1))} disabled={currentPage <= 1} className="rounded-md bg-zinc-800 px-3 py-1 text-sm disabled:opacity-40">Previous</button>
                   {Array.from({ length: pages }).map((_, index) => {
                     const pageNum = index + 1;

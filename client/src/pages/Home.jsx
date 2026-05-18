@@ -7,111 +7,7 @@ import PromoStrip from "../components/PromoStrip";
 import CategoryRow from "../components/CategoryRow";
 import ProductCard from "../components/ProductCard";
 import SellerBanner from "../components/SellerBanner";
-
-const products = [
-  {
-    _id: "dummy-camera",
-    name: "DSLR Camera Kit 24MP",
-    cat: "Electronics",
-    price: 28999,
-    oldPrice: 47999,
-    rating: 4.9,
-    sale: "-40%",
-    image: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400&q=80"
-  },
-  {
-    _id: "dummy-laptop",
-    name: 'Ultra Slim Laptop 14"',
-    cat: "Electronics",
-    price: 52499,
-    rating: 4.7,
-    image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&q=80"
-  },
-  {
-    _id: "dummy-bag",
-    name: "Leather Tote Bag",
-    cat: "Fashion",
-    price: 3499,
-    rating: 5.0,
-    isNew: true,
-    image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&q=80"
-  },
-  {
-    _id: "dummy-jogger",
-    name: "Men's Jogger Set",
-    cat: "Fashion",
-    price: 1799,
-    rating: 4.5,
-    image: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=400&q=80"
-  },
-  {
-    _id: "dummy-plant",
-    name: "Indoor Plant Set of 3",
-    cat: "Home",
-    price: 1299,
-    rating: 4.6,
-    image: "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=400&q=80"
-  },
-  {
-    _id: "dummy-watch",
-    name: "Smart Watch Series 8",
-    cat: "Electronics",
-    price: 18999,
-    oldPrice: 24999,
-    rating: 4.8,
-    sale: "-23%",
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80"
-  },
-  {
-    _id: "dummy-coffee",
-    name: "Pour-Over Coffee Kit",
-    cat: "Kitchen",
-    price: 2299,
-    rating: 4.9,
-    isNew: true,
-    image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&q=80"
-  },
-  {
-    _id: "dummy-yoga",
-    name: "Yoga Mat Premium 6mm",
-    cat: "Sports",
-    price: 899,
-    rating: 4.7,
-    image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&q=80"
-  },
-  {
-    _id: "dummy-lipstick",
-    name: "Velvet Matte Lipstick Trio",
-    cat: "Beauty",
-    price: 699,
-    rating: 4.6,
-    image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=400&q=80"
-  },
-  {
-    _id: "dummy-books",
-    name: "Weekend Reading Bundle",
-    cat: "Books",
-    price: 999,
-    rating: 4.8,
-    image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&q=80"
-  },
-  {
-    _id: "dummy-toy",
-    name: "Creative Blocks Play Set",
-    cat: "Toys",
-    price: 1199,
-    rating: 4.7,
-    image: "https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=400&q=80"
-  },
-  {
-    _id: "dummy-garden",
-    name: "Balcony Garden Starter Kit",
-    cat: "Garden",
-    price: 1499,
-    rating: 4.5,
-    image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&q=80"
-  }
-];
+import { searchDemoProducts } from "../data/demoProducts";
 
 const sectionTransition = {
   duration: 0.55,
@@ -154,12 +50,12 @@ export default function Home() {
   const [query, setQuery] = useState("");
 
   const filteredProducts = useMemo(() => {
-    const text = query.trim().toLowerCase();
-    return products.filter((product) => {
-      const matchesCategory = activeCategory === "All" || product.cat === activeCategory;
-      const matchesSearch = !text || `${product.name} ${product.cat}`.toLowerCase().includes(text);
-      return matchesCategory && matchesSearch;
+    const { products } = searchDemoProducts({
+      q: query,
+      category: activeCategory === "All" ? "" : activeCategory,
+      limit: activeCategory === "All" && !query.trim() ? 16 : 20
     });
+    return products;
   }, [activeCategory, query]);
 
   return (
