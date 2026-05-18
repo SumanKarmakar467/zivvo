@@ -4,9 +4,10 @@ import { useDispatch, useSelector } from "react-redux";
 import FilterSidebar from "../components/FilterSidebar";
 import SearchBar from "../components/SearchBar";
 import ProductCard from "../components/ProductCard";
-import ProductCardSkeleton from "../components/ProductCardSkeleton";
+import SkeletonGrid from "../components/SkeletonGrid";
 import { fetchSearchResults, selectSearchResults } from "../features/search/searchSlice";
 import { getDemoFacets, searchDemoProducts } from "../data/demoProducts";
+import useLoadingStore from "../store/useLoadingStore";
 
 const DEFAULT_LIMIT = 20;
 
@@ -28,6 +29,8 @@ export default function SearchResultsPage() {
   const [facets, setFacets] = useState({ categories: [], brands: [] });
   const [facetsLoading, setFacetsLoading] = useState(false);
   const { results, total, pages, currentPage, status } = useSelector(selectSearchResults);
+  const isSearching = useLoadingStore((state) => state.isSearching);
+  const setSearching = useLoadingStore((state) => state.setSearching);
 
   const normalizedParams = useMemo(() => {
     const params = Object.fromEntries(searchParams.entries());
@@ -47,6 +50,16 @@ export default function SearchResultsPage() {
   useEffect(() => {
     dispatch(fetchSearchResults(normalizedParams));
   }, [dispatch, normalizedParams]);
+
+  useEffect(() => {
+    if (status !== "loading") {
+      setSearching(false);
+      return undefined;
+    }
+
+    const timer = setTimeout(() => setSearching(true), 400);
+    return () => clearTimeout(timer);
+  }, [setSearching, status]);
 
   useEffect(() => {
     const loadFacets = async () => {
@@ -118,10 +131,8 @@ export default function SearchResultsPage() {
               {shouldBoostResults && <span className="ml-2 font-semibold text-[#e8730a]">Related product suggestions</span>}
             </p>
 
-            {(status === "loading" || facetsLoading) ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 9 }).map((_, idx) => <ProductCardSkeleton key={idx} />)}
-              </div>
+            {(isSearching || facetsLoading) ? (
+              <SkeletonGrid count={9} />
             ) : displayResults.length === 0 ? (
               <div className="rounded-2xl border border-black/10 bg-white p-10 text-center shadow-sm dark:border-night-border dark:bg-night-card">
                 <h2 className="text-lg font-semibold">No products found</h2>

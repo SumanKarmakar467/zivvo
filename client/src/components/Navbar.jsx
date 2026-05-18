@@ -1,87 +1,98 @@
-import { useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, NavLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useDispatch, useSelector } from "react-redux";
-import { toggleDarkMode } from "../store/uiSlice";
+import { useSelector } from "react-redux";
 import { selectWishlistCount } from "../store/wishlistSlice";
-
-function Icon({ children, className = "" }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      {children}
-    </svg>
-  );
-}
-
-function DarkModeToggle() {
-  const dispatch = useDispatch();
-  const darkMode = useSelector((state) => state.ui.darkMode);
-
-  return (
-    <button
-      type="button"
-      onClick={() => dispatch(toggleDarkMode())}
-      aria-label="Toggle dark mode"
-      className="flex h-7 w-12 items-center rounded-full bg-brand-muted p-1 transition dark:bg-accent"
-    >
-      <motion.span
-        layout
-        transition={{ type: "spring", stiffness: 520, damping: 32 }}
-        className={`flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] text-brand-ink shadow ${darkMode ? "ml-5" : "ml-0"}`}
-      >
-        {darkMode ? "\u263E" : "\u2600"}
-      </motion.span>
-    </button>
-  );
-}
+import { useTheme } from "../context/ThemeContext";
 
 const navLinks = [
-  { label: "Home", to: "/" },
   { label: "Shop", to: "/search" },
-  { label: "Deals", to: "/search?sort=deals" },
-  { label: "New In", to: "/search?sort=new" },
-  { label: "Sellers", to: "/seller" }
+  { label: "Collections", to: "/category/fashion" },
+  { label: "Sellers", to: "/seller" },
+  { label: "About", to: "/#about" }
 ];
 
-export default function Navbar() {
-  const navigate = useNavigate();
+function IconButton({ children, label, to }) {
+  return (
+    <Link
+      to={to}
+      aria-label={label}
+      className="relative grid h-10 w-10 place-items-center rounded-full border border-[rgba(124,92,252,0.26)] text-[var(--cream)] transition hover:border-[var(--cyan)] hover:text-[var(--cyan)]"
+    >
+      {children}
+    </Link>
+  );
+}
+
+export function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const cartCount = useSelector((state) => state.cart.itemCount || 0);
   const wishlistCount = useSelector(selectWishlistCount);
+  const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 50);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-black/10 bg-white/90 shadow-sm shadow-black/5 backdrop-blur-md transition-all duration-300 dark:border-night-border dark:bg-night-bg/95 dark:shadow-black/30">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <Link to="/" className="font-display text-2xl font-black text-accent">
-          Zivvo
+    <header
+      className="sticky top-0 z-50 w-full border-b backdrop-blur-[20px]"
+      style={{
+        background: scrolled ? "var(--nav-bg-strong)" : "var(--nav-bg)",
+        borderBottomColor: "rgba(124,92,252,0.2)",
+        transition: "background 0.3s, border-color 0.3s"
+      }}
+    >
+      <div className="flex h-[72px] w-full items-center justify-between px-[clamp(18px,5vw,72px)]">
+        <Link to="/" className="font-playfair text-2xl font-black tracking-[4px] z-gradient-text">
+          ZIVVO
         </Link>
 
-        <nav className="hidden items-center gap-7 md:flex">
+        <nav className="hidden items-center gap-8 md:flex">
           {navLinks.map((link) => (
-            <NavLink key={link.to} to={link.to} className="text-sm font-bold text-brand-inkMid transition-colors hover:text-accent dark:text-zivvo-text-muted dark:hover:text-accent">
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className="text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--cream)]"
+            >
               {link.label}
             </NavLink>
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
-          <DarkModeToggle />
-          <button type="button" onClick={() => navigate("/search")} className="rounded-full border border-black/10 bg-white p-2 text-brand-ink transition hover:bg-accent hover:text-white dark:border-night-border dark:bg-night-card dark:text-white">
-            <Icon className="h-4 w-4"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></Icon>
+        <div className="hidden items-center gap-3 md:flex">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className="grid h-10 w-10 place-items-center rounded-full border border-[rgba(124,92,252,0.28)] text-[var(--cream)] transition hover:border-[var(--cyan)]"
+          >
+            {theme === "dark" ? "☾" : "☀"}
           </button>
-          <Link to="/wishlist" className="relative rounded-full border border-black/10 bg-white p-2 text-brand-ink transition hover:bg-accent hover:text-white dark:border-night-border dark:bg-night-card dark:text-white">
-            <Icon className="h-4 w-4"><path d="m12 21-1.4-1.2C5.6 15.4 2 12.1 2 8A5 5 0 0 1 7 3c2 0 3.2.9 5 2.8C13.8 3.9 15 3 17 3a5 5 0 0 1 5 5c0 4.1-3.6 7.4-8.6 11.8L12 21Z" /></Icon>
-            {wishlistCount > 0 && <span className="absolute -right-1 -top-1 rounded-full bg-accent px-1.5 text-[10px] font-bold text-white">{wishlistCount}</span>}
-          </Link>
-          <Link to="/cart" className="relative flex items-center gap-2 rounded-2xl bg-accent px-4 py-2 text-sm font-bold text-white transition hover:bg-accent-dark">
-            <Icon className="h-4 w-4"><circle cx="9" cy="20" r="1" /><circle cx="18" cy="20" r="1" /><path d="M2 3h3l2.5 12h11L21 6H7" /></Icon>
-            Cart
-            {cartCount > 0 && <span className="ml-1 rounded-full bg-white px-2 py-0.5 text-xs font-black text-accent">{cartCount}</span>}
+          <IconButton to="/wishlist" label="Wishlist">
+            ♡
+            {wishlistCount > 0 && <span className="absolute -right-1 -top-1 rounded-full bg-[var(--rose)] px-1.5 text-[10px] font-bold text-white">{wishlistCount}</span>}
+          </IconButton>
+          <Link
+            to="/cart"
+            className="relative rounded-full bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] px-5 py-2.5 text-sm font-bold text-white shadow-[0_16px_34px_rgba(124,92,252,0.24)] transition hover:scale-[1.03]"
+          >
+            Start Shopping
+            {cartCount > 0 && <span className="ml-2 rounded-full bg-white px-2 py-0.5 text-xs text-[#5B21B6]">{cartCount}</span>}
           </Link>
         </div>
 
-        <button type="button" onClick={() => setOpen((value) => !value)} className="rounded-full border border-black/10 bg-white p-2 text-brand-ink dark:border-night-border dark:bg-night-card dark:text-white md:hidden">
-          <Icon className="h-5 w-5"><path d="M4 6h16M4 12h16M4 18h16" /></Icon>
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          className="grid h-10 w-10 place-items-center rounded-full border border-[rgba(124,92,252,0.28)] text-[var(--cream)] md:hidden"
+          aria-label="Open menu"
+        >
+          ☰
         </button>
       </div>
 
@@ -91,23 +102,21 @@ export default function Navbar() {
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
-            className="border-t border-black/10 bg-white/95 px-6 py-4 backdrop-blur-md dark:border-night-border dark:bg-night-bg/95 md:hidden"
+            className="grid gap-2 border-t border-[rgba(124,92,252,0.18)] px-5 py-4 md:hidden"
+            style={{ background: "var(--nav-bg-strong)" }}
           >
-            <div className="flex items-center justify-between pb-3">
-              <DarkModeToggle />
-              <div className="flex gap-2">
-                <Link to="/wishlist" onClick={() => setOpen(false)} className="rounded-full border border-black/10 bg-white p-2 dark:border-night-border dark:bg-night-card">
-                  <Icon className="h-4 w-4"><path d="m12 21-1.4-1.2C5.6 15.4 2 12.1 2 8A5 5 0 0 1 7 3c2 0 3.2.9 5 2.8C13.8 3.9 15 3 17 3a5 5 0 0 1 5 5c0 4.1-3.6 7.4-8.6 11.8L12 21Z" /></Icon>
-                </Link>
-                <Link to="/cart" onClick={() => setOpen(false)} className="rounded-2xl bg-accent px-4 py-2 text-sm font-bold text-white">Cart {cartCount || ""}</Link>
-              </div>
-            </div>
-            <div className="grid gap-2">
-              {navLinks.map((link) => (
-                <NavLink key={link.to} to={link.to} onClick={() => setOpen(false)} className="rounded-xl px-3 py-2 text-sm font-semibold text-brand-inkMid transition hover:bg-accent-light hover:text-accent dark:text-zivvo-text-muted dark:hover:bg-night-muted">
-                  {link.label}
-                </NavLink>
-              ))}
+            {navLinks.map((link) => (
+              <NavLink key={link.to} to={link.to} onClick={() => setOpen(false)} className="rounded-xl px-3 py-3 text-sm font-semibold text-[var(--muted)]">
+                {link.label}
+              </NavLink>
+            ))}
+            <div className="mt-2 flex items-center gap-3">
+              <button type="button" onClick={toggleTheme} className="rounded-full border border-[rgba(124,92,252,0.28)] px-4 py-2 text-sm text-[var(--cream)]">
+                {theme === "dark" ? "Dark" : "Light"}
+              </button>
+              <Link to="/cart" onClick={() => setOpen(false)} className="rounded-full bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] px-4 py-2 text-sm font-bold text-white">
+                Start Shopping
+              </Link>
             </div>
           </motion.nav>
         )}
@@ -115,3 +124,5 @@ export default function Navbar() {
     </header>
   );
 }
+
+export default Navbar;

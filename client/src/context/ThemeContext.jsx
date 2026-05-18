@@ -8,6 +8,7 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     localStorage.setItem("zivvo-theme", theme);
     document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.style.colorScheme = theme;
   }, [theme]);
 
   const value = useMemo(() => ({

@@ -1,10 +1,11 @@
+@import "./styles/globals.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   color-scheme: light;
-  font-family: "Plus Jakarta Sans", system-ui, -apple-system, Segoe UI, sans-serif;
+  font-family: "DM Sans", system-ui, -apple-system, Segoe UI, sans-serif;
 }
 
 :root.dark {
@@ -23,16 +24,16 @@ html {
 
 body {
   margin: 0;
-  background: #f8f5f0;
-  color: #1a1208;
+  background: var(--bg);
+  color: var(--cream);
   transition: background 0.3s, color 0.3s;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
 .dark body {
-  background: #0e0a06;
-  color: #f5ede0;
+  background: var(--bg);
+  color: var(--cream);
 }
 
 * {

@@ -5,10 +5,29 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', "sans-serif"],
-        display: ['"Syne"', "sans-serif"]
+        sans: ['"DM Sans"', "sans-serif"],
+        display: ['"Playfair Display"', "serif"],
+        playfair: ['"Playfair Display"', "serif"]
       },
       colors: {
+        cosmic: {
+          bg: "#05060F",
+          surface: "#0C0F1A",
+          violet: "#7C5CFC",
+          violet2: "#A78BFA",
+          cyan: "#22D3EE",
+          rose: "#F43F5E",
+          cream: "#E8EAFF",
+          muted: "#7B83A8"
+        },
+        aura: {
+          bg: "#F5F3FF",
+          surface: "#EDE9FE",
+          violet: "#5B21B6",
+          cyan: "#0E7490",
+          cream: "#1E1B4B",
+          muted: "#6B7280"
+        },
         accent: {
           DEFAULT: "#e8730a",
           dark: "#c45c00",
