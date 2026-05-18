@@ -1,7 +1,7 @@
 export function SearchSkeletonRows() {
   return (
     <section className="z-section py-20">
-      <h2 className="font-playfair text-3xl font-black text-[var(--cream)] md:text-5xl">Results That Respect Your Time</h2>
+      <h2 className="font-head text-3xl font-black text-[var(--cream)] md:text-5xl">Results That Respect Your Time</h2>
       <div className="mt-8 grid gap-4">
         {Array.from({ length: 3 }).map((_, index) => (
           <div key={index} className="z-glass grid grid-cols-[56px_1fr_auto] items-center gap-4 rounded-[14px] p-4 max-sm:grid-cols-[56px_1fr]">

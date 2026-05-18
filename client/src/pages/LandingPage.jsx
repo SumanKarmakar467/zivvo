@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import FloatingProductCards from "../components/FloatingProductCards";
 import Marquee from "../components/Marquee";
-import FloatingProductCard from "../components/FloatingProductCard";
 import { SearchSkeletonRows } from "../components/SkeletonGrid";
 
 const reveal = {
@@ -13,24 +13,13 @@ const reveal = {
 
 const staggerParent = {
   hidden: {},
-  show: {
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
+  show: { transition: { staggerChildren: 0.1 } }
 };
 
 const staggerChild = {
   hidden: { opacity: 0, y: 30 },
   show: { opacity: 1, y: 0 }
 };
-
-const heroItems = [
-  { emoji: "👜", name: "Artisan Leather Bag", price: "₹2,499", tag: "HOT" },
-  { emoji: "💍", name: "Silver Pendant Set", price: "₹1,199", tag: "NEW" },
-  { emoji: "🕯️", name: "Luxury Soy Candles", price: "₹649", tag: "SALE" },
-  { emoji: "🧵", name: "Handwoven Kantha", price: "₹3,299", tag: "NEW" }
-];
 
 const stats = [
   ["50K+", "Products"],
@@ -90,31 +79,29 @@ const productImage = (emoji, title, accent = "#7C5CFC") => {
 export function LandingPage() {
   return (
     <main className="w-full overflow-hidden bg-[var(--bg)] text-[var(--cream)]">
-      <section className="relative flex min-h-screen w-full flex-col items-center justify-center px-[clamp(18px,5vw,60px)] pb-[60px] pt-[80px]">
-        <div className="z-ambient-layer" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-          <span />
-        </div>
-        <div className="z-grid-overlay absolute inset-0 opacity-100" aria-hidden="true" />
+      <section className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden px-[clamp(18px,5vw,60px)] pb-[60px] pt-[80px]">
+        <div className="hero-orb hero-orb-1" aria-hidden="true" />
+        <div className="hero-orb hero-orb-2" aria-hidden="true" />
+        <div className="hero-orb hero-orb-3" aria-hidden="true" />
+        <div className="hero-orb hero-orb-4" aria-hidden="true" />
+        <div className="z-grid-overlay absolute inset-0 z-0 pointer-events-none" aria-hidden="true" />
 
         <motion.div initial="hidden" animate="show" variants={staggerParent} className="relative z-10 flex w-full flex-col items-center text-center">
-          <motion.div variants={staggerChild} transition={{ duration: 0.6, delay: 0.1 }} className="z-glass inline-flex items-center gap-3 rounded-full px-4 py-2 text-sm text-[var(--muted)]">
+          <motion.div variants={staggerChild} transition={{ duration: 0.6, delay: 0.1 }} className="z-glass relative z-10 inline-flex items-center gap-3 rounded-full px-4 py-2 text-sm text-[var(--muted)]">
             <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[var(--cyan)] shadow-[0_0_22px_var(--cyan)]" />
             India's Premium Marketplace · Est. 2024
           </motion.div>
 
-          <motion.h1 variants={staggerChild} transition={{ duration: 0.7, delay: 0.2 }} className="mt-8 font-playfair text-[clamp(42px,6vw,72px)] font-black leading-[0.96] tracking-normal">
+          <motion.h1 variants={staggerChild} transition={{ duration: 0.7, delay: 0.2 }} className="relative z-10 mt-8 font-head text-[clamp(42px,6vw,72px)] font-black leading-[0.96] tracking-normal">
             Discover Indian Commerce
           </motion.h1>
-          <motion.h2 variants={staggerChild} transition={{ duration: 0.7, delay: 0.3 }} className="font-playfair text-[clamp(42px,6vw,72px)] font-black leading-[0.96]">
+          <motion.h2 variants={staggerChild} transition={{ duration: 0.7, delay: 0.3 }} className="relative z-10 font-head text-[clamp(42px,6vw,72px)] font-black leading-[0.96]">
             Curated <span className="z-gradient-text">Beautifully</span>
           </motion.h2>
-          <motion.p variants={staggerChild} transition={{ duration: 0.7, delay: 0.4 }} className="mt-6 max-w-3xl text-base font-light leading-8 text-[var(--muted)] md:text-xl">
+          <motion.p variants={staggerChild} transition={{ duration: 0.7, delay: 0.4 }} className="relative z-10 mt-6 max-w-3xl text-base font-light leading-8 text-[var(--muted)] md:text-xl">
             Zivvo blends verified sellers, fast discovery, secure checkout, and expressive product stories into one luxurious marketplace experience.
           </motion.p>
-          <motion.div variants={staggerChild} transition={{ duration: 0.7, delay: 0.5 }} className="mt-8 flex flex-wrap justify-center gap-3">
+          <motion.div variants={staggerChild} transition={{ duration: 0.7, delay: 0.5 }} className="relative z-10 mb-12 mt-8 flex flex-wrap justify-center gap-3">
             <Link to="/search" className="rounded-full bg-gradient-to-r from-[#7C5CFC] via-[#A78BFA] to-[#22D3EE] px-6 py-3 text-sm font-bold text-white shadow-[0_18px_42px_rgba(124,92,252,0.32)] transition hover:scale-[1.03]">
               Explore Collections →
             </Link>
@@ -124,16 +111,12 @@ export function LandingPage() {
           </motion.div>
         </motion.div>
 
-        <div className="relative z-10 mt-16 flex w-full flex-wrap justify-center gap-4">
-          {heroItems.map((item) => (
-            <FloatingProductCard key={item.name} product={item} />
-          ))}
-        </div>
+        <FloatingProductCards />
 
-        <div className="z-glass relative z-10 mt-14 flex w-full flex-wrap justify-center overflow-hidden rounded-[20px]">
+        <div className="z-glass relative z-10 mt-2 flex w-full flex-wrap justify-center overflow-hidden rounded-[20px]">
           {stats.map(([value, label], index) => (
             <div key={label} className="min-w-[170px] flex-1 px-6 py-6 text-center">
-              <p className="font-playfair text-3xl font-black text-[var(--cream)]">{value}</p>
+              <p className="font-head text-3xl font-black text-[var(--cream)]">{value}</p>
               <p className="mt-1 text-sm uppercase tracking-[0.22em] text-[var(--muted)]">{label}</p>
               {index < stats.length - 1 && <span className="absolute top-6 hidden h-14 w-px bg-[rgba(124,92,252,0.2)] md:inline-block" style={{ left: `${((index + 1) / stats.length) * 100}%` }} />}
             </div>
@@ -146,7 +129,7 @@ export function LandingPage() {
       <motion.section {...reveal} className="z-section py-24">
         <div className="mb-10 flex w-full flex-col gap-3">
           <p className="text-sm font-bold uppercase tracking-[0.28em] text-[var(--cyan)]">Marketplace Edge</p>
-          <h2 className="font-playfair text-4xl font-black md:text-6xl">Built For High-Intent Shopping</h2>
+          <h2 className="font-head text-4xl font-black md:text-6xl">Built For High-Intent Shopping</h2>
         </div>
         <motion.div variants={staggerParent} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {features.map(([icon, title, copy, number]) => (
@@ -154,7 +137,7 @@ export function LandingPage() {
               <div className="text-4xl">{icon}</div>
               <h3 className="mt-5 text-xl font-bold">{title}</h3>
               <p className="mt-3 leading-7 text-[var(--muted)]">{copy}</p>
-              <span className="absolute bottom-3 right-5 font-playfair text-[52px] font-black text-white opacity-[0.05]">{number}</span>
+              <span className="absolute bottom-3 right-5 font-head text-[52px] font-black text-white opacity-[0.05]">{number}</span>
             </motion.article>
           ))}
         </motion.div>
@@ -164,7 +147,7 @@ export function LandingPage() {
         <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.28em] text-[var(--cyan)]">Insane Finds</p>
-            <h2 className="font-playfair text-4xl font-black md:text-6xl">Product Showcase</h2>
+            <h2 className="font-head text-4xl font-black md:text-6xl">Product Showcase</h2>
           </div>
           <Link to="/search" className="rounded-full border border-[rgba(124,92,252,0.35)] px-5 py-3 text-sm font-bold text-[var(--cream)] hover:border-[var(--cyan)]">Shop all</Link>
         </div>
@@ -183,7 +166,7 @@ export function LandingPage() {
                 </div>
                 <img src={productImage(emoji, title, index % 2 ? "#22D3EE" : "#7C5CFC")} alt={title} className="my-6 aspect-[4/3] w-full rounded-[16px] object-cover" />
                 <div>
-                  <h3 className="font-playfair text-3xl font-black">{title}</h3>
+                  <h3 className="font-head text-3xl font-black">{title}</h3>
                   <p className="mt-2 text-[var(--muted)]">{copy}</p>
                 </div>
               </div>
@@ -195,7 +178,7 @@ export function LandingPage() {
       <SearchSkeletonRows />
 
       <motion.section {...reveal} className="z-section py-20">
-        <h2 className="font-playfair text-4xl font-black md:text-6xl">Loved Across India</h2>
+        <h2 className="font-head text-4xl font-black md:text-6xl">Loved Across India</h2>
         <div className="mt-10 grid w-full grid-cols-1 gap-4 md:grid-cols-3">
           {testimonials.map(([initials, name, city, quote]) => (
             <article key={name} className="rounded-[14px] border border-[rgba(124,92,252,0.22)] bg-[var(--bg2)] p-6 transition hover:-translate-y-1 hover:border-[var(--violet2)]">
@@ -216,7 +199,7 @@ export function LandingPage() {
       <motion.section {...reveal} className="z-section relative py-24 text-center">
         <div className="absolute inset-x-0 top-0 h-full bg-[radial-gradient(ellipse_60%_60%_at_50%_0%,rgba(124,92,252,0.12),transparent)]" aria-hidden="true" />
         <div className="relative z-10">
-          <h2 className="font-playfair text-4xl font-black md:text-6xl">Join <span className="z-gradient-text">12,000+</span> Early Shoppers</h2>
+          <h2 className="font-head text-4xl font-black md:text-6xl">Join <span className="z-gradient-text">12,000+</span> Early Shoppers</h2>
           <p className="mx-auto mt-4 max-w-2xl text-[var(--muted)]">Get first access to curated drops, seller launches, and limited-time marketplace rewards.</p>
           <form className="z-glass mx-auto mt-8 flex w-full max-w-2xl flex-col gap-3 rounded-full p-2 sm:flex-row">
             <input className="min-h-12 flex-1 rounded-full bg-transparent px-5 text-[var(--cream)] outline-none placeholder:text-[var(--muted)]" placeholder="you@example.com" type="email" />
@@ -228,7 +211,7 @@ export function LandingPage() {
       <footer className="z-section border-t border-[rgba(124,92,252,0.25)] py-12">
         <div className="grid w-full grid-cols-1 gap-8 md:grid-cols-4">
           <div>
-            <p className="font-playfair text-3xl font-black tracking-[4px] z-gradient-text">ZIVVO</p>
+            <p className="font-head text-3xl font-black tracking-[4px] z-gradient-text">ZIVVO</p>
             <p className="mt-3 max-w-xs text-sm leading-7 text-[var(--muted)]">A premium marketplace for expressive products, verified sellers, and effortless shopping.</p>
           </div>
           {[

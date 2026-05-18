@@ -24,7 +24,7 @@ export function Loader({ active = true }) {
           transition={{ duration: 0.4 }}
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#05060F] text-center"
         >
-          <h2 className="z-loader-word font-playfair text-5xl font-black tracking-[0.22em] sm:text-7xl">ZIVVO</h2>
+          <h2 className="z-loader-word font-head text-5xl font-black tracking-[0.22em] sm:text-7xl">ZIVVO</h2>
           <div className="z-loader-bar mt-8 h-[2px] w-[280px] overflow-hidden rounded-full bg-white/10" />
           <div className="mt-6 flex items-center gap-3">
             {[0, 0.2, 0.4].map((delay) => (

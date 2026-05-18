@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
@@ -25,30 +25,32 @@ function IconButton({ children, label, to }) {
 }
 
 export function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const navRef = useRef(null);
   const cartCount = useSelector((state) => state.cart.itemCount || 0);
   const wishlistCount = useSelector(selectWishlistCount);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 50);
-    onScroll();
+    const onScroll = () => {
+      if (window.scrollY > 50) {
+        navRef.current?.classList.add("scrolled");
+      } else {
+        navRef.current?.classList.remove("scrolled");
+      }
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
     <header
-      className="sticky top-0 z-50 w-full border-b backdrop-blur-[20px]"
-      style={{
-        background: scrolled ? "var(--nav-bg-strong)" : "var(--nav-bg)",
-        borderBottomColor: "rgba(124,92,252,0.2)",
-        transition: "background 0.3s, border-color 0.3s"
-      }}
+      ref={navRef}
+      className="z-navbar sticky top-0 z-50 w-full"
     >
       <div className="flex h-[72px] w-full items-center justify-between px-[clamp(18px,5vw,72px)]">
-        <Link to="/" className="font-playfair text-2xl font-black tracking-[4px] z-gradient-text">
+        <Link to="/" className="z-logo text-2xl">
           ZIVVO
         </Link>
 

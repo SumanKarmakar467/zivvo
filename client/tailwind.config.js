@@ -7,9 +7,28 @@ export default {
       fontFamily: {
         sans: ['"DM Sans"', "sans-serif"],
         display: ['"Playfair Display"', "serif"],
-        playfair: ['"Playfair Display"', "serif"]
+        playfair: ['"Playfair Display"', "serif"],
+        head: ["Playfair Display", "Georgia", "serif"],
+        body: ["DM Sans", "system-ui", "sans-serif"]
       },
       colors: {
+        violet: {
+          DEFAULT: "#7C5CFC",
+          light: "#A78BFA"
+        },
+        cyan: {
+          DEFAULT: "#22D3EE",
+          light: "#67E8F9"
+        },
+        rose: {
+          DEFAULT: "#F43F5E"
+        },
+        cream: {
+          DEFAULT: "#E8EAFF"
+        },
+        muted: {
+          DEFAULT: "#7B83A8"
+        },
         cosmic: {
           bg: "#05060F",
           surface: "#0C0F1A",
@@ -49,6 +68,9 @@ export default {
           border: "rgba(255,255,255,0.08)"
         },
         bg: {
+          DEFAULT: "#05060F",
+          2: "#0C0F1A",
+          3: "#111528",
           warm: "#f8f5f0",
           card: "#ffffff",
           muted: "#f0ebe3"

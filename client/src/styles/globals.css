@@ -1,29 +1,39 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Playfair+Display:wght@700;900&display=swap");
-
 :root {
-  --bg: #f5f3ff;
-  --bg2: #ede9fe;
-  --violet: #5b21b6;
-  --violet2: #7c3aed;
-  --cyan: #0e7490;
-  --rose: #f43f5e;
-  --cream: #1e1b4b;
-  --muted: #6b7280;
-  --nav-bg: rgba(245, 243, 255, 0.9);
-  --nav-bg-strong: rgba(245, 243, 255, 0.96);
+  --bg: #05060F;
+  --bg2: #0C0F1A;
+  --bg3: #111528;
+  --violet: #7C5CFC;
+  --violet2: #A78BFA;
+  --cyan: #22D3EE;
+  --rose: #F43F5E;
+  --cream: #E8EAFF;
+  --muted: #7B83A8;
+  --border: rgba(124,92,252,0.18);
+  --font-head: "Playfair Display", Georgia, serif;
+  --font-body: "DM Sans", system-ui, sans-serif;
+  --nav-bg: rgba(5, 6, 15, 0.75);
+  --nav-bg-strong: rgba(5, 6, 15, 0.95);
 }
 
 :root.dark {
-  --bg: #05060f;
-  --bg2: #0c0f1a;
-  --violet: #7c5cfc;
-  --violet2: #a78bfa;
-  --cyan: #22d3ee;
-  --rose: #f43f5e;
-  --cream: #e8eaff;
-  --muted: #7b83a8;
-  --nav-bg: rgba(5, 6, 15, 0.85);
+  --bg: #05060F;
+  --bg2: #0C0F1A;
+  --bg3: #111528;
+  --violet: #7C5CFC;
+  --violet2: #A78BFA;
+  --cyan: #22D3EE;
+  --rose: #F43F5E;
+  --cream: #E8EAFF;
+  --muted: #7B83A8;
+  --border: rgba(124,92,252,0.18);
+  --nav-bg: rgba(5, 6, 15, 0.75);
   --nav-bg-strong: rgba(5, 6, 15, 0.95);
+}
+
+html {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--cream);
 }
 
 html,
@@ -35,11 +45,15 @@ body,
 body {
   background: var(--bg);
   color: var(--cream);
-  font-family: "DM Sans", system-ui, sans-serif;
+  font-family: var(--font-body);
 }
 
 .font-playfair {
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: var(--font-head);
+}
+
+.font-head {
+  font-family: var(--font-head);
 }
 
 .z-gradient-text {
@@ -62,80 +76,164 @@ body {
 
 .z-grid-overlay {
   background-image:
-    linear-gradient(rgba(124, 92, 252, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(124, 92, 252, 0.035) 1px, transparent 1px);
+    linear-gradient(rgba(124, 92, 252, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 92, 252, 0.04) 1px, transparent 1px);
   background-size: 60px 60px;
 }
 
-.z-ambient-layer {
+.hero-orb {
   position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.z-ambient-layer span {
-  position: absolute;
-  width: min(36vw, 430px);
-  aspect-ratio: 1;
-  border-radius: 999px;
+  border-radius: 50%;
   filter: blur(90px);
+  pointer-events: none;
+  animation: orbFloat 10s ease-in-out infinite alternate;
+}
+
+.hero-orb-1 {
+  width: 420px;
+  height: 420px;
+  background: #5C3BCC;
   opacity: 0.18;
-  transform: translate3d(0, 0, 0);
-  animation: floatAmbient 10s ease-in-out infinite alternate;
+  top: -100px;
+  left: -100px;
+  animation-duration: 10s;
 }
 
-.z-ambient-layer span:nth-child(1) {
-  left: 6%;
-  top: 12%;
-  background: var(--violet);
-  animation-duration: 9s;
-}
-
-.z-ambient-layer span:nth-child(2) {
-  right: 8%;
-  top: 18%;
-  background: var(--cyan);
-  animation-duration: 11s;
-  animation-delay: -1.5s;
-}
-
-.z-ambient-layer span:nth-child(3) {
-  bottom: 10%;
-  left: 20%;
-  background: var(--rose);
+.hero-orb-2 {
+  width: 300px;
+  height: 300px;
+  background: #0891B2;
   opacity: 0.15;
-  animation-duration: 8s;
-  animation-delay: -2.4s;
-}
-
-.z-ambient-layer span:nth-child(4) {
-  right: 18%;
-  bottom: 8%;
-  background: #3b0764;
-  opacity: 0.22;
+  top: 120px;
+  right: -80px;
   animation-duration: 13s;
   animation-delay: -4s;
 }
 
-.z-float-card {
-  animation: productFloat 6s ease-in-out infinite alternate;
+.hero-orb-3 {
+  width: 260px;
+  height: 260px;
+  background: #BE185D;
+  opacity: 0.12;
+  bottom: -40px;
+  left: 38%;
+  animation-duration: 9s;
+  animation-delay: -7s;
 }
 
-.z-float-card:nth-child(1) {
-  animation-duration: 5s;
+.hero-orb-4 {
+  width: 180px;
+  height: 180px;
+  background: #7C5CFC;
+  opacity: 0.20;
+  bottom: 80px;
+  right: 12%;
+  animation-duration: 11s;
+  animation-delay: -2s;
 }
 
-.z-float-card:nth-child(2) {
+.floating-product-row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+  position: relative;
+  z-index: 1;
+}
+
+.float-card {
+  min-width: 120px;
+  padding: 16px 18px;
+  border: 0.5px solid rgba(124, 92, 252, 0.22);
+  border-radius: 14px;
+  background: rgba(12, 15, 30, 0.88);
+  backdrop-filter: blur(12px);
+  transition: border-color 0.3s;
+  animation: cardFloat1 5.5s ease-in-out infinite alternate;
+}
+
+.float-card:hover {
+  border-color: rgba(124, 92, 252, 0.5);
+}
+
+.float-card:nth-child(2) {
   animation-duration: 7s;
+  animation-delay: -2s;
 }
 
-.z-float-card:nth-child(3) {
+.float-card:nth-child(3) {
   animation-duration: 6s;
+  animation-delay: -4s;
 }
 
-.z-float-card:nth-child(4) {
+.float-card:nth-child(4) {
   animation-duration: 8s;
+  animation-delay: -1s;
+}
+
+.float-card-emoji {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 30px;
+}
+
+.float-card-name {
+  color: #E8EAFF;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.float-card-price {
+  color: #A78BFA;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.float-card-badge {
+  display: inline-block;
+  margin-top: 5px;
+  border-radius: 8px;
+  padding: 2px 7px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.float-card-badge-hot {
+  background: rgba(244, 63, 94, 0.15);
+  color: #F43F5E;
+}
+
+.float-card-badge-new {
+  background: rgba(34, 211, 238, 0.14);
+  color: #22D3EE;
+}
+
+.float-card-badge-sale {
+  background: rgba(124, 92, 252, 0.15);
+  color: #A78BFA;
+}
+
+.z-navbar {
+  background: rgba(5, 6, 15, 0.75);
+  backdrop-filter: blur(20px);
+  border-bottom: 0.5px solid rgba(124, 92, 252, 0.2);
+  transition: background 0.3s ease;
+}
+
+.z-navbar.scrolled {
+  background: rgba(5, 6, 15, 0.95);
+}
+
+.z-logo {
+  font-family: var(--font-head);
+  font-weight: 900;
+  letter-spacing: 4px;
+  background: linear-gradient(120deg, #A78BFA, #22D3EE);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .z-marquee-track {
@@ -230,21 +328,15 @@ body {
   }
 }
 
-@keyframes floatAmbient {
-  from {
-    transform: translate3d(-12px, 10px, 0) scale(0.96);
+@keyframes orbFloat {
+  0% {
+    transform: translate(0, 0) scale(1);
   }
-  to {
-    transform: translate3d(18px, -18px, 0) scale(1.05);
+  50% {
+    transform: translate(20px, -28px) scale(1.07);
   }
-}
-
-@keyframes productFloat {
-  from {
-    transform: translate3d(0, 10px, 0);
-  }
-  to {
-    transform: translate3d(0, -18px, 0);
+  100% {
+    transform: translate(-16px, 18px) scale(0.95);
   }
 }
 
@@ -254,5 +346,20 @@ body {
   }
   to {
     transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes cardFloat1 {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-14px);
+  }
+}
+
+@media (max-width: 768px) {
+  .float-card:nth-child(n+3) {
+    display: none;
   }
 }
