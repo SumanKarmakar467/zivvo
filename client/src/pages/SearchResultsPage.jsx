@@ -1,166 +1,180 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import FilterSidebar from "../components/FilterSidebar";
-import SearchBar from "../components/SearchBar";
 import ProductCard from "../components/ProductCard";
 import SkeletonGrid from "../components/SkeletonGrid";
-import { fetchSearchResults, selectSearchResults } from "../features/search/searchSlice";
-import { getDemoFacets, searchDemoProducts } from "../data/demoProducts";
-import useLoadingStore from "../store/useLoadingStore";
+import FilterSidebar from "../components/search/FilterSidebar";
+import SearchBar from "../components/search/SearchBar";
+import SortDropdown from "../components/search/SortDropdown";
+import useSearchStore from "../store/useSearchStore";
 
 const DEFAULT_LIMIT = 20;
 
-const mergeProducts = (primary, supplemental, targetCount = 16) => {
-  const seen = new Set();
-  return [...primary, ...supplemental]
-    .filter((product) => {
-      const key = product._id || product.slug || product.name;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    })
-    .slice(0, targetCount);
-};
+const parseList = (value) =>
+  String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const popularChips = ["Fashion", "Shoes", "Electronics", "Kitchen", "Beauty", "Sports"];
 
 export default function SearchResultsPage() {
-  const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [facets, setFacets] = useState({ categories: [], brands: [] });
-  const [facetsLoading, setFacetsLoading] = useState(false);
-  const { results, total, pages, currentPage, status } = useSelector(selectSearchResults);
-  const isSearching = useLoadingStore((state) => state.isSearching);
-  const setSearching = useLoadingStore((state) => state.setSearching);
+  const {
+    query,
+    results,
+    filters,
+    availableFilters,
+    sort,
+    page,
+    total,
+    totalPages,
+    isLoading,
+    setQuery,
+    setFilters,
+    setSort,
+    setPage,
+    clearFilters,
+    fetchResults
+  } = useSearchStore();
 
-  const normalizedParams = useMemo(() => {
+  const paramsState = useMemo(() => {
     const params = Object.fromEntries(searchParams.entries());
     return {
-      q: params.q || "",
-      category: params.category || "",
-      brand: params.brand || "",
-      minPrice: params.minPrice || "",
-      maxPrice: params.maxPrice || "",
-      minRating: params.minRating || "",
-      sort: params.sort || "newest",
+      query: params.q || "",
+      filters: {
+        category: parseList(params.category),
+        brand: parseList(params.brand),
+        minPrice: params.minPrice || "",
+        maxPrice: params.maxPrice || "",
+        rating: params.rating || params.minRating || "",
+        discount: params.discount || "",
+        inStock: params.inStock === "true"
+      },
+      sort: params.sort || "relevance",
       page: Number(params.page || 1),
       limit: Number(params.limit || DEFAULT_LIMIT)
     };
   }, [searchParams]);
 
   useEffect(() => {
-    dispatch(fetchSearchResults(normalizedParams));
-  }, [dispatch, normalizedParams]);
+    setQuery(paramsState.query);
+    setFilters(paramsState.filters);
+    setSort(paramsState.sort);
+    setPage(paramsState.page);
+    fetchResults(paramsState);
+  }, [fetchResults, paramsState, setFilters, setPage, setQuery, setSort]);
 
-  useEffect(() => {
-    if (status !== "loading") {
-      setSearching(false);
-      return undefined;
-    }
-
-    const timer = setTimeout(() => setSearching(true), 400);
-    return () => clearTimeout(timer);
-  }, [setSearching, status]);
-
-  useEffect(() => {
-    const loadFacets = async () => {
-      setFacetsLoading(true);
-      try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/products/facets`);
-        const data = await res.json();
-        if (res.ok) {
-          const demoFacets = getDemoFacets();
-          setFacets({
-            categories: [...data.categories, ...demoFacets.categories].filter(
-              (category, index, all) => all.findIndex((item) => item.slug === category.slug) === index
-            ),
-            brands: Array.from(new Set([...(data.brands || []), ...demoFacets.brands])).sort((a, b) => a.localeCompare(b))
-          });
-        } else {
-          setFacets(getDemoFacets());
-        }
-      } catch {
-        setFacets(getDemoFacets());
-      } finally {
-        setFacetsLoading(false);
-      }
-    };
-    loadFacets();
-  }, []);
-
-  const setParam = (key, value) => {
-    const next = new URLSearchParams(searchParams);
-    if (value === undefined || value === null || value === "") next.delete(key);
-    else next.set(key, String(value));
-    if (key !== "page") next.set("page", "1");
-    setSearchParams(next, { replace: true });
+  const updateParams = (next = {}) => {
+    const mergedFilters = { ...filters, ...(next.filters || {}) };
+    const nextSort = next.sort ?? sort;
+    const nextPage = next.page ?? 1;
+    const params = new URLSearchParams();
+    if (next.query ?? query) params.set("q", next.query ?? query);
+    if (mergedFilters.category?.length) params.set("category", mergedFilters.category.join(","));
+    if (mergedFilters.brand?.length) params.set("brand", mergedFilters.brand.join(","));
+    ["minPrice", "maxPrice", "rating", "discount"].forEach((key) => {
+      if (mergedFilters[key]) params.set(key, mergedFilters[key]);
+    });
+    if (mergedFilters.inStock) params.set("inStock", "true");
+    if (nextSort && nextSort !== "relevance") params.set("sort", nextSort);
+    params.set("page", String(nextPage));
+    setSearchParams(params, { replace: true });
   };
 
-  const clearFilters = () => {
-    const q = searchParams.get("q");
-    const next = new URLSearchParams();
-    if (q) next.set("q", q);
-    next.set("sort", "newest");
-    setSearchParams(next, { replace: true });
+  const onFiltersChange = (nextFilters) => updateParams({ filters: nextFilters, page: 1 });
+  const onClear = () => {
+    clearFilters();
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    params.set("page", "1");
+    setSearchParams(params, { replace: true });
   };
 
-  const from = total === 0 ? 0 : (currentPage - 1) * normalizedParams.limit + 1;
-  const to = Math.min(currentPage * normalizedParams.limit, total);
-  const demoSearch = useMemo(
-    () => searchDemoProducts({ ...normalizedParams, limit: 16 }),
-    [normalizedParams]
-  );
-  const shouldBoostResults = (normalizedParams.q || normalizedParams.category) && results.length < 12;
-  const displayResults = shouldBoostResults ? mergeProducts(results, demoSearch.products) : results;
-  const displayTotal = shouldBoostResults ? Math.max(total, displayResults.length) : total;
-  const displayFrom = displayTotal === 0 ? 0 : shouldBoostResults ? 1 : from;
-  const displayTo = shouldBoostResults ? displayResults.length : to;
+  const from = total === 0 ? 0 : (page - 1) * DEFAULT_LIMIT + 1;
+  const to = Math.min(page * DEFAULT_LIMIT, total);
 
   return (
-    <main className="min-h-screen bg-brand-bg px-4 py-6 text-brand-ink dark:bg-night-bg dark:text-white md:px-6">
+    <main className="min-h-screen bg-[var(--bg)] px-4 py-6 text-[var(--cream)] md:px-6">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-4 rounded-2xl border border-black/10 bg-white p-3 shadow-sm dark:border-night-border dark:bg-night-card">
+        <div className="mb-5 rounded-2xl border border-[var(--border)] bg-[var(--bg2)] p-3 shadow-[0_18px_50px_rgba(0,0,0,0.2)]">
           <SearchBar />
         </div>
 
         <div className="grid gap-5 md:grid-cols-[18rem_1fr]">
-          <FilterSidebar searchParams={searchParams} facets={facets} onParamChange={setParam} onClear={clearFilters} />
+          <FilterSidebar filters={filters} availableFilters={availableFilters} onFiltersChange={onFiltersChange} onClear={onClear} />
 
           <section>
-            <p className="mb-4 rounded-2xl border border-black/10 bg-white px-3 py-2 text-sm text-brand-inkMid shadow-sm dark:border-night-border dark:bg-night-card dark:text-zivvo-text-muted">
-              Showing {displayFrom}-{displayTo} of {displayTotal} results
-              {shouldBoostResults && <span className="ml-2 font-semibold text-[#e8730a]">Related product suggestions</span>}
-            </p>
+            <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg2)] px-4 py-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h1 className="font-head text-2xl font-black">
+                  {query ? `Showing ${total.toLocaleString("en-IN")} results for "${query}"` : "Search Zivvo products"}
+                </h1>
+                <p className="mt-1 text-sm text-[var(--muted)]">
+                  {total ? `Showing ${from}-${to} of ${total.toLocaleString("en-IN")} products` : "Use keywords, filters, or popular categories to discover products."}
+                </p>
+              </div>
+              <SortDropdown value={sort} onChange={(value) => updateParams({ sort: value, page: 1 })} />
+            </div>
 
-            {(isSearching || facetsLoading) ? (
-              <SkeletonGrid count={9} />
-            ) : displayResults.length === 0 ? (
-              <div className="rounded-2xl border border-black/10 bg-white p-10 text-center shadow-sm dark:border-night-border dark:bg-night-card">
-                <h2 className="text-lg font-semibold">No products found</h2>
-                <p className="mt-2 text-sm text-brand-inkMid dark:text-zivvo-text-muted">Try broadening your filters or search term.</p>
-                <Link to="/" className="mt-4 inline-block text-sm font-semibold text-[#ef9f27]">Back to home</Link>
+            {isLoading ? (
+              <SkeletonGrid count={12} />
+            ) : results.length === 0 ? (
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg2)] p-10 text-center shadow-sm">
+                <div className="mx-auto grid h-28 w-28 place-items-center rounded-full bg-[rgba(124,92,252,0.12)] text-5xl">⌕</div>
+                <h2 className="mt-5 font-head text-3xl font-black">Try different keywords</h2>
+                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[var(--muted)]">
+                  We could not find products for this search. Try broader words, remove filters, or explore a popular category.
+                </p>
+                <div className="mt-6 flex flex-wrap justify-center gap-2">
+                  {popularChips.map((chip) => (
+                    <Link
+                      key={chip}
+                      to={`/search?q=${encodeURIComponent(chip)}&page=1`}
+                      className="min-h-11 rounded-full border border-[var(--border)] px-4 py-2 text-sm font-bold text-[var(--cream)] hover:border-[var(--cyan)]"
+                    >
+                      {chip}
+                    </Link>
+                  ))}
+                </div>
               </div>
             ) : (
               <>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {displayResults.map((product) => <ProductCard key={product._id} product={product} />)}
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {results.map((product) => <ProductCard key={product._id} product={product} />)}
                 </div>
-                {!shouldBoostResults && <div className="mt-6 flex flex-wrap items-center gap-2">
-                  <button type="button" onClick={() => setParam("page", Math.max(currentPage - 1, 1))} disabled={currentPage <= 1} className="rounded-md bg-zinc-800 px-3 py-1 text-sm disabled:opacity-40">Previous</button>
-                  {Array.from({ length: pages }).map((_, index) => {
-                    const pageNum = index + 1;
-                    return (
-                      <button
-                        type="button"
-                        key={pageNum}
-                        onClick={() => setParam("page", pageNum)}
-                        className={`rounded-md px-3 py-1 text-sm ${pageNum === currentPage ? "bg-[#ef9f27] text-black" : "bg-zinc-800"}`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                  <button type="button" onClick={() => setParam("page", Math.min(currentPage + 1, pages || 1))} disabled={currentPage >= pages} className="rounded-md bg-zinc-800 px-3 py-1 text-sm disabled:opacity-40">Next</button>
-                </div>}
+                {totalPages > 1 && (
+                  <div className="mt-6 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => updateParams({ page: Math.max(page - 1, 1) })}
+                      disabled={page <= 1}
+                      className="min-h-11 rounded-xl border border-[var(--border)] px-4 text-sm font-bold disabled:opacity-40"
+                    >
+                      Previous
+                    </button>
+                    {Array.from({ length: totalPages }).slice(0, 8).map((_, index) => {
+                      const pageNum = index + 1;
+                      return (
+                        <button
+                          type="button"
+                          key={pageNum}
+                          onClick={() => updateParams({ page: pageNum })}
+                          className={`min-h-11 min-w-11 rounded-xl px-3 text-sm font-bold ${pageNum === page ? "bg-[#7C5CFC] text-white" : "border border-[var(--border)] text-[var(--cream)]"}`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      onClick={() => updateParams({ page: Math.min(page + 1, totalPages) })}
+                      disabled={page >= totalPages}
+                      className="min-h-11 rounded-xl border border-[var(--border)] px-4 text-sm font-bold disabled:opacity-40"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </section>

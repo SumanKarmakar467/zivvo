@@ -23,6 +23,7 @@ import verificationRoutes from "./routes/verificationRoutes.js";
 import sellerPublicRoutes from "./routes/sellerPublicRoutes.js";
 import addressRoutes from "./routes/addressRoutes.js";
 import shippingRoutes from "./routes/shippingRoutes.js";
+import searchRoutes from "./routes/searchRoutes.js";
 import { notFound, errorHandler } from "./middlewares/errorMiddleware.js";
 
 const app = express();
@@ -62,6 +63,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/search", searchRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/seller", sellerRoutes);
