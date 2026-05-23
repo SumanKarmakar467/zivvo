@@ -2,177 +2,131 @@ import slugify from "slugify";
 import mongoose from "mongoose";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
-import Review from "../models/Review.js";
+import Category from "../models/Category.js";
 import asyncHandler from "../middlewares/asyncHandler.js";
-import { uploadToCloudinary } from "../middleware/upload.js";
+import { sendOrderStatusUpdate } from "../utils/emailService.js";
 
 const toObjectId = (id) => new mongoose.Types.ObjectId(String(id));
 
-const parseSpecs = (specsInput) => {
-  if (!specsInput) return {};
-  if (typeof specsInput === "object" && !Array.isArray(specsInput)) return specsInput;
-
+const parseJson = (value, fallback) => {
+  if (value === undefined || value === null || value === "") return fallback;
+  if (typeof value !== "string") return value;
   try {
-    const parsed = JSON.parse(specsInput);
-    if (Array.isArray(parsed)) {
-      return parsed.reduce((acc, item) => {
-        if (item?.key && item?.value !== undefined) acc[item.key] = String(item.value);
-        return acc;
-      }, {});
-    }
-    if (parsed && typeof parsed === "object") return parsed;
-  } catch (error) {
-    return {};
+    return JSON.parse(value);
+  } catch {
+    return fallback;
   }
-
-  return {};
 };
 
 const parseTags = (tagsInput) => {
   if (!tagsInput) return [];
   if (Array.isArray(tagsInput)) return tagsInput.map((tag) => String(tag).trim()).filter(Boolean);
-  return String(tagsInput)
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter(Boolean);
+  return String(tagsInput).split(",").map((tag) => tag.trim()).filter(Boolean);
 };
 
-const normalizeToken = (value) =>
-  String(value || "")
-    .trim()
-    .replace(/\s+/g, "_")
-    .replace(/[^a-zA-Z0-9_-]/g, "")
-    .toUpperCase();
+const normalizeProductPayload = (body) => {
+  const specsInput = parseJson(body.specifications ?? body.specs, {});
+  const specs = Array.isArray(specsInput)
+    ? specsInput.reduce((acc, item) => {
+        if (item?.key && item?.value !== undefined) acc[item.key] = String(item.value);
+        return acc;
+      }, {})
+    : specsInput;
 
-const buildVariants = (variantsInput, productIdFragment) => {
-  let parsed = variantsInput;
-  if (typeof variantsInput === "string") {
-    try { parsed = JSON.parse(variantsInput); } catch { parsed = []; }
-  }
-  if (!Array.isArray(parsed)) return [];
+  return {
+    name: body.name,
+    slug: body.name ? slugify(body.name, { lower: true, strict: true, trim: true }) : undefined,
+    description: body.description,
+    price: body.price === undefined ? undefined : Number(body.price),
+    mrp: body.mrp === undefined ? undefined : Number(body.mrp),
+    category: body.category,
+    brand: body.brand || "",
+    stock: body.stock === undefined ? undefined : Number(body.stock),
+    specs,
+    tags: parseTags(body.tags),
+    variants: parseJson(body.variants, []),
+    status: body.status || (body.isActive === "false" ? "paused" : "active"),
+    isFeatured: body.isFeatured === true || body.isFeatured === "true"
+  };
+};
 
-  return parsed.map((variant, idx) => {
-    const attrs = variant?.attributes && typeof variant.attributes === "object" ? variant.attributes : {};
-    const color = normalizeToken(attrs.color);
-    const size = normalizeToken(attrs.size);
-    const material = normalizeToken(attrs.material);
-    const autoSkuParts = [productIdFragment, color, size, material].filter(Boolean);
-    const autoSku = autoSkuParts.join("-");
-    return {
-      sku: normalizeToken(variant?.sku) || autoSku || `${productIdFragment}-VAR${idx + 1}`,
-      attributes: attrs,
-      stock: Math.max(Number(variant?.stock || 0), 0),
-      priceDelta: Number(variant?.priceDelta || 0),
-      images: Array.isArray(variant?.images) ? variant.images : [],
-      isActive: variant?.isActive === undefined ? true : Boolean(variant.isActive)
-    };
+const uploadedUrls = (files = []) => files.map((file) => file.path).filter(Boolean);
+const uploadedPublicIds = (files = []) => files.map((file) => file.filename).filter(Boolean);
+
+const resolveCategory = async (category) => {
+  if (!category) return category;
+  if (mongoose.Types.ObjectId.isValid(String(category))) return category;
+  const name = String(category).trim();
+  const slug = slugify(name, { lower: true, strict: true, trim: true });
+  const doc = await Category.findOneAndUpdate(
+    { slug },
+    { $setOnInsert: { name, slug, isActive: true } },
+    { new: true, upsert: true }
+  );
+  return doc._id;
+};
+
+const fillThirtyDays = (rows) => {
+  const map = new Map(rows.map((row) => [row._id, { date: row._id, revenue: row.revenue, orders: row.orders }]));
+  return Array.from({ length: 30 }, (_, index) => {
+    const date = new Date(Date.now() - (29 - index) * 24 * 60 * 60 * 1000);
+    const key = date.toISOString().slice(0, 10);
+    return map.get(key) || { date: key, revenue: 0, orders: 0 };
   });
-};
-
-const ensureUniqueSku = (variants = []) => {
-  const seen = new Set();
-  for (const variant of variants) {
-    const sku = String(variant.sku || "").toUpperCase();
-    if (!sku) throw new Error("Each variant must have a SKU");
-    if (seen.has(sku)) throw new Error("Duplicate variant SKU found");
-    seen.add(sku);
-  }
-};
-
-const uploadImages = async (files = []) => {
-  const uploaded = [];
-  for (const file of files) {
-    const asset = await uploadToCloudinary(file.buffer, "zivvo/products");
-    uploaded.push(asset.url);
-  }
-  return uploaded;
 };
 
 export const getSellerStats = asyncHandler(async (req, res) => {
-  const sellerId = String(req.user._id);
-  const sellerObjectId = toObjectId(sellerId);
+  const sellerId = toObjectId(req.user._id);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const [totalProducts, sellerProducts, sellerOrdersRaw] = await Promise.all([
-    Product.countDocuments({ seller: sellerObjectId }),
-    Product.find({ seller: sellerObjectId }).select("_id sold price rating").lean(),
-    Order.find({ "items.seller": sellerObjectId })
+  const sellerPaidMatch = [
+    { $unwind: "$items" },
+    { $lookup: { from: "products", localField: "items.product", foreignField: "_id", as: "product" } },
+    { $unwind: "$product" },
+    { $match: { "product.seller": sellerId, paymentStatus: "paid" } }
+  ];
+
+  const [revenueAgg, ordersTodayAgg, totalProducts, ratingAgg, revenueRows, recentOrders, lowStockProducts] = await Promise.all([
+    Order.aggregate([...sellerPaidMatch, { $group: { _id: null, total: { $sum: { $multiply: ["$items.price", "$items.quantity"] } } } }]),
+    Order.aggregate([...sellerPaidMatch, { $match: { createdAt: { $gte: today } } }, { $group: { _id: "$_id" } }, { $count: "orders" }]),
+    Product.countDocuments({ seller: sellerId, status: "active" }),
+    Product.aggregate([{ $match: { seller: sellerId, status: { $ne: "deleted" } } }, { $group: { _id: null, avg: { $avg: "$averageRating" } } }]),
+    Order.aggregate([
+      ...sellerPaidMatch,
+      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      {
+        $group: {
+          _id: { $dateToString: { date: "$createdAt", format: "%Y-%m-%d" } },
+          revenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } },
+          orders: { $addToSet: "$_id" }
+        }
+      },
+      { $project: { revenue: 1, orders: { $size: "$orders" } } },
+      { $sort: { _id: 1 } }
+    ]),
+    Order.find({ "items.seller": sellerId })
       .sort({ createdAt: -1 })
+      .limit(10)
       .populate("user", "name email")
+      .populate("items.product", "name images")
+      .lean(),
+    Product.find({ seller: sellerId, stock: { $lte: 5 }, status: "active" })
+      .sort({ stock: 1 })
+      .limit(10)
+      .select("name images stock price")
       .lean()
   ]);
 
-  const productIds = sellerProducts.map((product) => product._id);
-  const totalReviews = productIds.length
-    ? await Review.countDocuments({ product: { $in: productIds } })
-    : 0;
-
-  const deliveredOrders = sellerOrdersRaw.filter((order) => order.orderStatus === "delivered");
-
-  let totalRevenue = 0;
-  for (const order of deliveredOrders) {
-    const sellerItems = order.items.filter((item) => String(item.seller) === sellerId);
-    totalRevenue += sellerItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  }
-
-  const totalOrders = sellerOrdersRaw.length;
-
-  const recentOrders = sellerOrdersRaw.slice(0, 5).map((order) => {
-    const sellerItems = order.items.filter((item) => String(item.seller) === sellerId);
-    const sellerTotal = sellerItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-    return {
-      _id: order._id,
-      customer: order.user,
-      items: sellerItems,
-      total: sellerTotal,
-      orderStatus: order.orderStatus,
-      createdAt: order.createdAt
-    };
-  });
-
-  const now = new Date();
-  const monthSeed = Array.from({ length: 6 }).map((_, index) => {
-    const date = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1);
-    return {
-      key: `${date.getFullYear()}-${date.getMonth()}`,
-      month: date.toLocaleString("en-US", { month: "short" }),
-      revenue: 0
-    };
-  });
-
-  const revenueMap = new Map(monthSeed.map((entry) => [entry.key, entry]));
-
-  for (const order of deliveredOrders) {
-    const date = new Date(order.createdAt);
-    const key = `${date.getFullYear()}-${date.getMonth()}`;
-    const target = revenueMap.get(key);
-    if (!target) continue;
-
-    const sellerItems = order.items.filter((item) => String(item.seller) === sellerId);
-    target.revenue += sellerItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  }
-
-  const revenueByMonth = monthSeed.map((entry) => revenueMap.get(entry.key));
-
-  const topProducts = await Product.find({ seller: sellerObjectId })
-    .sort({ sold: -1 })
-    .limit(5)
-    .select("name images sold price")
-    .lean();
-
-  const avgRating = sellerProducts.length
-    ? sellerProducts.reduce((sum, p) => sum + Number(p.rating || 0), 0) / sellerProducts.length
-    : 0;
-
   res.json({
-    totalRevenue,
-    totalOrders,
+    totalRevenue: revenueAgg[0]?.total || 0,
+    ordersToday: ordersTodayAgg[0]?.orders || 0,
     totalProducts,
-    totalReviews,
+    averageRating: Number((ratingAgg[0]?.avg || 0).toFixed(1)),
+    revenueByDay: fillThirtyDays(revenueRows),
     recentOrders,
-    revenueByMonth,
-    topProducts,
-    avgRating: Number(avgRating.toFixed(1))
+    lowStockProducts
   });
 });
 
@@ -181,214 +135,149 @@ export const getSellerProducts = asyncHandler(async (req, res) => {
   const page = Math.max(Number(req.query.page || 1), 1);
   const limit = Math.max(Number(req.query.limit || 10), 1);
   const skip = (page - 1) * limit;
-
   const filter = { seller: sellerId };
+
+  if (req.query.status) filter.status = req.query.status;
   if (req.query.search) {
     const searchRegex = new RegExp(req.query.search, "i");
     filter.$or = [{ name: searchRegex }, { description: searchRegex }, { brand: searchRegex }];
   }
 
-  if (req.query.isActive === "true") filter.isActive = true;
-  if (req.query.isActive === "false") filter.isActive = false;
-
   const [products, total] = await Promise.all([
-    Product.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate("category", "name slug")
-      .lean(),
+    Product.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).populate("category", "name slug").lean(),
     Product.countDocuments(filter)
   ]);
 
-  res.json({
-    products,
-    page,
-    pages: Math.ceil(total / limit),
-    total
-  });
+  res.json({ products, total, page, totalPages: Math.ceil(total / limit), pages: Math.ceil(total / limit) });
 });
 
 export const addProduct = asyncHandler(async (req, res) => {
-  const { name, description, price, mrp, category, brand, stock, specs, tags, isFeatured, isActive, hasVariants, attributeOptions, variants } = req.body;
-
-  if (!name || !description || !price || !category) {
+  const payload = normalizeProductPayload(req.body);
+  if (!payload.name || !payload.price || !payload.mrp || payload.stock === undefined || !payload.category) {
     res.status(400);
-    throw new Error("name, description, price and category are required");
+    throw new Error("name, price, mrp, stock and category are required");
   }
 
-  const files = req.files || [];
-  if (!files.length) {
+  const bodyImages = parseJson(req.body.images, []);
+  const images = [...(Array.isArray(bodyImages) ? bodyImages : []), ...uploadedUrls(req.files || [])];
+  if (!images.length) {
     res.status(400);
     throw new Error("At least one product image is required");
   }
 
-  const images = await uploadImages(files);
-
-  const baseDraft = new Product({
-    name,
-    slug: slugify(name, { lower: true, strict: true, trim: true }),
-    description,
-    price: Number(price),
-    mrp: mrp ? Number(mrp) : undefined,
+  const product = await Product.create({
+    ...payload,
+    category: await resolveCategory(payload.category),
     images,
-    category,
-    brand: brand || "",
-    seller: req.user._id,
-    stock: stock ? Number(stock) : 0,
-    specs: parseSpecs(specs),
-    tags: parseTags(tags),
-    hasVariants: hasVariants === "true" || hasVariants === true,
-    attributeOptions: parseSpecs(attributeOptions),
-    isFeatured: isFeatured === "true" || isFeatured === true,
-    isActive: isActive === undefined ? true : isActive === "true" || isActive === true
+    imagePublicIds: uploadedPublicIds(req.files || []),
+    seller: req.user._id
   });
 
-  if (baseDraft.hasVariants) {
-    const variantRows = buildVariants(variants, String(baseDraft._id).slice(-4).toUpperCase());
-    if (!variantRows.length) {
-      res.status(400);
-      throw new Error("At least one variant is required when hasVariants is true");
-    }
-    ensureUniqueSku(variantRows);
-    baseDraft.variants = variantRows;
-  } else {
-    baseDraft.variants = [];
-  }
-
-  await baseDraft.save();
-
-  const created = await Product.findById(baseDraft._id).populate("category", "name slug").lean();
-  res.status(201).json(created);
+  res.status(201).json(product);
 });
 
 export const updateProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
-
   if (!product) {
     res.status(404);
     throw new Error("Product not found");
   }
-
   if (String(product.seller) !== String(req.user._id) && req.user.role !== "admin") {
     res.status(403);
-    throw new Error("You do not have permission to update this product");
+    throw new Error("Not authorized to update this product");
   }
 
-  const allowedFields = [
-    "name",
-    "description",
-    "price",
-    "mrp",
-    "category",
-    "brand",
-    "stock",
-    "specs",
-    "tags",
-    "isFeatured",
-    "isActive",
-    "hasVariants",
-    "attributeOptions",
-    "variants"
-  ];
+  const payload = normalizeProductPayload(req.body);
+  Object.entries(payload).forEach(([key, value]) => {
+    if (key === "category") return;
+    if (value !== undefined) product[key] = value;
+  });
+  if (payload.category !== undefined) product.category = await resolveCategory(payload.category);
 
-  for (const field of allowedFields) {
-    if (req.body[field] === undefined) continue;
-
-    if (field === "price" || field === "mrp" || field === "stock") {
-      product[field] = Number(req.body[field]);
-    } else if (field === "specs") {
-      product.specs = parseSpecs(req.body.specs);
-    } else if (field === "tags") {
-      product.tags = parseTags(req.body.tags);
-    } else if (field === "isFeatured" || field === "isActive" || field === "hasVariants") {
-      product[field] = req.body[field] === "true" || req.body[field] === true;
-    } else if (field === "attributeOptions") {
-      product.attributeOptions = parseSpecs(req.body.attributeOptions);
-    } else if (field === "variants") {
-      const variantRows = buildVariants(req.body.variants, String(product._id).slice(-4).toUpperCase());
-      if (product.hasVariants && !variantRows.length) {
-        res.status(400);
-        throw new Error("At least one variant is required when hasVariants is true");
-      }
-      ensureUniqueSku(variantRows);
-      product.variants = variantRows;
-    } else {
-      product[field] = req.body[field];
-    }
-  }
-
-  if (!product.hasVariants) {
-    product.variants = [];
-    product.attributeOptions = {};
-  }
-
-  if (Array.isArray(req.files) && req.files.length > 0) {
-    product.images = await uploadImages(req.files);
+  const newImages = uploadedUrls(req.files || []);
+  if (newImages.length) {
+    product.images = [...product.images, ...newImages].slice(0, 5);
+    product.imagePublicIds = [...(product.imagePublicIds || []), ...uploadedPublicIds(req.files || [])].slice(0, 5);
   }
 
   await product.save();
-
-  const updated = await Product.findById(product._id).populate("category", "name slug").lean();
-  res.json(updated);
+  res.json(product);
 });
 
 export const deleteProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
-
   if (!product) {
     res.status(404);
     throw new Error("Product not found");
   }
-
   if (String(product.seller) !== String(req.user._id) && req.user.role !== "admin") {
     res.status(403);
-    throw new Error("You do not have permission to delete this product");
+    throw new Error("Not authorized to delete this product");
   }
 
+  product.status = "deleted";
   product.isActive = false;
   await product.save();
+  res.json({ message: "Product removed" });
+});
 
-  res.json({ message: "Product deactivated successfully" });
+export const toggleProductStatus = asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.id);
+  if (!product) {
+    res.status(404);
+    throw new Error("Product not found");
+  }
+  if (String(product.seller) !== String(req.user._id) && req.user.role !== "admin") {
+    res.status(403);
+    throw new Error("Not authorized to update this product");
+  }
+  product.status = product.status === "active" ? "paused" : "active";
+  product.isActive = product.status === "active";
+  await product.save();
+  res.json({ status: product.status });
 });
 
 export const getSellerOrders = asyncHandler(async (req, res) => {
-  const sellerId = String(req.user._id);
-  const sellerObjectId = toObjectId(sellerId);
+  const sellerId = toObjectId(req.user._id);
   const page = Math.max(Number(req.query.page || 1), 1);
   const limit = Math.max(Number(req.query.limit || 10), 1);
   const skip = (page - 1) * limit;
+  const filter = { "items.seller": sellerId };
+  if (req.query.status) filter.orderStatus = req.query.status;
 
-  const filter = { "items.seller": sellerObjectId };
-  if (req.query.status) {
-    filter.orderStatus = req.query.status;
-  }
-
-  const [ordersRaw, total] = await Promise.all([
-    Order.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate("user", "name email")
-      .lean(),
+  const [orders, total] = await Promise.all([
+    Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).populate("user", "name email").populate("items.product", "name images").lean(),
     Order.countDocuments(filter)
   ]);
 
-  const orders = ordersRaw.map((order) => {
-    const items = order.items.filter((item) => String(item.seller) === sellerId);
-    const sellerTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  res.json({ orders, total, page, totalPages: Math.ceil(total / limit), pages: Math.ceil(total / limit) });
+});
 
-    return {
-      ...order,
-      items,
-      sellerTotal
-    };
+export const shipSellerOrder = asyncHandler(async (req, res) => {
+  const { trackingId, courier, estimatedDelivery } = req.body;
+  if (!trackingId || !courier) {
+    res.status(400);
+    throw new Error("trackingId and courier are required");
+  }
+
+  const order = await Order.findOne({ _id: req.params.id, "items.seller": req.user._id }).populate("user", "name email");
+  if (!order) {
+    res.status(404);
+    throw new Error("Order not found");
+  }
+
+  order.orderStatus = "shipped";
+  order.trackingNumber = trackingId;
+  order.awbNumber = trackingId;
+  order.courierName = courier;
+  if (estimatedDelivery) order.estimatedDelivery = estimatedDelivery;
+  order.statusHistory.push({
+    status: "shipped",
+    note: `Shipped via ${courier} with tracking ID ${trackingId}`,
+    updatedBy: req.user._id
   });
 
-  res.json({
-    orders,
-    page,
-    pages: Math.ceil(total / limit),
-    total
-  });
+  await order.save();
+  await sendOrderStatusUpdate(order.user, order, "shipped");
+  res.json(order);
 });

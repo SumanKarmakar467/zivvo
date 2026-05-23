@@ -26,7 +26,8 @@ import sellerPublicRoutes from "./routes/sellerPublicRoutes.js";
 import addressRoutes from "./routes/addressRoutes.js";
 import shippingRoutes from "./routes/shippingRoutes.js";
 import searchRoutes from "./routes/searchRoutes.js";
-import { notFound, errorHandler } from "./middlewares/errorMiddleware.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
+import { AppError, globalErrorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 
@@ -105,8 +106,12 @@ app.use("/api/verification", verificationRoutes);
 app.use("/api/sellers", sellerPublicRoutes);
 app.use("/api/addresses", addressRoutes);
 app.use("/api/shipping", shippingRoutes);
+app.use("/api/upload", uploadRoutes);
 
-app.use(notFound);
-app.use(errorHandler);
+app.use("*", (req, res, next) => {
+  next(new AppError(`Route ${req.originalUrl} not found`, 404));
+});
+
+app.use(globalErrorHandler);
 
 export default app;

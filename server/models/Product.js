@@ -29,6 +29,7 @@ const productSchema = new mongoose.Schema(
       },
       required: true
     },
+    imagePublicIds: { type: [String], default: [] },
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
     brand: { type: String, default: "" },
     seller: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -45,7 +46,8 @@ const productSchema = new mongoose.Schema(
     hasVariants: { type: Boolean, default: false },
     attributeOptions: { type: Map, of: [String], default: {} },
     isFeatured: { type: Boolean, default: false },
-    isActive: { type: Boolean, default: true }
+    isActive: { type: Boolean, default: true },
+    status: { type: String, enum: ["active", "paused", "deleted"], default: "active", index: true }
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
@@ -66,6 +68,8 @@ productSchema.pre("validate", function preValidate(next) {
   } else {
     this.discount = 0;
   }
+
+  this.isActive = this.status === "active";
 
   next();
 });

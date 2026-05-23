@@ -16,12 +16,14 @@ const authSlice = createSlice({
       state.accessToken = action.payload.accessToken || null;
       state.isAuthenticated = Boolean(action.payload.accessToken);
       state.loading = false;
+      if (action.payload.accessToken) localStorage.setItem("zivvo-token", action.payload.accessToken);
     },
     logout: (state) => {
       state.user = null;
       state.accessToken = null;
       state.loading = false;
       state.isAuthenticated = false;
+      localStorage.removeItem("zivvo-token");
     },
     setLoading: (state, action) => {
       state.loading = action.payload;

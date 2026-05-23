@@ -1,3 +1,4 @@
+import type { ReactNode, SVGProps } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -12,8 +13,21 @@ const navLinks = [
   { label: "About", to: "/#about" }
 ];
 
-function Icon({ type }) {
-  const common = { className: "h-5 w-5", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", viewBox: "0 0 24 24" };
+type IconType = "search" | "heart" | "bag" | "sun" | "moon";
+
+interface RootState {
+  cart?: {
+    itemCount?: number;
+  };
+  auth?: {
+    user?: {
+      role?: string;
+    } | null;
+  };
+}
+
+function Icon({ type }: { type: IconType }) {
+  const common: SVGProps<SVGSVGElement> = { className: "h-5 w-5", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", viewBox: "0 0 24 24" };
   if (type === "search") return <svg {...common}><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>;
   if (type === "heart") return <svg {...common}><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" /></svg>;
   if (type === "bag") return <svg {...common}><path d="M6 8h12l-1 12H7L6 8Z" /><path d="M9 8a3 3 0 0 1 6 0" /></svg>;
@@ -21,34 +35,56 @@ function Icon({ type }) {
   return <svg {...common}><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" /></svg>;
 }
 
-function NavIconButton({ children, to, onClick, count, label }) {
-  const Comp = to ? Link : "button";
-  return (
-    <Comp to={to} onClick={onClick} aria-label={label} className="relative grid h-11 w-11 place-items-center rounded-full border border-[var(--border)] text-[var(--cream)] transition hover:border-[var(--violet2)] hover:text-[var(--violet2)]">
+interface NavIconButtonProps {
+  children: ReactNode;
+  to?: string;
+  onClick?: () => void;
+  count?: number;
+  label: string;
+}
+
+function NavIconButton({ children, to, onClick, count = 0, label }: NavIconButtonProps) {
+  const className = "relative grid h-11 w-11 place-items-center rounded-full border border-[var(--border)] text-[var(--cream)] transition hover:border-[var(--violet2)] hover:text-[var(--violet2)]";
+  const content = (
+    <>
       {children}
       {count > 0 && <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-[var(--violet)] px-1 text-[10px] font-bold text-white">{count}</span>}
-    </Comp>
+    </>
+  );
+
+  if (to) {
+    return <Link to={to} onClick={onClick} aria-label={label} className={className}>{content}</Link>;
+  }
+
+  return (
+    <button type="button" onClick={onClick} aria-label={label} className={className}>
+      {content}
+    </button>
   );
 }
 
 export function Navbar() {
-  const navRef = useRef(null);
-  const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+  const [scrolled, setScrolled] = useState<boolean>(false);
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const location = useLocation();
   const navigate = useNavigate();
   const wishlistCount = useSelector(selectWishlistCount);
-  const cartCount = useSelector((state) => state.cart.itemCount || 0);
+  const cartCount = useSelector((state: RootState) => state.cart?.itemCount || 0);
+  const userRole = useSelector((state: RootState) => state.auth?.user?.role);
   const { theme, toggleTheme } = useTheme();
+  const visibleNavLinks = userRole === "seller" || userRole === "admin"
+    ? [{ label: "Seller Hub", to: "/seller/dashboard" }, ...navLinks.filter((link) => link.label !== "Sellers")]
+    : navLinks;
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
+    const handleScroll = (_event?: Event) => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const isActive = (to) => (to === "/#about" ? location.hash === "#about" : location.pathname === to || location.pathname.startsWith(`${to}/`));
+  const isActive = (to: string) => (to === "/#about" ? location.hash === "#about" : location.pathname === to || location.pathname.startsWith(`${to}/`));
 
   return (
     <motion.header
@@ -69,7 +105,7 @@ export function Navbar() {
         <Link to="/" className="z-nav-logo text-[22px]">ZIVVO</Link>
 
         <nav className="hidden items-center gap-8 md:flex">
-          {navLinks.map((link) => (
+          {visibleNavLinks.map((link) => (
             <NavLink key={link.to} to={link.to} className={`z-nav-link ${isActive(link.to) ? "is-active" : ""}`}>
               {link.label}
             </NavLink>
@@ -108,7 +144,7 @@ export function Navbar() {
             exit={{ opacity: 0, y: -18 }}
             className="border-t border-[var(--border)] bg-[rgba(5,6,15,0.98)] px-5 py-5 md:hidden"
           >
-            {navLinks.map((link) => (
+            {visibleNavLinks.map((link) => (
               <motion.div key={link.to} initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
                 <NavLink to={link.to} onClick={() => setMenuOpen(false)} className="block border-b border-[rgba(124,92,252,0.1)] py-3.5 text-base text-[var(--cream)]">
                   {link.label}

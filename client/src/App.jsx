@@ -18,6 +18,9 @@ import AccountOrders from "./pages/AccountOrders";
 import Account from "./pages/Account";
 import SellerDashboard from "./pages/SellerDashboard";
 import SellerDashboardPage from "./pages/seller/SellerDashboardPage";
+import SellerDashboardNew from "./pages/seller/SellerDashboard";
+import SellerProducts from "./pages/seller/SellerProducts";
+import SellerOrders from "./pages/seller/SellerOrders";
 import SellerCouponsPage from "./pages/seller/SellerCouponsPage";
 import SellerReturnsPage from "./pages/seller/SellerReturnsPage";
 import AdminPanel from "./pages/AdminPanel";
@@ -38,6 +41,7 @@ import { fetchNotifications } from "./features/notifications/notificationsSlice"
 import { useNotificationSocket } from "./hooks/useNotificationSocket";
 import useLoadingStore from "./store/useLoadingStore";
 import PageWrapper from "./components/ui/PageWrapper";
+import ErrorBoundary from "./components/ui/ErrorBoundary";
 
 function Placeholder({ title }) {
   return <main className="min-h-screen bg-zivvo-dark-bg p-8 text-zivvo-text-base">{title}</main>;
@@ -150,6 +154,9 @@ export default function App() {
           <Route path="/forgot-password" element={<PageWrapper><ForgotPassword /></PageWrapper>} />
           <Route path="/reset-password/:token" element={<PageWrapper><ResetPassword /></PageWrapper>} />
           <Route path="/seller" element={<PageWrapper><SellerRoute><SellerDashboardPage /></SellerRoute></PageWrapper>} />
+          <Route path="/seller/dashboard" element={<PageWrapper><SellerRoute><ErrorBoundary><SellerDashboardNew /></ErrorBoundary></SellerRoute></PageWrapper>} />
+          <Route path="/seller/products" element={<PageWrapper><SellerRoute><ErrorBoundary><SellerProducts /></ErrorBoundary></SellerRoute></PageWrapper>} />
+          <Route path="/seller/orders" element={<PageWrapper><SellerRoute><ErrorBoundary><SellerOrders /></ErrorBoundary></SellerRoute></PageWrapper>} />
           <Route path="/seller/manage" element={<PageWrapper><SellerRoute><SellerDashboard /></SellerRoute></PageWrapper>} />
           <Route path="/seller/coupons" element={<PageWrapper><SellerRoute><SellerCouponsPage /></SellerRoute></PageWrapper>} />
           <Route path="/seller/returns" element={<PageWrapper><SellerRoute><SellerReturnsPage /></SellerRoute></PageWrapper>} />

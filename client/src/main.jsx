@@ -11,6 +11,7 @@ import { store } from "./store/store";
 import { ToastViewport } from "./components/common/Toast";
 import { ThemeProvider } from "./context/ThemeContext";
 import { SocketProvider } from "./context/SocketContext";
+import ErrorBoundary from "./components/ui/ErrorBoundary";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -18,9 +19,11 @@ createRoot(document.getElementById("root")).render(
       <ThemeProvider>
         <SocketProvider>
           <BrowserRouter>
-            <AnimatePresence mode="wait" initial={false}>
-              <App />
-            </AnimatePresence>
+            <ErrorBoundary>
+              <AnimatePresence mode="wait" initial={false}>
+                <App />
+              </AnimatePresence>
+            </ErrorBoundary>
             <Toaster
               position="top-right"
               toastOptions={{
