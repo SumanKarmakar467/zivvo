@@ -115,7 +115,8 @@ const createOrderDocument = async ({
   couponCode,
   couponDiscount,
   shipping,
-  total
+  total,
+  finalize = true
 }) => {
   const estimatedDelivery = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
 
@@ -150,6 +151,14 @@ const createOrderDocument = async ({
     estimatedDelivery
   });
 
+  if (finalize) {
+    await finalizeOrder({ order, items, userId, couponCode, total });
+  }
+
+  return order;
+};
+
+const finalizeOrder = async ({ order, items, userId, couponCode, total }) => {
   for (const item of items) {
     if (item.variantSku) {
       await Product.findOneAndUpdate(
@@ -185,8 +194,14 @@ const createOrderDocument = async ({
       })
     )
   );
+};
 
-  return order;
+const safelySendOrderConfirmation = async (user, order) => {
+  try {
+    await sendOrderConfirmation(user, order);
+  } catch (error) {
+    console.error(`Order confirmation email failed for ${order._id}:`, error.message);
+  }
 };
 
 export const createRazorpayOrder = asyncHandler(async (req, res) => {
@@ -204,10 +219,28 @@ export const createRazorpayOrder = asyncHandler(async (req, res) => {
       receipt: `zivvo_${Date.now()}`
     });
 
+    const order = await createOrderDocument({
+      userId: req.user._id,
+      paymentMethod: "razorpay",
+      paymentStatus: "pending",
+      razorpayOrderId: rzOrder.id,
+      address: context.address,
+      items: context.items,
+      subtotal: context.subtotal,
+      discount: context.discount,
+      couponCode: context.couponCode,
+      couponDiscount: context.couponDiscount,
+      shipping: context.shipping,
+      total: context.total,
+      finalize: false
+    });
+
     return res.json({
       razorpayOrderId: rzOrder.id,
       amount: rzOrder.amount,
       currency: rzOrder.currency,
+      orderId: order._id,
+      key: process.env.RAZORPAY_KEY_ID,
       keyId: process.env.RAZORPAY_KEY_ID
     });
   }
@@ -226,13 +259,13 @@ export const createRazorpayOrder = asyncHandler(async (req, res) => {
     total: context.total
   });
 
-  await sendOrderConfirmation(context.user, order);
+  await safelySendOrderConfirmation(context.user, order);
 
   return res.json({ orderId: order._id });
 });
 
 export const verifyPayment = asyncHandler(async (req, res) => {
-  const { razorpayOrderId, razorpayPaymentId, razorpaySignature, addressId } = req.body;
+  const { razorpayOrderId, razorpayPaymentId, razorpaySignature, addressId, orderId } = req.body;
 
   if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature || !addressId) {
     throw new AppError("Missing payment verification data", 400);
@@ -247,26 +280,39 @@ export const verifyPayment = asyncHandler(async (req, res) => {
     throw new AppError("Payment verification failed", 400);
   }
 
-  const context = await getCheckoutContext(req.user._id, addressId);
-
-  const order = await createOrderDocument({
-    userId: req.user._id,
-    paymentMethod: "razorpay",
-    paymentStatus: "paid",
-    razorpayOrderId,
-    razorpayPaymentId,
-    razorpaySignature,
-    address: context.address,
-    items: context.items,
-    subtotal: context.subtotal,
-    discount: context.discount,
-    couponCode: context.couponCode,
-    couponDiscount: context.couponDiscount,
-    shipping: context.shipping,
-    total: context.total
+  const order = await Order.findOne({
+    _id: orderId,
+    user: req.user._id,
+    razorpayOrderId
   });
 
-  await sendOrderConfirmation(context.user, order);
+  if (!order) throw new AppError("Order not found", 404);
+  if (order.paymentStatus === "paid") {
+    return res.json({ orderId: order._id, success: true });
+  }
+
+  const context = await getCheckoutContext(req.user._id, addressId);
+
+  order.paymentStatus = "paid";
+  order.razorpayPaymentId = razorpayPaymentId;
+  order.razorpaySignature = razorpaySignature;
+  order.orderStatus = "confirmed";
+  order.statusHistory.push({
+    status: "confirmed",
+    note: "Payment confirmed. Your order is being processed.",
+    timestamp: new Date()
+  });
+  await order.save();
+
+  await finalizeOrder({
+    order,
+    items: order.items,
+    userId: req.user._id,
+    couponCode: order.couponCode,
+    total: order.total
+  });
+
+  await safelySendOrderConfirmation(context.user, order);
 
   return res.json({ orderId: order._id, success: true });
 });

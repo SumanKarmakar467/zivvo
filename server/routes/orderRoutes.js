@@ -2,9 +2,12 @@ import express from "express";
 import { body, validationResult } from "express-validator";
 import { authorize, protect } from "../middleware/authMiddleware.js";
 import { cancelOrder, getMyOrders, getOrderById, updateOrderStatus } from "../controllers/orderController.js";
+import { createRazorpayOrder, verifyPayment } from "../controllers/paymentController.js";
 
 const router = express.Router();
 
+router.post("/create", protect, createRazorpayOrder);
+router.post("/verify", protect, verifyPayment);
 router.get("/my", protect, getMyOrders);
 router.get("/:id", protect, getOrderById);
 router.put("/:id/cancel", protect, cancelOrder);
