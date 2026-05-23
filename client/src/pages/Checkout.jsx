@@ -125,6 +125,7 @@ export default function Checkout() {
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
+              orderId: orderData.orderId,
               addressId: selectedAddressId
             }).unwrap();
             navigate(`/order-success/${verified.orderId}`);
