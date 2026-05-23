@@ -44,19 +44,22 @@ function Placeholder({ title }) {
 }
 
 function PrivateRoute({ children }) {
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const { isAuthenticated, loading } = useSelector((state) => state.auth);
+  if (loading) return <main className="min-h-screen bg-zivvo-dark-bg" />;
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
 function SellerRoute({ children }) {
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
+  if (loading) return <main className="min-h-screen bg-zivvo-dark-bg" />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (!user || (user.role !== "seller" && user.role !== "admin")) return <Navigate to="/" replace />;
   return children;
 }
 
 function AdminRoute({ children }) {
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
+  if (loading) return <main className="min-h-screen bg-zivvo-dark-bg" />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (!user || user.role !== "admin") return <Navigate to="/" replace />;
   return children;
