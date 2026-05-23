@@ -1,9 +1,13 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import type { ThemeContextType } from "@/types";
 
-const ThemeContext = createContext(null);
+const ThemeContext = createContext<ThemeContextType | null>(null);
 
-export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem("zivvo-theme") || "dark");
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    const saved = localStorage.getItem("zivvo-theme");
+    return saved === "light" ? "light" : "dark";
+  });
 
   useEffect(() => {
     const root = document.documentElement;
@@ -20,14 +24,13 @@ export function ThemeProvider({ children }) {
 
   const value = useMemo(() => ({
     theme,
-    setTheme,
     toggleTheme: () => setTheme((prev) => (prev === "dark" ? "light" : "dark"))
   }), [theme]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
-export function useTheme() {
+export function useTheme(): ThemeContextType {
   const ctx = useContext(ThemeContext);
   if (!ctx) throw new Error("useTheme must be used within ThemeProvider");
   return ctx;

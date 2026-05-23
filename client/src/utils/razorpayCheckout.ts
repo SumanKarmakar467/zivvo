@@ -1,4 +1,42 @@
-export async function initiateRazorpayPayment({ orderData, userInfo, onSuccess, onFailure }) {
+import type { Address, CartItem, Coupon } from "@/types";
+
+declare global {
+  interface Window {
+    Razorpay: new (options: Record<string, unknown>) => {
+      open: () => void;
+      on: (event: string, handler: (response: RazorpayFailureResponse) => void) => void;
+    };
+  }
+}
+
+interface RazorpayFailureResponse {
+  error?: { description?: string };
+}
+
+interface RazorpaySuccessResponse {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+interface RazorpayCheckoutParams {
+  orderData: {
+    items?: CartItem[];
+    address?: Address;
+    addressId?: string;
+    coupon?: Coupon;
+    subtotal?: number;
+    discount?: number;
+    deliveryCharge?: number;
+    totalAmount?: number;
+    paymentMethod?: string;
+  };
+  userInfo: { name: string; email: string; phone: string };
+  onSuccess: (orderId: string) => void;
+  onFailure: (message: string) => void;
+}
+
+export async function initiateRazorpayPayment({ orderData, userInfo, onSuccess, onFailure }: RazorpayCheckoutParams): Promise<void> {
   try {
     const token = localStorage.getItem("zivvo-token");
     const response = await fetch(`${import.meta.env.VITE_API_URL}/orders/create`, {
@@ -28,7 +66,7 @@ export async function initiateRazorpayPayment({ orderData, userInfo, onSuccess, 
       },
       notes: { orderId: data.orderId },
       theme: { color: "#7C5CFC" },
-      handler: async (paymentResponse) => {
+      handler: async (paymentResponse: RazorpaySuccessResponse) => {
         try {
           const verifyRes = await fetch(`${import.meta.env.VITE_API_URL}/orders/verify`, {
             method: "POST",
@@ -52,7 +90,7 @@ export async function initiateRazorpayPayment({ orderData, userInfo, onSuccess, 
           }
           onSuccess?.(verifyData.orderId);
         } catch (error) {
-          onFailure?.(error.message || "Payment verification error. Contact support.");
+          onFailure?.(error instanceof Error ? error.message : "Payment verification error. Contact support.");
         }
       },
       modal: {
@@ -66,6 +104,6 @@ export async function initiateRazorpayPayment({ orderData, userInfo, onSuccess, 
     });
     razorpay.open();
   } catch (error) {
-    onFailure?.(error.message || "Could not initiate payment. Please try again.");
+    onFailure?.(error instanceof Error ? error.message : "Could not initiate payment. Please try again.");
   }
 }

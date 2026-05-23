@@ -1,13 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 
-export default function useCountUp(target, duration = 1800, startOnView = true) {
-  const [count, setCount] = useState(0);
-  const [inView, setInView] = useState(!startOnView);
-  const ref = useRef(null);
+export default function useCountUp(
+  target: number,
+  duration = 1800,
+  startOnView = true
+): { count: number; ref: React.RefObject<HTMLDivElement> } {
+  const [count, setCount] = useState<number>(0);
+  const [inView, setInView] = useState<boolean>(!startOnView);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!startOnView) return undefined;
-    const obs = new IntersectionObserver(([entry]) => {
+    const obs = new IntersectionObserver((entries: IntersectionObserverEntry[]) => {
+      const [entry] = entries;
       if (entry.isIntersecting) setInView(true);
     }, { threshold: 0.3 });
     if (ref.current) obs.observe(ref.current);
