@@ -6,9 +6,16 @@ export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => localStorage.getItem("zivvo-theme") || "dark");
 
   useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+      root.classList.remove("light");
+    } else {
+      root.classList.add("light");
+      root.classList.remove("dark");
+    }
     localStorage.setItem("zivvo-theme", theme);
-    document.documentElement.classList.toggle("dark", theme === "dark");
-    document.documentElement.style.colorScheme = theme;
+    root.style.colorScheme = theme;
   }, [theme]);
 
   const value = useMemo(() => ({

@@ -1,5 +1,5 @@
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import LandingPage from "./pages/LandingPage";
@@ -37,22 +37,10 @@ import { fetchWishlist } from "./features/wishlist/wishlistSlice";
 import { fetchNotifications } from "./features/notifications/notificationsSlice";
 import { useNotificationSocket } from "./hooks/useNotificationSocket";
 import useLoadingStore from "./store/useLoadingStore";
+import PageWrapper from "./components/ui/PageWrapper";
 
 function Placeholder({ title }) {
   return <main className="min-h-screen bg-zivvo-dark-bg p-8 text-zivvo-text-base">{title}</main>;
-}
-
-function RouteTransition({ children }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 10 }}
-      transition={{ duration: 0.3 }}
-    >
-      {children}
-    </motion.div>
-  );
 }
 
 function PrivateRoute({ children }) {
@@ -147,34 +135,34 @@ export default function App() {
       <Navbar />
       <AnimatePresence mode="wait" initial={false}>
         <Routes location={location} key={location.pathname + location.search}>
-          <Route path="/" element={<RouteTransition><LandingPage /></RouteTransition>} />
-          <Route path="/search" element={<RouteTransition><SearchResultsPage /></RouteTransition>} />
-          <Route path="/category/:slug" element={<RouteTransition><CategoryPage /></RouteTransition>} />
-          <Route path="/product/:slug" element={<RouteTransition><ProductDetailPage /></RouteTransition>} />
-          <Route path="/cart" element={<RouteTransition><Cart /></RouteTransition>} />
-          <Route path="/wishlist" element={<RouteTransition><PrivateRoute><WishlistPage /></PrivateRoute></RouteTransition>} />
-          <Route path="/notifications" element={<RouteTransition><PrivateRoute><NotificationsPage /></PrivateRoute></RouteTransition>} />
-          <Route path="/login" element={<RouteTransition><Login /></RouteTransition>} />
-          <Route path="/register" element={<RouteTransition><Register /></RouteTransition>} />
-          <Route path="/forgot-password" element={<RouteTransition><ForgotPassword /></RouteTransition>} />
-          <Route path="/reset-password/:token" element={<RouteTransition><ResetPassword /></RouteTransition>} />
-          <Route path="/seller" element={<RouteTransition><SellerRoute><SellerDashboardPage /></SellerRoute></RouteTransition>} />
-          <Route path="/seller/manage" element={<RouteTransition><SellerRoute><SellerDashboard /></SellerRoute></RouteTransition>} />
-          <Route path="/seller/coupons" element={<RouteTransition><SellerRoute><SellerCouponsPage /></SellerRoute></RouteTransition>} />
-          <Route path="/seller/returns" element={<RouteTransition><SellerRoute><SellerReturnsPage /></SellerRoute></RouteTransition>} />
-          <Route path="/seller/verification" element={<RouteTransition><SellerRoute><SellerVerificationPage /></SellerRoute></RouteTransition>} />
-          <Route path="/admin" element={<RouteTransition><AdminRoute><AdminPanel /></AdminRoute></RouteTransition>} />
-          <Route path="/admin/verification" element={<RouteTransition><AdminRoute><AdminVerificationPage /></AdminRoute></RouteTransition>} />
-          <Route path="/admin/verification/:sellerId" element={<RouteTransition><AdminRoute><AdminVerificationDetailPage /></AdminRoute></RouteTransition>} />
-          <Route path="/checkout" element={<RouteTransition><PrivateRoute><Checkout /></PrivateRoute></RouteTransition>} />
-          <Route path="/account" element={<RouteTransition><PrivateRoute><Account /></PrivateRoute></RouteTransition>} />
-          <Route path="/account/addresses" element={<RouteTransition><PrivateRoute><AddressBookPage /></PrivateRoute></RouteTransition>} />
-          <Route path="/order-success/:orderId" element={<RouteTransition><PrivateRoute><OrderSuccess /></PrivateRoute></RouteTransition>} />
-          <Route path="/account/orders" element={<RouteTransition><PrivateRoute><AccountOrders /></PrivateRoute></RouteTransition>} />
-          <Route path="/orders/:id" element={<RouteTransition><PrivateRoute><OrderDetailPage /></PrivateRoute></RouteTransition>} />
-          <Route path="/seller/:sellerId" element={<RouteTransition><SellerStorefrontPage /></RouteTransition>} />
-          <Route path="/returns/:id" element={<RouteTransition><PrivateRoute><ReturnDetailPage /></PrivateRoute></RouteTransition>} />
-          <Route path="*" element={<RouteTransition><Placeholder title="Not Found" /></RouteTransition>} />
+          <Route path="/" element={<PageWrapper><LandingPage /></PageWrapper>} />
+          <Route path="/search" element={<PageWrapper><SearchResultsPage /></PageWrapper>} />
+          <Route path="/category/:slug" element={<PageWrapper><CategoryPage /></PageWrapper>} />
+          <Route path="/product/:slug" element={<PageWrapper><ProductDetailPage /></PageWrapper>} />
+          <Route path="/cart" element={<PageWrapper><Cart /></PageWrapper>} />
+          <Route path="/wishlist" element={<PageWrapper><PrivateRoute><WishlistPage /></PrivateRoute></PageWrapper>} />
+          <Route path="/notifications" element={<PageWrapper><PrivateRoute><NotificationsPage /></PrivateRoute></PageWrapper>} />
+          <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
+          <Route path="/register" element={<PageWrapper><Register /></PageWrapper>} />
+          <Route path="/forgot-password" element={<PageWrapper><ForgotPassword /></PageWrapper>} />
+          <Route path="/reset-password/:token" element={<PageWrapper><ResetPassword /></PageWrapper>} />
+          <Route path="/seller" element={<PageWrapper><SellerRoute><SellerDashboardPage /></SellerRoute></PageWrapper>} />
+          <Route path="/seller/manage" element={<PageWrapper><SellerRoute><SellerDashboard /></SellerRoute></PageWrapper>} />
+          <Route path="/seller/coupons" element={<PageWrapper><SellerRoute><SellerCouponsPage /></SellerRoute></PageWrapper>} />
+          <Route path="/seller/returns" element={<PageWrapper><SellerRoute><SellerReturnsPage /></SellerRoute></PageWrapper>} />
+          <Route path="/seller/verification" element={<PageWrapper><SellerRoute><SellerVerificationPage /></SellerRoute></PageWrapper>} />
+          <Route path="/admin" element={<PageWrapper><AdminRoute><AdminPanel /></AdminRoute></PageWrapper>} />
+          <Route path="/admin/verification" element={<PageWrapper><AdminRoute><AdminVerificationPage /></AdminRoute></PageWrapper>} />
+          <Route path="/admin/verification/:sellerId" element={<PageWrapper><AdminRoute><AdminVerificationDetailPage /></AdminRoute></PageWrapper>} />
+          <Route path="/checkout" element={<PageWrapper><PrivateRoute><Checkout /></PrivateRoute></PageWrapper>} />
+          <Route path="/account" element={<PageWrapper><PrivateRoute><Account /></PrivateRoute></PageWrapper>} />
+          <Route path="/account/addresses" element={<PageWrapper><PrivateRoute><AddressBookPage /></PrivateRoute></PageWrapper>} />
+          <Route path="/order-success/:orderId" element={<PageWrapper><PrivateRoute><OrderSuccess /></PrivateRoute></PageWrapper>} />
+          <Route path="/account/orders" element={<PageWrapper><PrivateRoute><AccountOrders /></PrivateRoute></PageWrapper>} />
+          <Route path="/orders/:id" element={<PageWrapper><PrivateRoute><OrderDetailPage /></PrivateRoute></PageWrapper>} />
+          <Route path="/seller/:sellerId" element={<PageWrapper><SellerStorefrontPage /></PageWrapper>} />
+          <Route path="/returns/:id" element={<PageWrapper><PrivateRoute><ReturnDetailPage /></PrivateRoute></PageWrapper>} />
+          <Route path="*" element={<PageWrapper><Placeholder title="Not Found" /></PageWrapper>} />
         </Routes>
       </AnimatePresence>
       {location.pathname !== "/" && <Footer />}
