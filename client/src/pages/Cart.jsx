@@ -31,13 +31,14 @@ export default function Cart() {
   const [pulseId, setPulseId] = useState("");
 
   const { items, subtotal, shipping, couponDiscount, total, loading, appliedCoupon } = useSelector((state) => state.cart);
-  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { isAuthenticated, accessToken, loading: authLoading } = useSelector((state) => state.auth);
   const itemCount = useSelector(selectCartItemCount);
   const [deliveryEstimate, setDeliveryEstimate] = useState(null);
 
   useEffect(() => {
+    if (authLoading) return;
     dispatch(fetchCart());
-  }, [dispatch]);
+  }, [authLoading, accessToken, dispatch, isAuthenticated]);
 
   useEffect(() => {
     const loadEstimate = async () => {
