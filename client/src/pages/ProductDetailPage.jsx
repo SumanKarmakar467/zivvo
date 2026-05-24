@@ -13,7 +13,7 @@ const countryByBrand = {
   "Dior": "France",
   "Dolce & Gabbana": "Italy",
   Gucci: "Italy",
-  Annibale Colombo: "Italy",
+  "Annibale Colombo": "Italy",
   "Calvin Klein": "United States",
   Rolex: "Switzerland",
   "Chanel": "France"
