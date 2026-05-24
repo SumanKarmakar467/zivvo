@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, Moon, Search, ShoppingBag, Sun, User, X } from "lucide-react";
+import { Menu, Moon, ShoppingBag, Sun, X } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { useCartContext } from "../context/CartContext";
 
 const links = [
-  { label: "Home", to: "/home" },
+  { label: "Home", to: "/" },
   { label: "Search", to: "/search" },
   { label: "Profile", to: "/profile" },
   { label: "Cart", to: "/cart" }
@@ -19,49 +19,66 @@ export default function Navbar() {
   const { count } = useCartContext();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
-    <header className={`sticky top-0 z-50 border-b transition ${scrolled ? "border-[var(--border)] bg-[var(--nav-bg-strong)] shadow-xl shadow-black/20 backdrop-blur-xl" : "border-transparent bg-[var(--nav-bg)] backdrop-blur-md"}`}>
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
-        <Link to="/" className="min-h-0 text-xl font-black tracking-[0.28em] text-[var(--cream)]">ZIVVO</Link>
-        <nav className="hidden items-center gap-7 md:flex">
-          {links.map((link) => <NavItem key={link.to} {...link} count={link.label === "Cart" ? count : 0} />)}
+    <header className={`sticky top-0 z-50 bg-[#0A0A0A]/80 transition ${scrolled ? "border-b border-white/5 backdrop-blur-md" : "border-b border-transparent"}`}>
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
+        <Link to="/" className="min-h-0 text-xl font-black tracking-widest text-[#C9A84C]">ZIVVO</Link>
+
+        <nav className="hidden items-center gap-8 md:flex">
+          {links.map((link) => (
+            <NavLink key={link.to} to={link.to} className="group relative min-h-0 py-2 text-sm font-bold text-[#F5F0E8]">
+              {link.label}
+              {link.label === "Cart" && count > 0 && <CartBadge count={count} />}
+              <span className="absolute inset-x-0 -bottom-1 h-0.5 origin-left scale-x-0 bg-[#C9A84C] transition group-hover:scale-x-100 group-[.active]:scale-x-100" />
+            </NavLink>
+          ))}
         </nav>
-        <div className="hidden items-center gap-2 md:flex">
-          <IconLink to="/search" label="Search"><Search className="h-5 w-5" /></IconLink>
-          <IconLink to="/profile" label="Profile"><User className="h-5 w-5" /></IconLink>
-          <IconLink to="/cart" label="Cart" count={count}><ShoppingBag className="h-5 w-5" /></IconLink>
-          <button type="button" onClick={toggleTheme} className="grid h-11 w-11 place-items-center rounded-full border border-[var(--border)]">
-            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+
+        <div className="hidden items-center gap-3 md:flex">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="inline-flex h-10 items-center gap-2 rounded-full border border-white/10 bg-[#141414] px-3 text-sm font-bold text-[#F5F0E8]"
+            aria-label="Toggle dark or light mode"
+          >
+            <span className={`grid h-6 w-6 place-items-center rounded-full transition ${theme === "dark" ? "translate-x-0 bg-[#C9A84C] text-black" : "translate-x-6 bg-[#7F77DD] text-white"}`}>
+              {theme === "dark" ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
+            </span>
+            <span className="w-9 text-left">{theme === "dark" ? "Dark" : "Light"}</span>
           </button>
         </div>
-        <button type="button" onClick={() => setOpen(true)} className="grid h-11 w-11 place-items-center md:hidden" aria-label="Open menu">
+
+        <button type="button" onClick={() => setOpen(true)} className="relative grid h-11 w-11 place-items-center text-[#F5F0E8] md:hidden" aria-label="Open menu">
           <Menu />
+          {count > 0 && <CartBadge count={count} compact />}
         </button>
       </div>
+
       <AnimatePresence>
         {open && (
-          <motion.aside initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/70 backdrop-blur md:hidden">
-            <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 24 }} className="ml-auto flex h-screen w-full max-w-sm flex-col bg-[var(--bg)] p-5">
-              <button type="button" onClick={() => setOpen(false)} className="ml-auto grid h-11 w-11 place-items-center rounded-full border border-[var(--border)]" aria-label="Close menu">
+          <motion.aside initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-md md:hidden">
+            <motion.nav initial={{ y: "-100%" }} animate={{ y: 0 }} exit={{ y: "-100%" }} transition={{ type: "spring", damping: 24 }} className="flex min-h-screen flex-col bg-[#0A0A0A] p-5">
+              <button type="button" onClick={() => setOpen(false)} className="ml-auto grid h-11 w-11 place-items-center rounded-full border border-white/10 text-[#F5F0E8]" aria-label="Close menu">
                 <X />
               </button>
-              <nav className="mt-10 grid gap-2">
+              <div className="mt-12 grid gap-3">
                 {links.map((link) => (
-                  <NavLink key={link.to} to={link.to} onClick={() => setOpen(false)} className="rounded-lg border border-[var(--border)] px-4 py-4 text-lg font-bold">
-                    {link.label}{link.label === "Cart" && count ? ` (${count})` : ""}
+                  <NavLink key={link.to} to={link.to} onClick={() => setOpen(false)} className="flex items-center justify-between rounded-lg border border-white/10 bg-[#141414] px-5 py-5 text-2xl font-black text-[#F5F0E8]">
+                    {link.label}
+                    {link.label === "Cart" && count > 0 && <span className="text-base text-[#C9A84C]">{count}</span>}
                   </NavLink>
                 ))}
-              </nav>
-              <button type="button" onClick={toggleTheme} className="mt-auto rounded-lg border border-[var(--border)] px-4 py-3 text-left font-bold">
-                Toggle {theme === "dark" ? "light" : "dark"} mode
+              </div>
+              <button type="button" onClick={toggleTheme} className="mt-auto inline-flex items-center justify-between rounded-full border border-white/10 bg-[#141414] px-5 py-4 font-black text-[#F5F0E8]">
+                Theme <span className="text-[#C9A84C]">{theme === "dark" ? "Dark" : "Light"}</span>
               </button>
-            </motion.div>
+            </motion.nav>
           </motion.aside>
         )}
       </AnimatePresence>
@@ -69,20 +86,16 @@ export default function Navbar() {
   );
 }
 
-function NavItem({ label, to, count }) {
+function CartBadge({ count, compact = false }) {
   return (
-    <NavLink to={to} className="group relative min-h-0 py-2 text-sm font-bold text-[var(--cream)]">
-      {label}{count ? <span className="ml-1 rounded-full bg-[#C9A84C] px-1.5 text-[10px] text-black">{count}</span> : null}
-      <span className="absolute inset-x-0 -bottom-1 h-0.5 origin-left scale-x-0 bg-[#C9A84C] transition group-[.active]:scale-x-100 group-hover:scale-x-100" />
-    </NavLink>
-  );
-}
-
-function IconLink({ to, label, children, count = 0 }) {
-  return (
-    <Link to={to} aria-label={label} className="relative grid h-11 w-11 place-items-center rounded-full border border-[var(--border)]">
-      {children}
-      {count > 0 && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-[#C9A84C] px-1 text-[10px] font-black text-black">{count}</motion.span>}
-    </Link>
+    <motion.span
+      key={count}
+      initial={{ scale: 0.5 }}
+      animate={{ scale: 1 }}
+      transition={{ type: "spring", stiffness: 420, damping: 18 }}
+      className={`${compact ? "absolute right-0 top-0" : "ml-2 inline-grid"} min-h-5 min-w-5 place-items-center rounded-full bg-[#C9A84C] px-1 text-[10px] font-black text-black`}
+    >
+      {count}
+    </motion.span>
   );
 }
