@@ -130,7 +130,7 @@ export function SearchBar({ autoFocus = false }) {
                   onClick={() => submitSearch(item.value)}
                   className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm ${active ? "bg-[rgba(124,92,252,0.18)]" : "hover:bg-white/5"}`}
                 >
-                  <img src={image} alt="" className="h-8 w-8 rounded-lg object-cover" />
+                  <img src={image} alt="" loading="lazy" className="h-8 w-8 rounded-lg object-cover" />
                   <span className="min-w-0 flex-1 truncate text-[var(--cream)]">{item.product.name}</span>
                   <span className="text-xs font-bold text-[var(--cyan)]">{formatRupees(item.product.price)}</span>
                 </button>

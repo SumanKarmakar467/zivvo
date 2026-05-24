@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type React from "react";
 import { useRef } from "react";
 import toast from "react-hot-toast";
@@ -83,6 +83,7 @@ export function ProductCard({
   className = ""
 }: ProductCardProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion();
   const productId = product?._id || id || "";
   const productName = product?.name || name || "";
   const productBrand = product?.brand || brand || "Zivvo";
@@ -115,11 +116,11 @@ export function ProductCard({
   };
 
   return (
-    <motion.div ref={ref} whileTap={{ scale: 0.97 }} className={`z-product-card group ${className}`} data-href={href}>
+    <motion.div ref={ref} whileTap={reduceMotion ? undefined : { scale: 0.97 }} className={`z-product-card group ${className}`} data-href={href}>
       <div className="z-product-card-media">
         {productImage ? <img src={productImage} alt={productName} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" /> : <span className="z-product-card-emoji">{emoji}</span>}
         {badgeInfo && <span className={badgeInfo.className}>{badgeInfo.label}</span>}
-        <motion.button type="button" whileTap={{ scale: [1, 1.3, 1] }} onClick={toggleWishlist} className={`z-product-heart ${isWishlisted ? "is-active" : ""}`} aria-label="Toggle wishlist">
+        <motion.button type="button" whileTap={reduceMotion ? undefined : { scale: [1, 1.3, 1] }} onClick={toggleWishlist} className={`z-product-heart ${isWishlisted ? "is-active" : ""}`} aria-label="Toggle wishlist">
           <HeartIcon active={isWishlisted} />
         </motion.button>
         {productStock <= 0 ? <span className="z-quick-add">Out of Stock</span> : showQuickAdd && <button type="button" onClick={addToCart} className="z-quick-add">Add to Cart</button>}

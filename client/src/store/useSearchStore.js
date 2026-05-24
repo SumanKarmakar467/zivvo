@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { notifyError } from "../components/common/Toast";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -88,7 +89,9 @@ export const useSearchStore = create((set, get) => ({
         isLoading: false
       });
     } catch (error) {
-      set({ results: [], total: 0, totalPages: 0, isLoading: false, error: error.message || "Search failed" });
+      const message = error.message || "Search failed";
+      notifyError(message);
+      set({ results: [], total: 0, totalPages: 0, isLoading: false, error: message });
     }
   },
   fetchSuggestions: async (query) => {

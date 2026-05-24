@@ -12,8 +12,35 @@ const parseList = (value) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
+const getSearchTerms = (value) => {
+  const rawSearch = String(value || "").trim();
+  if (!rawSearch) return [];
+
+  const singularized = rawSearch
+    .split(/\s+/)
+    .map((word) => (word.length > 3 && word.endsWith("s") ? word.slice(0, -1) : word))
+    .join(" ");
+
+  const terms = new Set([rawSearch]);
+  if (singularized !== rawSearch) terms.add(singularized);
+
+  const normalized = rawSearch.toLowerCase();
+  const footwearTerms = ["shoe", "shoes", "sneaker", "sneakers", "footwear", "sandals", "boots"];
+  if (footwearTerms.some((term) => normalized.includes(term))) {
+    ["shoe", "footwear", "fashion"].forEach((term) => terms.add(term));
+  }
+
+  return Array.from(terms);
+};
+
+const buildTextSearch = (value) =>
+  getSearchTerms(value).flatMap((term) => {
+    const regex = new RegExp(escapeRegex(term), "i");
+    return [{ name: regex }, { description: regex }, { brand: regex }, { tags: regex }];
+  });
+
 const getSortStage = (sort, hasQuery) => {
-  if (hasQuery && (!sort || sort === "relevance")) return { score: { $meta: "textScore" }, sold: -1 };
+  if (hasQuery && (!sort || sort === "relevance")) return { sold: -1, averageRating: -1, createdAt: -1 };
 
   switch (sort) {
     case "price_asc":
@@ -27,7 +54,7 @@ const getSortStage = (sort, hasQuery) => {
     case "popular":
       return { sold: -1, reviewCount: -1 };
     default:
-      return hasQuery ? { score: { $meta: "textScore" }, sold: -1 } : { isFeatured: -1, sold: -1, createdAt: -1 };
+      return hasQuery ? { sold: -1, averageRating: -1, createdAt: -1 } : { isFeatured: -1, sold: -1, createdAt: -1 };
   }
 };
 
@@ -35,9 +62,7 @@ const buildSearchMatch = async (query) => {
   const q = String(query.q || "").trim();
   const match = { isActive: true };
 
-  if (q) {
-    match.$text = { $search: q };
-  }
+  if (q) match.$or = buildTextSearch(q);
 
   const categories = parseList(query.category);
   if (categories.length) {

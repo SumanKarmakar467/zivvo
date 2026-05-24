@@ -70,7 +70,7 @@ function FilterContent({ filters, availableFilters, onFiltersChange, onClear }) 
             max={sliderMax}
             step={100}
             minStepsBetweenThumbs={1}
-            onValueChange={([minPrice, maxPrice]) => onFiltersChange({ minPrice, maxPrice })}
+            onValueCommit={([minPrice, maxPrice]) => onFiltersChange({ minPrice, maxPrice })}
             className="relative flex h-8 touch-none select-none items-center"
           >
             <Slider.Track className="relative h-1 grow rounded-full bg-white/10">

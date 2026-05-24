@@ -85,7 +85,7 @@ export default function SellerOrders() {
           <article key={order._id} className="rounded-[14px] border border-[var(--border)] bg-[var(--bg2)] p-4">
             <header className="flex flex-wrap items-center justify-between gap-2"><div><p className="font-semibold">#{order._id.slice(-8)}</p><p className="text-xs text-[var(--muted)]">{new Date(order.createdAt).toLocaleDateString("en-IN")}</p></div><span className="rounded-full border border-[var(--border)] px-3 py-1 text-xs">{order.orderStatus}</span><p className="font-semibold">₹{Number(order.total || order.totalAmount || 0).toLocaleString("en-IN")}</p></header>
             <div className="mt-4 flex items-center gap-3">
-              <div className="flex -space-x-2">{order.items.slice(0, 4).map((item, index) => <img key={index} src={item.image || "https://placehold.co/40"} alt={item.name} className="h-8 w-8 rounded-full border border-[var(--bg2)] object-cover" />)}</div>
+              <div className="flex -space-x-2">{order.items.slice(0, 4).map((item, index) => <img key={index} src={item.image || "https://placehold.co/40"} alt={item.name} loading="lazy" className="h-8 w-8 rounded-full border border-[var(--bg2)] object-cover" />)}</div>
               <span className="text-sm text-[var(--muted)]">{order.items.length} items</span>
               <span className="text-sm text-[var(--muted)]">{order.user?.name || "Customer"} - {order.shippingAddress?.city || "India"}</span>
             </div>

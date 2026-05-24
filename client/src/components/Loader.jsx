@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 export function Loader({ active = true }) {
   const [visible, setVisible] = useState(active);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (!active) {
@@ -19,9 +20,9 @@ export function Loader({ active = true }) {
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.98 }}
-          transition={{ duration: 0.4 }}
+          initial={reduceMotion ? false : { opacity: 1, scale: 1 }}
+          exit={reduceMotion ? undefined : { opacity: 0, scale: 0.98 }}
+          transition={{ duration: reduceMotion ? 0 : 0.4 }}
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#05060F] text-center"
         >
           <h2 className="z-loader-word font-head text-5xl font-black tracking-[0.22em] sm:text-7xl">ZIVVO</h2>

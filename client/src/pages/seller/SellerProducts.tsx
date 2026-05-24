@@ -83,7 +83,7 @@ export default function SellerProducts() {
                 {products.map((product) => (
                   <tr key={product._id} className="border-t border-[var(--border)]">
                     <td className="p-3"><input type="checkbox" checked={selected.includes(product._id)} onChange={(e) => setSelected(e.target.checked ? [...selected, product._id] : selected.filter((id) => id !== product._id))} /></td>
-                    <td><img src={product.images[0]} alt={product.name} className="h-12 w-12 rounded-lg object-cover" /></td>
+                    <td><img src={product.images[0]} alt={product.name} loading="lazy" className="h-12 w-12 rounded-lg object-cover" /></td>
                     <td><p className="font-medium">{product.name}</p><p className="text-xs text-[var(--muted)]">{product.brand}</p></td>
                     <td>₹{product.price.toLocaleString("en-IN")} <span className="text-xs text-[var(--muted)] line-through">₹{product.mrp.toLocaleString("en-IN")}</span> <span className="text-xs text-emerald-400">{product.discount}%</span></td>
                     <td className={product.stock <= 5 ? "text-rose-400" : ""}>{product.stock}</td>

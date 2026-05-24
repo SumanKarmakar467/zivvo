@@ -1,16 +1,16 @@
-const steps = ["placed", "confirmed", "processing", "shipped", "out_for_delivery", "delivered"];
+const steps = ["placed", "confirmed", "shipped", "out_for_delivery", "delivered"];
 
 const labels = {
   placed: "Placed",
   confirmed: "Confirmed",
-  processing: "Processing",
   shipped: "Shipped",
-  out_for_delivery: "Out for delivery",
+  out_for_delivery: "Out for Delivery",
   delivered: "Delivered"
 };
 
 export default function OrderTimeline({ statusHistory = [], currentStatus = "placed" }) {
-  const currentIndex = Math.max(steps.indexOf(currentStatus), 0);
+  const normalizedStatus = currentStatus === "processing" ? "confirmed" : currentStatus;
+  const currentIndex = Math.max(steps.indexOf(normalizedStatus), 0);
   const byStatus = statusHistory.reduce((acc, item) => {
     acc[item.status] = item;
     return acc;
@@ -27,18 +27,18 @@ export default function OrderTimeline({ statusHistory = [], currentStatus = "pla
             {idx !== steps.length - 1 && (
               <span
                 className={`absolute left-[11px] top-6 h-[calc(100%-6px)] w-0.5 ${
-                  completed ? "bg-green-500" : "border-l border-dashed border-zinc-600"
+                completed ? "bg-green-500" : "border-l border-dashed border-zinc-600"
                 }`}
               />
             )}
             <span
               className={`absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full text-xs ${
-                completed ? "bg-green-500 text-black" : current ? "bg-green-500 text-black animate-pulse" : "border border-zinc-600 text-zinc-500"
+                completed ? "bg-green-500 text-black" : current ? "bg-[#7C5CFC] text-white animate-pulse" : "border border-zinc-600 text-zinc-500"
               }`}
             >
               {completed ? "✓" : ""}
             </span>
-            <p className="text-sm font-semibold">{labels[status]}</p>
+            <p className={`text-sm font-semibold ${completed ? "text-green-300" : current ? "text-[#A78BFA]" : "text-zinc-500"}`}>{labels[status]}</p>
             <p className="text-xs text-zivvo-text-soft">{info?.timestamp ? new Date(info.timestamp).toLocaleString() : "Pending"}</p>
             {info?.note ? <p className="text-xs text-zivvo-text-muted">{info.note}</p> : null}
           </div>

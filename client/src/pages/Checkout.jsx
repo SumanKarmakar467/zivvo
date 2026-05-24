@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+ï»¿import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, useNavigate } from "react-router-dom";
 import PageTransition from "../components/common/PageTransition";
 import { fetchCart } from "../store/slices/cartSlice";
 import { useCreateRazorpayOrderMutation, useVerifyPaymentMutation } from "../services/paymentApi";
-import { notifyError } from "../components/common/Toast";
+import { notifyError, notifySuccess } from "../components/common/Toast";
 
 const defaultAddress = {
   fullName: "",
@@ -99,6 +99,7 @@ export default function Checkout() {
     try {
       if (paymentMethod === "cod") {
         const result = await createOrder({ addressId: selectedAddressId, paymentMethod: "cod" }).unwrap();
+        notifySuccess("Order placed successfully");
         navigate(`/order-success/${result.orderId}`);
         return;
       }
@@ -128,6 +129,7 @@ export default function Checkout() {
               orderId: orderData.orderId,
               addressId: selectedAddressId
             }).unwrap();
+            notifySuccess("Order placed successfully");
             navigate(`/order-success/${verified.orderId}`);
           } catch (err) {
             notifyError(err?.data?.message || "Payment verification failed");
@@ -137,6 +139,7 @@ export default function Checkout() {
         },
         modal: {
           ondismiss: () => {
+            notifyError("Payment was cancelled");
             setLoading(false);
           }
         }
@@ -169,7 +172,7 @@ export default function Checkout() {
                 <div className="space-y-3">
                   {addresses.map((addr) => (
                     <button key={addr._id} onClick={() => setSelectedAddressId(addr._id)} className={`w-full rounded-lg border p-3 text-left ${selectedAddressId === addr._id ? "border-zivvo-amber-brand" : "border-zivvo-dark-raised"}`}>
-                      <p className="font-semibold">{addr.fullName} • {addr.phone}</p>
+                      <p className="font-semibold">{addr.fullName} â€¢ {addr.phone}</p>
                       <p className="text-sm text-zivvo-text-muted">{addr.addressLine1}, {addr.addressLine2}, {addr.city}, {addr.state} - {addr.pincode}</p>
                     </button>
                   ))}
@@ -206,7 +209,7 @@ export default function Checkout() {
                 <div className="space-y-3">
                   <button onClick={() => setPaymentMethod("razorpay")} className={`w-full rounded-lg border p-3 text-left ${paymentMethod === "razorpay" ? "border-zivvo-amber-brand" : "border-zivvo-dark-raised"}`}>
                     <p className="font-semibold">Pay Online</p>
-                    <p className="text-sm text-zivvo-text-muted">UPI • Card • Netbanking</p>
+                    <p className="text-sm text-zivvo-text-muted">UPI â€¢ Card â€¢ Netbanking</p>
                   </button>
                   <button onClick={() => setPaymentMethod("cod")} className={`w-full rounded-lg border p-3 text-left ${paymentMethod === "cod" ? "border-zivvo-amber-brand" : "border-zivvo-dark-raised"}`}>
                     <p className="font-semibold">Cash on Delivery</p>
@@ -260,3 +263,6 @@ export default function Checkout() {
     </PageTransition>
   );
 }
+
+
+

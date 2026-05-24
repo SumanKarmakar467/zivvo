@@ -5,6 +5,7 @@ import SkeletonGrid from "../components/SkeletonGrid";
 import FilterSidebar from "../components/search/FilterSidebar";
 import SearchBar from "../components/search/SearchBar";
 import SortDropdown from "../components/search/SortDropdown";
+import useDebounce from "../hooks/useDebounce";
 import useSearchStore from "../store/useSearchStore";
 
 const DEFAULT_LIMIT = 20;
@@ -55,14 +56,15 @@ export default function SearchResultsPage() {
       limit: Number(params.limit || DEFAULT_LIMIT)
     };
   }, [searchParams]);
+  const debouncedParamsState = useDebounce(paramsState, 300);
 
   useEffect(() => {
-    setQuery(paramsState.query);
-    setFilters(paramsState.filters);
-    setSort(paramsState.sort);
-    setPage(paramsState.page);
-    fetchResults(paramsState);
-  }, [fetchResults, paramsState, setFilters, setPage, setQuery, setSort]);
+    setQuery(debouncedParamsState.query);
+    setFilters(debouncedParamsState.filters);
+    setSort(debouncedParamsState.sort);
+    setPage(debouncedParamsState.page);
+    fetchResults(debouncedParamsState);
+  }, [debouncedParamsState, fetchResults, setFilters, setPage, setQuery, setSort]);
 
   const updateParams = (next = {}) => {
     const mergedFilters = { ...filters, ...(next.filters || {}) };

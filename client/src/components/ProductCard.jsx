@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { addToCart } from "../store/slices/cartSlice";
 import { selectIsWishlisted, toggleWishlist } from "../store/wishlistSlice";
 import UiProductCard from "./ui/ProductCard";
+import { notifyError, notifySuccess } from "./common/Toast";
 
 const fallbackEmoji = "🛍️";
 
@@ -29,7 +30,14 @@ export default function ProductCard({ product }) {
         isWishlisted={wishlisted}
         href={href}
         onWishlistToggle={() => dispatch(toggleWishlist(product))}
-        onAddToCart={() => dispatch(addToCart({ productId: product?._id, quantity: 1, productData: product }))}
+        onAddToCart={async () => {
+          try {
+            await dispatch(addToCart({ productId: product?._id, quantity: 1, productData: product }));
+            notifySuccess("Added to cart");
+          } catch (error) {
+            notifyError(error?.message || "Failed to add to cart");
+          }
+        }}
       />
     </Link>
   );

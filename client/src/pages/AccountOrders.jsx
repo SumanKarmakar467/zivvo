@@ -72,7 +72,19 @@ export default function AccountOrders() {
         </div>
 
         {isLoading ? (
-          <p className="text-zivvo-text-muted">Loading orders...</p>
+          <div className="space-y-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="rounded-xl border border-zivvo-dark-raised bg-zivvo-dark-surface p-4">
+                <div className="h-4 w-40 animate-pulse rounded bg-zinc-800" />
+                <div className="mt-3 flex gap-2">
+                  <div className="h-14 w-14 animate-pulse rounded-md bg-zinc-800" />
+                  <div className="h-14 w-14 animate-pulse rounded-md bg-zinc-800" />
+                </div>
+                <div className="mt-3 h-4 w-3/5 animate-pulse rounded bg-zinc-800" />
+                <div className="mt-4 h-9 w-28 animate-pulse rounded-md bg-zinc-800" />
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="space-y-4">
             {orders.map((order) => {
@@ -94,7 +106,7 @@ export default function AccountOrders() {
 
                   <div className="mt-3 flex gap-2 overflow-x-auto">
                     {(order.items || []).slice(0, 3).map((item, idx) => (
-                      <img key={`${order._id}-${idx}`} src={item.image || item.product?.images?.[0] || "https://picsum.photos/80"} alt={item.name} className="h-14 w-14 rounded-md object-cover" />
+                      <img key={`${order._id}-${idx}`} src={item.image || item.product?.images?.[0] || "https://picsum.photos/80"} alt={item.name} loading="lazy" className="h-14 w-14 rounded-md object-cover" />
                     ))}
                     {(order.items || []).length > 3 && <span className="flex h-14 w-14 items-center justify-center rounded-md bg-zivvo-dark-raised text-xs">+{(order.items || []).length - 3} more</span>}
                   </div>

@@ -1,37 +1,7 @@
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { AnimatePresence, useReducedMotion } from "framer-motion";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import LandingPage from "./pages/LandingPage";
-import SearchResultsPage from "./pages/SearchResultsPage";
-import CategoryPage from "./pages/CategoryPage";
-import ProductDetailPage from "./pages/ProductDetailPage";
-import Cart from "./pages/Cart";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import Checkout from "./pages/Checkout";
-import OrderSuccess from "./pages/OrderSuccess";
-import OrderDetailPage from "./pages/OrderDetailPage";
-import AccountOrders from "./pages/AccountOrders";
-import Account from "./pages/Account";
-import SellerDashboard from "./pages/SellerDashboard";
-import SellerDashboardPage from "./pages/seller/SellerDashboardPage";
-import SellerDashboardNew from "./pages/seller/SellerDashboard";
-import SellerProducts from "./pages/seller/SellerProducts";
-import SellerOrders from "./pages/seller/SellerOrders";
-import SellerCouponsPage from "./pages/seller/SellerCouponsPage";
-import SellerReturnsPage from "./pages/seller/SellerReturnsPage";
-import AdminPanel from "./pages/AdminPanel";
-import WishlistPage from "./pages/WishlistPage";
-import NotificationsPage from "./pages/NotificationsPage";
-import ReturnDetailPage from "./pages/ReturnDetailPage";
-import SellerStorefrontPage from "./pages/SellerStorefrontPage";
-import SellerVerificationPage from "./pages/seller/SellerVerificationPage";
-import AdminVerificationPage from "./pages/admin/AdminVerificationPage";
-import AdminVerificationDetailPage from "./pages/admin/AdminVerificationDetailPage";
-import AddressBookPage from "./pages/AddressBookPage";
 import { setCredentials, setLoading } from "./store/slices/authSlice";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -42,6 +12,39 @@ import { useNotificationSocket } from "./hooks/useNotificationSocket";
 import useLoadingStore from "./store/useLoadingStore";
 import PageWrapper from "./components/ui/PageWrapper";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
+import PageSeo from "./components/PageSeo";
+import Spinner from "./components/Spinner";
+
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+const SearchResultsPage = lazy(() => import("./pages/SearchResultsPage"));
+const CategoryPage = lazy(() => import("./pages/CategoryPage"));
+const ProductDetailPage = lazy(() => import("./pages/ProductDetailPage"));
+const Cart = lazy(() => import("./pages/Cart"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
+const OrderDetailPage = lazy(() => import("./pages/OrderDetailPage"));
+const AccountOrders = lazy(() => import("./pages/AccountOrders"));
+const Account = lazy(() => import("./pages/Account"));
+const SellerDashboard = lazy(() => import("./pages/SellerDashboard"));
+const SellerDashboardPage = lazy(() => import("./pages/seller/SellerDashboardPage"));
+const SellerDashboardNew = lazy(() => import("./pages/seller/SellerDashboard"));
+const SellerProducts = lazy(() => import("./pages/seller/SellerProducts"));
+const SellerOrders = lazy(() => import("./pages/seller/SellerOrders"));
+const SellerCouponsPage = lazy(() => import("./pages/seller/SellerCouponsPage"));
+const SellerReturnsPage = lazy(() => import("./pages/seller/SellerReturnsPage"));
+const AdminPanel = lazy(() => import("./pages/AdminPanel"));
+const WishlistPage = lazy(() => import("./pages/WishlistPage"));
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
+const ReturnDetailPage = lazy(() => import("./pages/ReturnDetailPage"));
+const SellerStorefrontPage = lazy(() => import("./pages/SellerStorefrontPage"));
+const SellerVerificationPage = lazy(() => import("./pages/seller/SellerVerificationPage"));
+const AdminVerificationPage = lazy(() => import("./pages/admin/AdminVerificationPage"));
+const AdminVerificationDetailPage = lazy(() => import("./pages/admin/AdminVerificationDetailPage"));
+const AddressBookPage = lazy(() => import("./pages/AddressBookPage"));
 
 function Placeholder({ title }) {
   return <main className="min-h-screen bg-zivvo-dark-bg p-8 text-zivvo-text-base">{title}</main>;
@@ -83,8 +86,18 @@ export default function App() {
   const dispatch = useDispatch();
   const { isAuthenticated, accessToken } = useSelector((state) => state.auth);
   const isLoading = useLoadingStore((state) => state.isLoading);
+  const reduceMotion = useReducedMotion();
   const [routeLoading, setRouteLoading] = useState(true);
   const [globalLoadingVisible, setGlobalLoadingVisible] = useState(false);
+  const seo = useMemo(() => {
+    if (location.pathname.startsWith("/search")) return { title: "Search Products | Zivvo", description: "Search and filter Zivvo products by category, price, rating, and newest arrivals." };
+    if (location.pathname.startsWith("/product")) return { title: "Product Details | Zivvo", description: "View product details, ratings, offers, delivery options, and secure checkout on Zivvo." };
+    if (location.pathname.startsWith("/seller/dashboard")) return { title: "Seller Dashboard | Zivvo", description: "Track seller products, orders, revenue, ratings, and recent activity on Zivvo." };
+    if (location.pathname.startsWith("/cart")) return { title: "Cart | Zivvo", description: "Review your Zivvo cart, coupons, delivery charges, and checkout total." };
+    if (location.pathname.startsWith("/checkout")) return { title: "Checkout | Zivvo", description: "Complete your Zivvo order with saved addresses and secure payment options." };
+    if (location.pathname.startsWith("/account/orders")) return { title: "My Orders | Zivvo", description: "Track your Zivvo orders, shipment status, cancellation, and returns." };
+    return { title: "Zivvo | Indian E-commerce Marketplace", description: "Shop curated Indian products on Zivvo with secure checkout, seller tools, and fast discovery." };
+  }, [location.pathname]);
   useNotificationSocket();
 
   useEffect(() => {
@@ -138,9 +151,11 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--cream)] transition-colors duration-300">
-      <Loader active={routeLoading || globalLoadingVisible} />
+      <PageSeo title={seo.title} description={seo.description} />
+      <Loader active={!reduceMotion && (routeLoading || globalLoadingVisible)} />
       <Navbar />
       <AnimatePresence mode="wait" initial={false}>
+        <Suspense fallback={<main className="grid min-h-[60vh] place-items-center"><Spinner label="Loading page" /></main>}>
         <Routes location={location} key={location.pathname + location.search}>
           <Route path="/" element={<PageWrapper><LandingPage /></PageWrapper>} />
           <Route path="/search" element={<PageWrapper><SearchResultsPage /></PageWrapper>} />
@@ -174,6 +189,7 @@ export default function App() {
           <Route path="/returns/:id" element={<PageWrapper><PrivateRoute><ReturnDetailPage /></PrivateRoute></PageWrapper>} />
           <Route path="*" element={<PageWrapper><Placeholder title="Not Found" /></PageWrapper>} />
         </Routes>
+        </Suspense>
       </AnimatePresence>
       {location.pathname !== "/" && <Footer />}
     </div>

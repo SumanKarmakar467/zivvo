@@ -8,7 +8,7 @@ import SkeletonGrid from "../components/SkeletonGrid";
 import { addToCart } from "../store/slices/cartSlice";
 import useWishlistStore from "../store/useWishlistStore";
 import { getUsableImages, productImageFallback } from "../utils/imageFallbacks";
-import { notifySuccess } from "../components/common/Toast";
+import { notifyError, notifySuccess } from "../components/common/Toast";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const formatRupees = (value) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
@@ -84,8 +84,11 @@ export function ProductDetailPage() {
         } catch {
           if (!cancelled) setSimilar(data.relatedProducts || []);
         }
-      } catch {
-        if (!cancelled) setProduct(null);
+      } catch (error) {
+        if (!cancelled) {
+          notifyError(error?.message || "Failed to load product");
+          setProduct(null);
+        }
       } finally {
         if (!cancelled) {
           setIsLoading(false);
