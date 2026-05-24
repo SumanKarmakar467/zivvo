@@ -16,6 +16,7 @@ import PageSeo from "./components/PageSeo";
 import Spinner from "./components/Spinner";
 
 const LandingPage = lazy(() => import("./pages/LandingPage"));
+const Home = lazy(() => import("./pages/Home"));
 const SearchResultsPage = lazy(() => import("./pages/SearchResultsPage"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 const ProductDetailPage = lazy(() => import("./pages/ProductDetailPage"));
@@ -29,6 +30,7 @@ const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
 const OrderDetailPage = lazy(() => import("./pages/OrderDetailPage"));
 const AccountOrders = lazy(() => import("./pages/AccountOrders"));
 const Account = lazy(() => import("./pages/Account"));
+const Profile = lazy(() => import("./pages/Profile"));
 const SellerDashboard = lazy(() => import("./pages/SellerDashboard"));
 const SellerDashboardPage = lazy(() => import("./pages/seller/SellerDashboardPage"));
 const SellerDashboardNew = lazy(() => import("./pages/seller/SellerDashboard"));
@@ -120,7 +122,8 @@ export default function App() {
     const restore = async () => {
       dispatch(setLoading(true));
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
+        const apiBase = import.meta.env.VITE_API_URL || "/api";
+        const res = await fetch(`${apiBase}/auth/refresh`, {
           method: "POST",
           credentials: "include"
         });
@@ -158,6 +161,7 @@ export default function App() {
         <Suspense fallback={<main className="grid min-h-[60vh] place-items-center"><Spinner label="Loading page" /></main>}>
         <Routes location={location} key={location.pathname + location.search}>
           <Route path="/" element={<PageWrapper><LandingPage /></PageWrapper>} />
+          <Route path="/home" element={<PageWrapper><Home /></PageWrapper>} />
           <Route path="/search" element={<PageWrapper><SearchResultsPage /></PageWrapper>} />
           <Route path="/category/:slug" element={<PageWrapper><CategoryPage /></PageWrapper>} />
           <Route path="/product/:slug" element={<PageWrapper><ProductDetailPage /></PageWrapper>} />
@@ -166,6 +170,7 @@ export default function App() {
           <Route path="/notifications" element={<PageWrapper><PrivateRoute><NotificationsPage /></PrivateRoute></PageWrapper>} />
           <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
           <Route path="/register" element={<PageWrapper><Register /></PageWrapper>} />
+          <Route path="/auth" element={<PageWrapper><Login /></PageWrapper>} />
           <Route path="/forgot-password" element={<PageWrapper><ForgotPassword /></PageWrapper>} />
           <Route path="/reset-password/:token" element={<PageWrapper><ResetPassword /></PageWrapper>} />
           <Route path="/seller" element={<PageWrapper><SellerRoute><SellerDashboardPage /></SellerRoute></PageWrapper>} />
@@ -179,7 +184,8 @@ export default function App() {
           <Route path="/admin" element={<PageWrapper><AdminRoute><AdminPanel /></AdminRoute></PageWrapper>} />
           <Route path="/admin/verification" element={<PageWrapper><AdminRoute><AdminVerificationPage /></AdminRoute></PageWrapper>} />
           <Route path="/admin/verification/:sellerId" element={<PageWrapper><AdminRoute><AdminVerificationDetailPage /></AdminRoute></PageWrapper>} />
-          <Route path="/checkout" element={<PageWrapper><PrivateRoute><Checkout /></PrivateRoute></PageWrapper>} />
+          <Route path="/checkout" element={<PageWrapper><Checkout /></PageWrapper>} />
+          <Route path="/profile" element={<PageWrapper><Profile /></PageWrapper>} />
           <Route path="/account" element={<PageWrapper><PrivateRoute><Account /></PrivateRoute></PageWrapper>} />
           <Route path="/account/addresses" element={<PageWrapper><PrivateRoute><AddressBookPage /></PrivateRoute></PageWrapper>} />
           <Route path="/order-success/:orderId" element={<PageWrapper><PrivateRoute><OrderSuccess /></PrivateRoute></PageWrapper>} />

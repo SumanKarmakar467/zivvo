@@ -15,6 +15,11 @@ const getCookieOptions = () => ({
   maxAge: 7 * 24 * 60 * 60 * 1000
 });
 
+const getAccessCookieOptions = () => ({
+  ...getCookieOptions(),
+  maxAge: 15 * 60 * 1000
+});
+
 const signAccessToken = (user) =>
   jwt.sign({ id: user._id, role: user.role, email: user.email }, process.env.JWT_SECRET, { expiresIn: ACCESS_EXPIRES_IN });
 
@@ -26,6 +31,10 @@ const sanitizeUser = (user) => ({
   email: user.email,
   role: user.role,
   avatar: user.avatar
+});
+
+export const me = asyncHandler(async (req, res) => {
+  res.json({ user: sanitizeUser(req.user) });
 });
 
 const createHttpError = (statusCode, message) => {
@@ -120,6 +129,7 @@ export const register = asyncHandler(async (req, res) => {
   await user.save();
 
   res.cookie("refreshToken", refreshToken, getCookieOptions());
+  res.cookie("accessToken", accessToken, getAccessCookieOptions());
   await sendWelcomeEmail(user);
 
   res.status(201).json({ user: sanitizeUser(user), accessToken });
@@ -152,6 +162,7 @@ export const login = asyncHandler(async (req, res) => {
   await user.save();
 
   res.cookie("refreshToken", refreshToken, getCookieOptions());
+  res.cookie("accessToken", accessToken, getAccessCookieOptions());
   res.json({ user: sanitizeUser(user), accessToken });
 });
 
@@ -230,6 +241,7 @@ export const googleLogin = asyncHandler(async (req, res) => {
   await user.save();
 
   res.cookie("refreshToken", refreshToken, getCookieOptions());
+  res.cookie("accessToken", accessToken, getAccessCookieOptions());
   res.json({ user: sanitizeUser(user), accessToken });
 });
 
@@ -256,6 +268,7 @@ export const refreshToken = asyncHandler(async (req, res) => {
 
   const accessToken = signAccessToken(user);
   res.cookie("refreshToken", newRefreshToken, getCookieOptions());
+  res.cookie("accessToken", accessToken, getAccessCookieOptions());
   res.json({ accessToken });
 });
 
@@ -276,6 +289,7 @@ export const logout = asyncHandler(async (req, res) => {
   }
 
   res.clearCookie("refreshToken", getCookieOptions());
+  res.clearCookie("accessToken", getAccessCookieOptions());
   res.json({ message: "Logged out successfully" });
 });
 

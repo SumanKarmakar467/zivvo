@@ -12,6 +12,8 @@ import { store } from "./store/store";
 import { ToastViewport } from "./components/common/Toast";
 import { ThemeProvider } from "./context/ThemeContext";
 import { SocketProvider } from "./context/SocketContext";
+import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
 import ErrorBoundary from "./ErrorBoundary";
 
 createRoot(document.getElementById("root")).render(
@@ -20,12 +22,14 @@ createRoot(document.getElementById("root")).render(
       <HelmetProvider>
         <Provider store={store}>
           <ThemeProvider>
-            <SocketProvider>
-              <BrowserRouter>
-                <AnimatePresence mode="wait" initial={false}>
-                  <App />
-                </AnimatePresence>
-                <Toaster
+            <AuthProvider>
+              <CartProvider>
+                <SocketProvider>
+                  <BrowserRouter>
+                    <AnimatePresence mode="wait" initial={false}>
+                      <App />
+                    </AnimatePresence>
+                    <Toaster
                   position="top-right"
                   toastOptions={{
                     duration: 3000,
@@ -45,10 +49,12 @@ createRoot(document.getElementById("root")).render(
                       iconTheme: { primary: "#F43F5E", secondary: "#0C0F1A" }
                     }
                   }}
-                />
-                <ToastViewport />
-              </BrowserRouter>
-            </SocketProvider>
+                    />
+                    <ToastViewport />
+                  </BrowserRouter>
+                </SocketProvider>
+              </CartProvider>
+            </AuthProvider>
           </ThemeProvider>
         </Provider>
       </HelmetProvider>

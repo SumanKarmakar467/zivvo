@@ -8,7 +8,9 @@ const router = express.Router();
 
 router.post("/create", protect, createRazorpayOrder);
 router.post("/verify", protect, verifyPayment);
+router.get("/", protect, getMyOrders);
 router.get("/my", protect, getMyOrders);
+router.get("/:id/track", protect, getOrderById);
 router.get("/:id", protect, getOrderById);
 router.put("/:id/cancel", protect, cancelOrder);
 

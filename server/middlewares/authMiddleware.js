@@ -4,13 +4,14 @@ import asyncHandler from "./asyncHandler.js";
 
 export const protect = asyncHandler(async (req, res, next) => {
   const authHeader = req.headers.authorization;
+  const cookieToken = req.cookies?.accessToken;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if ((!authHeader || !authHeader.startsWith("Bearer ")) && !cookieToken) {
     res.status(401);
     throw new Error("Not authorized, token missing");
   }
 
-  const token = authHeader.split(" ")[1];
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : cookieToken;
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
   const user = await User.findById(decoded.id).select("-passwordHash -refreshToken");
