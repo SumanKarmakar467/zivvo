@@ -1,20 +1,53 @@
-import { useEffect, useRef, useState } from "react";
-import gsap from "gsap";
-import confetti from "canvas-confetti";
+import { useState } from "react";
 import api from "../api/axios";
+import OrderTracker from "../components/OrderTracker";
 
-const steps = ["Order Placed", "Confirmed", "Shipped", "Out for Delivery", "Delivered"];
+const demoOrders = [
+  {
+    id: "ZV10291",
+    productName: "Gold Chrono Watch",
+    productImage: "https://cdn.dummyjson.com/product-images/mens-watches/brown-leather-belt-watch/thumbnail.webp",
+    productPrice: 129.99,
+    size: "One Size",
+    quantity: 1,
+    placedAt: "2026-05-20T10:20:00.000Z",
+    status: "out_for_delivery",
+    trackingStep: 3,
+    estimatedDelivery: "2026-05-25T18:30:00.000Z",
+    paymentId: "pay_ZV10291"
+  },
+  {
+    id: "ZV10244",
+    productName: "Nike Air Jordan 1 Red And Black",
+    productImage: "https://cdn.dummyjson.com/product-images/mens-shoes/nike-air-jordan-1-red-and-black/thumbnail.webp",
+    productPrice: 149.99,
+    size: "9",
+    quantity: 1,
+    placedAt: "2026-05-16T09:15:00.000Z",
+    status: "delivered",
+    trackingStep: 4,
+    estimatedDelivery: "2026-05-21T12:00:00.000Z",
+    paymentId: "pay_ZV10244"
+  },
+  {
+    id: "ZV10170",
+    productName: "Apple AirPods Max Silver",
+    productImage: "https://cdn.dummyjson.com/product-images/mobile-accessories/apple-airpods-max-silver/thumbnail.webp",
+    productPrice: 549.99,
+    size: "One Size",
+    quantity: 1,
+    placedAt: "2026-05-10T14:45:00.000Z",
+    status: "cancelled",
+    trackingStep: 1,
+    estimatedDelivery: "2026-05-15T18:00:00.000Z",
+    paymentId: "pay_ZV10170"
+  }
+];
 
 export default function Profile() {
   const [avatar, setAvatar] = useState("");
   const [preview, setPreview] = useState("");
-  const [status, setStatus] = useState(3);
-  const lineRef = useRef(null);
-
-  useEffect(() => {
-    gsap.to(lineRef.current, { width: `${(status / (steps.length - 1)) * 100}%`, duration: 0.8, ease: "power3.out" });
-    if (status === 4) confetti({ particleCount: 100, spread: 90 });
-  }, [status]);
+  const [selectedOrder, setSelectedOrder] = useState(demoOrders[0]);
 
   const upload = async (file) => {
     if (!file) return;
@@ -42,24 +75,11 @@ export default function Profile() {
           </div>
         </section>
         <section className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-4">
-            {["Total Orders", "Delivered", "Cancelled", "Wishlist items"].map((label, index) => <div key={label} className="zivvo-card rounded-lg p-5"><p className="text-3xl font-black text-[#C9A84C]">{[12, 9, 1, 7][index]}</p><p className="text-sm text-[var(--muted)]">{label}</p></div>)}
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.3em] text-[#C9A84C]">My Orders</p>
+            <h1 className="mt-2 text-4xl font-black text-[#F5F0E8]">Order tracking</h1>
           </div>
-          <div className="zivvo-card rounded-lg p-6">
-            <h2 className="text-2xl font-black">Order Tracking</h2>
-            <div className="relative mt-8">
-              <div className="absolute left-0 right-0 top-5 h-1 bg-[var(--bg3)]" />
-              <div ref={lineRef} className="absolute left-0 top-5 h-1 bg-[#C9A84C]" />
-              <div className="relative flex justify-between">
-                {steps.map((step, index) => <button key={step} type="button" onClick={() => setStatus(index)} className="grid max-w-24 justify-items-center gap-2 text-center text-xs"><span className={`grid h-11 w-11 place-items-center rounded-full border ${index === status ? "pulse-dot border-[#C9A84C] bg-[#C9A84C] text-black" : index < status ? "border-[#C9A84C] bg-[#C9A84C]/20" : "border-[var(--border)] bg-[var(--bg2)]"}`}>{index + 1}</span>{step}</button>)}
-              </div>
-            </div>
-            <p className="mt-6 text-[var(--muted)]">ETA: {new Date(Date.now() + (5 - status) * 86400000).toLocaleDateString()}</p>
-          </div>
-          <div className="zivvo-card rounded-lg p-6">
-            <h2 className="text-2xl font-black">Order History</h2>
-            {[1, 2, 3].map((item) => <div key={item} className="mt-4 flex items-center justify-between rounded-md border border-[var(--border)] p-3"><div><p className="font-bold">Zivvo curated product #{item}</p><p className="text-sm text-[var(--muted)]">May {20 + item}, 2026</p></div><span className="rounded-full bg-[#C9A84C]/15 px-3 py-1 text-sm">Shipped</span><p className="font-bold">${49 + item * 12}</p></div>)}
-          </div>
+          <OrderTracker order={selectedOrder} allOrders={demoOrders} onOrderSelect={setSelectedOrder} />
         </section>
       </div>
     </main>
