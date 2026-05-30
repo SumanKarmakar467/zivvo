@@ -1,128 +1,123 @@
-import { useMemo, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import FilterSidebar from "../components/FilterSidebar";
-import SortBar from "../components/SortBar";
-import ProductCard from "../components/ProductCard";
-import ProductCardSkeleton from "../components/ProductCardSkeleton";
-import { useGetCategoriesQuery, useGetProductsByCategoryQuery } from "../store/api/productsApi";
-
-const FILTER_KEYS = ["brand", "minPrice", "maxPrice", "minRating", "sort", "page", "limit"];
+import { Link, useParams } from "react-router-dom";
+import { SlidersHorizontal, Star } from "lucide-react";
+import { categories, getCategoryBySlug, products } from "../data/cosmicCatalog";
+import { useCartContext } from "../context/CartContext";
 
 export default function CategoryPage() {
   const { slug } = useParams();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [view, setView] = useState("grid");
-
-  const filters = useMemo(() => {
-    const obj = {};
-    FILTER_KEYS.forEach((key) => {
-      const value = searchParams.get(key);
-      if (value) obj[key] = value;
-    });
-    return obj;
-  }, [searchParams]);
-
-  const page = Number(filters.page || 1);
-  const query = { slug, ...filters, page, limit: 20 };
-
-  const { data: categories = [] } = useGetCategoriesQuery();
-  const categoryMeta = categories.find((c) => c.slug === slug);
-
-  const { data, isLoading } = useGetProductsByCategoryQuery(query, { skip: !slug });
-  const products = data?.products || [];
-  const total = data?.total || 0;
-  const pages = data?.pages || 0;
-  const brands = data?.brands || [];
-  const facets = useMemo(() => ({
-    categories,
-    brands
-  }), [categories, brands]);
-  const sidebarSearchParams = useMemo(() => {
-    const params = new URLSearchParams(searchParams);
-    if (slug) params.set("category", slug);
-    return params;
-  }, [searchParams, slug]);
-
-  const setParam = (key, value) => {
-    if (key === "category") {
-      if (value) navigate(`/category/${value}`, { replace: true });
-      else navigate("/search?sort=newest", { replace: true });
-      return;
-    }
-
-    const params = new URLSearchParams(searchParams);
-    if (value === undefined || value === "" || value === null) params.delete(key);
-    else params.set(key, String(value));
-    if (key !== "page") params.set("page", "1");
-    navigate(`/category/${slug}?${params.toString()}`, { replace: true });
-  };
-
-  const updateParams = (next) => {
-    const params = new URLSearchParams(searchParams);
-    Object.entries(next).forEach(([key, value]) => {
-      if (value === undefined || value === "" || value === null) params.delete(key);
-      else params.set(key, String(value));
-    });
-    if (!next.page) params.set("page", "1");
-    navigate(`/category/${slug}?${params.toString()}`, { replace: true });
-  };
-
-  const clearFilters = () => {
-    navigate(`/category/${slug}?sort=newest`, { replace: true });
-  };
+  const category = getCategoryBySlug(slug);
+  const { addItem } = useCartContext();
+  const visibleProducts = products.filter((product) => product.category === category.slug || category.slug === "electronics");
 
   return (
-    <main className="min-h-screen bg-zivvo-dark-bg px-4 py-6 text-zivvo-text-base md:px-6">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-4 text-sm text-zivvo-text-muted">
-          <Link to="/" className="hover:text-[#ef9f27]">Home</Link> &gt; <span>{categoryMeta?.name || slug}</span>
+    <main className="cosmic-container py-10 lg:py-14">
+      <section className="glass-card grid min-h-[340px] overflow-hidden rounded-[2rem] lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="p-6 md:p-10 lg:p-12">
+          <p className="text-label-caps font-bold uppercase tracking-[0.16em] text-neon-cyan">{category.eyebrow}</p>
+          <h1 className="cosmic-title mt-4 max-w-2xl text-5xl leading-tight md:text-6xl lg:text-7xl">
+            {category.name === "Electronics" ? "Electronics & Gadgets" : category.name}
+          </h1>
+          <p className="mt-5 max-w-xl text-body-lg text-on-surface-variant">
+            Curated next-generation hardware, everyday luxury, and high-signal products for the digital elite.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            {["iPhone 15 Pro", "Sony XM5", "MacBook Air", "Vision Glass"].map((chip) => (
+              <button key={chip} type="button" className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-on-surface">
+                {chip}
+              </button>
+            ))}
+          </div>
         </div>
-
-        <div className="mb-6 rounded-xl border border-zinc-800 bg-zivvo-surface p-4">
-          <h1 className="text-2xl font-bold">{categoryMeta?.name || "Category"}</h1>
-          <p className="mt-1 text-sm text-zivvo-text-muted">Browse the best picks from this category.</p>
+        <div className="min-h-[280px] overflow-hidden">
+          <img src={category.image} alt={category.name} className="h-full min-h-[280px] w-full object-cover opacity-80" />
         </div>
+      </section>
 
-        <div className="grid gap-5 md:grid-cols-[16rem_1fr]">
-          <div className="hidden md:block">
-            <FilterSidebar searchParams={sidebarSearchParams} facets={facets} onParamChange={setParam} onClear={clearFilters} />
+      <div className="mt-8 grid gap-6 lg:grid-cols-[280px_1fr]">
+        <aside className="hidden lg:block">
+          <div className="glass-card sticky top-28 rounded-2xl p-6">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="cosmic-title text-2xl">Refine Gear</h2>
+              <SlidersHorizontal className="h-5 w-5 text-neon-cyan" />
+            </div>
+            <FilterGroup title="Price Range">
+              <input type="range" min="0" max="5000" defaultValue="2400" className="w-full accent-neon-cyan" />
+              <div className="mt-2 flex justify-between text-xs text-outline">
+                <span>$0</span>
+                <span>$5000+</span>
+              </div>
+            </FilterGroup>
+            <FilterGroup title="Brands">
+              <div className="flex flex-wrap gap-2">
+                {["Apple", "Sony", "Samsung", "Bose"].map((brand, index) => (
+                  <button key={brand} className={`rounded-full border px-4 py-2 text-sm ${index === 0 ? "border-neon-cyan bg-neon-cyan/10 text-neon-cyan" : "border-white/10 bg-white/5"}`}>
+                    {brand}
+                  </button>
+                ))}
+              </div>
+            </FilterGroup>
+            <FilterGroup title="Availability">
+              <label className="flex items-center justify-between gap-4 text-on-surface">
+                In Stock Only
+                <span className="flex h-7 w-12 items-center rounded-full bg-electric-violet p-1">
+                  <span className="ml-auto h-5 w-5 rounded-full bg-white" />
+                </span>
+              </label>
+            </FilterGroup>
+            <button className="btn-primary mt-6 w-full">Apply Filters</button>
+          </div>
+        </aside>
+
+        <section>
+          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="cosmic-title text-3xl">Available Gear</h2>
+              <p className="mt-1 text-on-surface-variant">{visibleProducts.length * 6} items</p>
+            </div>
+            <button className="inline-flex items-center gap-2 text-label-caps font-bold uppercase tracking-[0.14em] text-neon-cyan lg:hidden">
+              <SlidersHorizontal className="h-4 w-4" /> Filter
+            </button>
           </div>
 
-          <section>
-            <SortBar sort={filters.sort || ""} onSortChange={(sort) => updateParams({ ...filters, sort, page: 1 })} total={total} view={view} onViewChange={setView} />
-
-            {isLoading ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 12 }).map((_, idx) => <ProductCardSkeleton key={idx} />)}
-              </div>
-            ) : products.length === 0 ? (
-              <div className="rounded-xl border border-zinc-800 bg-zivvo-surface p-10 text-center">
-                <div className="mx-auto mb-3 text-5xl">:(</div>
-                <h2 className="text-lg font-semibold">No products found</h2>
-                <p className="mt-1 text-sm text-zivvo-text-muted">Try changing filters.</p>
-              </div>
-            ) : (
-              <>
-                <div className={`grid gap-4 ${view === "grid" ? "sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}>
-                  {products.map((product) => <ProductCard key={product._id} product={product} />)}
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            {visibleProducts.map((product) => (
+              <article key={product.id} className="group glass-card flex min-h-[420px] flex-col rounded-2xl p-3">
+                <Link to={`/product/${product.id}`} className="relative block aspect-[4/5] overflow-hidden rounded-xl bg-surface-container-lowest">
+                  <img src={product.image} alt={product.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-110" />
+                  <span className="absolute left-3 top-3 rounded-full border border-stellar-gold/50 bg-cosmic-black/60 px-3 py-1 text-[10px] font-black text-stellar-gold">
+                    {product.tag}
+                  </span>
+                </Link>
+                <div className="flex flex-1 flex-col p-3">
+                  <h3 className="cosmic-title mt-2 text-xl">{product.title}</h3>
+                  <div className="mt-2 flex items-center gap-1 text-sm text-outline">
+                    <Star className="h-4 w-4 fill-stellar-gold text-stellar-gold" />
+                    {product.rating}
+                  </div>
+                  <p className="mt-3 text-xl font-black text-stellar-gold">${product.price}.00</p>
+                  <div className="mt-auto grid grid-cols-2 gap-2 pt-5">
+                    <button onClick={() => addItem(product, { size: product.variant })} className="btn-primary min-h-11 rounded-xl text-xs">
+                      Add to Bag
+                    </button>
+                    <Link to={`/product/${product.id}`} className="btn-ghost min-h-11 rounded-xl text-xs">
+                      Details
+                    </Link>
+                  </div>
                 </div>
-                <div className="mt-6 flex flex-wrap gap-2">
-                  {Array.from({ length: pages }).map((_, idx) => {
-                    const p = idx + 1;
-                    const active = p === page;
-                    return (
-                      <button type="button" key={p} onClick={() => updateParams({ ...filters, page: p })} className={`rounded-md px-3 py-1 text-sm ${active ? "bg-[#ef9f27] text-black" : "bg-zinc-800 text-zivvo-text-base"}`}>
-                        {p}
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </section>
-        </div>
+              </article>
+            ))}
+          </div>
+        </section>
       </div>
     </main>
+  );
+}
+
+function FilterGroup({ title, children }) {
+  return (
+    <div className="border-t border-white/10 py-6 first:border-t-0 first:pt-0">
+      <h3 className="mb-4 text-label-caps font-bold uppercase tracking-[0.16em] text-neon-cyan">{title}</h3>
+      {children}
+    </div>
   );
 }

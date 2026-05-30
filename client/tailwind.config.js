@@ -5,121 +5,76 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"DM Sans"', "sans-serif"],
-        display: ['"Playfair Display"', "serif"],
-        playfair: ['"Playfair Display"', "serif"],
-        head: ["Playfair Display", "Georgia", "serif"],
-        body: ["DM Sans", "system-ui", "sans-serif"]
+        syne: ["Syne", "sans-serif"],
+        outfit: ["Outfit", "system-ui", "sans-serif"],
+        sans: ["Outfit", "system-ui", "sans-serif"],
+        display: ["Syne", "sans-serif"],
+        body: ["Outfit", "system-ui", "sans-serif"]
+      },
+      fontSize: {
+        "display-lg": ["48px", { lineHeight: "56px", fontWeight: "800" }],
+        "display-xl": ["72px", { lineHeight: "78px", fontWeight: "800" }],
+        "headline-md": ["32px", { lineHeight: "40px", fontWeight: "700" }],
+        "headline-lg": ["44px", { lineHeight: "52px", fontWeight: "800" }],
+        "title-sm": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+        "label-caps": ["12px", { lineHeight: "16px", fontWeight: "700", letterSpacing: "0.1em" }]
       },
       colors: {
-        violet: {
-          DEFAULT: "#7C5CFC",
-          light: "#A78BFA"
-        },
-        cyan: {
-          DEFAULT: "#22D3EE",
-          light: "#67E8F9"
-        },
-        rose: {
-          DEFAULT: "#F43F5E"
-        },
-        cream: {
-          DEFAULT: "#E8EAFF"
-        },
-        muted: {
-          DEFAULT: "#7B83A8"
-        },
-        cosmic: {
-          bg: "#05060F",
-          surface: "#0C0F1A",
-          violet: "#7C5CFC",
-          violet2: "#A78BFA",
-          cyan: "#22D3EE",
-          rose: "#F43F5E",
-          cream: "#E8EAFF",
-          muted: "#7B83A8"
-        },
-        aura: {
-          bg: "#F5F3FF",
-          surface: "#EDE9FE",
-          violet: "#5B21B6",
-          cyan: "#0E7490",
-          cream: "#1E1B4B",
-          muted: "#6B7280"
-        },
-        accent: {
-          DEFAULT: "#e8730a",
-          dark: "#c45c00",
-          light: "#fff3e8",
-          muted: "rgba(232,115,10,0.12)"
-        },
-        brand: {
-          bg: "#f8f5f0",
-          card: "#ffffff",
-          muted: "#f0ebe3",
-          ink: "#1a1208",
-          inkMid: "#5c4d3a",
-          inkFaint: "#9c8a74"
-        },
-        night: {
-          bg: "#0e0a06",
-          card: "#1c1408",
-          muted: "#241a0f",
-          border: "rgba(255,255,255,0.08)"
-        },
-        bg: {
-          DEFAULT: "#05060F",
-          2: "#0C0F1A",
-          3: "#111528",
-          warm: "#f8f5f0",
-          card: "#ffffff",
-          muted: "#f0ebe3"
-        },
-        ink: {
-          DEFAULT: "#1a1208",
-          muted: "#5c4d3a",
-          faint: "#9c8a74"
-        },
-        dark: {
-          bg: "#0e0a06",
-          card: "#1c1408",
-          muted: "#241a0f"
-        },
-        green: {
-          DEFAULT: "#2d6a4f",
-          light: "#52b788"
-        },
-        success: "#2d6a4f",
-        successLight: "#52b788",
-        zivvo: {
-          surface: "#1f1a14",
-          dark: {
-            bg: "#19120b",
-            surface: "#1f1a14",
-            raised: "#2a2218"
-          },
-          amber: {
-            brand: "#ef9f27",
-            glow: "#ffb84d",
-            deep: "#c97a0d"
-          },
-          text: {
-            base: "#efe0d3",
-            muted: "#c9b8a8",
-            soft: "#9f8c79"
-          },
-          light: {
-            bg: "#f5f3ef",
-            surface: "#ffffff",
-            border: "#e2ddd5"
-          }
-        }
+        "cosmic-black": "#05060F",
+        background: "#11131d",
+        surface: "#11131d",
+        "surface-dim": "#11131d",
+        "surface-bright": "#373844",
+        "surface-container-lowest": "#0c0e17",
+        "surface-container-low": "#1a1b25",
+        "surface-container": "#1e1f29",
+        "surface-container-high": "#282934",
+        "surface-container-highest": "#33343f",
+        "glass-surface": "#1E2035",
+        "on-surface": "#e2e1f0",
+        "on-surface-variant": "#ccc3d8",
+        "on-background": "#e2e1f0",
+        "inverse-surface": "#e2e1f0",
+        "inverse-on-surface": "#2f303b",
+        "electric-violet": "#7C3AED",
+        "neon-cyan": "#06B6D4",
+        "stellar-gold": "#F59E0B",
+        "muted-silver": "#888780",
+        primary: "#d2bbff",
+        "on-primary": "#3f008e",
+        "primary-container": "#7c3aed",
+        "on-primary-container": "#ede0ff",
+        secondary: "#4cd7f6",
+        "on-secondary": "#003640",
+        "secondary-container": "#03b5d3",
+        tertiary: "#ffb95f",
+        "on-tertiary": "#472a00",
+        error: "#ffb4ab",
+        "error-container": "#93000a",
+        outline: "#958da1",
+        "outline-variant": "#4a4455",
+        "surface-tint": "#d2bbff",
+        "surface-variant": "#33343f"
+      },
+      spacing: {
+        unit: "4px",
+        "stack-sm": "8px",
+        "stack-md": "24px",
+        "stack-lg": "48px",
+        gutter: "16px",
+        "margin-mobile": "20px",
+        "margin-desktop": "80px"
       },
       boxShadow: {
-        amber: "0 12px 28px -10px rgba(239, 159, 39, 0.45)"
+        violet: "0 0 34px rgba(124, 58, 237, 0.28)",
+        cyan: "0 0 30px rgba(6, 182, 212, 0.24)",
+        gold: "0 0 18px rgba(245, 158, 11, 0.28)"
       },
       backgroundImage: {
-        "zivvo-radial": "radial-gradient(circle at top right, rgba(239, 159, 39, 0.22), transparent 45%)"
+        "cosmic-mesh":
+          "radial-gradient(circle at 15% 12%, rgba(124,58,237,0.28), transparent 34%), radial-gradient(circle at 82% 18%, rgba(6,182,212,0.18), transparent 30%), radial-gradient(circle at 50% 86%, rgba(124,58,237,0.16), transparent 36%), linear-gradient(180deg, #05060F 0%, #080A14 48%, #05060F 100%)"
       }
     }
   },

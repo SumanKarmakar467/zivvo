@@ -1,60 +1,122 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useSwipeable } from "react-swipeable";
-import { motion } from "framer-motion";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Minus, Plus, ShieldCheck, Ticket, Trash2 } from "lucide-react";
+import { cartDefaults } from "../data/cosmicCatalog";
 import { useCartContext } from "../context/CartContext";
 
 export default function Cart() {
-  const { items, totals, updateQty, removeItem } = useCartContext();
-  const [coupon, setCoupon] = useState("");
-  const discount = useMemo(() => coupon.toUpperCase() === "ZIVVO10" ? totals.subtotal * 0.1 : 0, [coupon, totals.subtotal]);
-  const total = totals.subtotal - discount + totals.delivery;
+  const { items, setItems, totals, updateQty, removeItem } = useCartContext();
+  const [coupon, setCoupon] = useState("ZIVVO10");
+
+  useEffect(() => {
+    if (!items.length) setItems(cartDefaults);
+  }, [items.length, setItems]);
+
+  const discount = useMemo(() => (coupon.toUpperCase() === "ZIVVO10" ? totals.subtotal * 0.1 : 0), [coupon, totals.subtotal]);
+  const total = Math.max(0, totals.subtotal - discount + totals.delivery);
 
   return (
-    <main className="min-h-screen bg-[var(--bg)] px-4 py-8 text-[var(--cream)] md:px-8">
-      <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[1fr_360px]">
-        <section className="space-y-4">
-          <h1 className="text-4xl font-black">Cart</h1>
-          {items.map((item) => <CartRow key={`${item.id}-${item.size}`} item={item} updateQty={updateQty} removeItem={removeItem} />)}
-          {!items.length && <div className="zivvo-card rounded-lg p-10 text-center text-[var(--muted)]">Your cart is empty.</div>}
-        </section>
-        <aside className="zivvo-card h-fit rounded-lg p-6">
-          <h2 className="text-2xl font-black">Price breakdown</h2>
-          <input value={coupon} onChange={(event) => setCoupon(event.target.value)} placeholder='Coupon "ZIVVO10"' className="input mt-5 w-full" />
-          <Line label="Subtotal" value={totals.subtotal} />
-          <Line label="Discount" value={-discount} />
-          <Line label="Delivery" value={totals.delivery} />
-          <div className="mt-4 flex justify-between border-t border-[var(--border)] pt-4 text-xl font-black"><span>Total</span><span>${total.toFixed(2)}</span></div>
-          <Link to="/checkout" className="mt-6 block rounded-md bg-[#C9A84C] px-5 py-4 text-center font-black text-black">Checkout</Link>
-        </aside>
+    <main className="cosmic-container py-10 lg:py-14">
+      <div className="mb-10">
+        <p className="text-label-caps font-bold uppercase tracking-[0.18em] text-neon-cyan">Shopping Bag</p>
+        <h1 className="cosmic-title mt-4 text-5xl md:text-6xl">Your Cart ({items.length} items)</h1>
       </div>
+
+      {items.length ? (
+        <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
+          <section className="space-y-4">
+            {items.map((item) => (
+              <CartRow key={`${item.id}-${item.size}`} item={item} updateQty={updateQty} removeItem={removeItem} />
+            ))}
+          </section>
+
+          <aside className="space-y-4 lg:sticky lg:top-28 lg:self-start">
+            <div className="glass-card rounded-[2rem] p-6 md:p-8">
+              <h2 className="cosmic-title text-3xl">Order Summary</h2>
+              <div className="mt-6 space-y-4 text-on-surface-variant">
+                <Line label="Subtotal" value={totals.subtotal} />
+                <Line label={`Discount (${coupon || "none"})`} value={-discount} accent />
+                <Line label="Delivery" value={totals.delivery} free={totals.delivery === 0} />
+                <div className="flex items-center justify-between border-t border-white/10 pt-5">
+                  <span className="font-bold text-on-surface">Total Amount</span>
+                  <span className="text-3xl font-black text-stellar-gold">${total.toFixed(2)}</span>
+                </div>
+              </div>
+              <Link to="/checkout" className="btn-primary mt-8 w-full px-6">
+                Proceed to Checkout
+              </Link>
+              <div className="mt-6 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-outline">
+                <ShieldCheck className="h-4 w-4" /> Secure checkout by ZIVVO
+              </div>
+            </div>
+
+            <div className="glass-card flex items-center justify-between rounded-2xl p-5">
+              <div className="flex items-center gap-3">
+                <Ticket className="h-6 w-6 text-neon-cyan" />
+                <input value={coupon} onChange={(event) => setCoupon(event.target.value)} className="w-32 bg-transparent font-bold uppercase outline-none placeholder:text-outline" placeholder="Coupon" />
+              </div>
+              <button onClick={() => setCoupon("")} className="text-sm font-black uppercase tracking-[0.12em] text-electric-violet">
+                Remove
+              </button>
+            </div>
+          </aside>
+        </div>
+      ) : (
+        <div className="glass-card rounded-[2rem] px-6 py-20 text-center">
+          <div className="mx-auto grid h-28 w-28 place-items-center rounded-full bg-neon-cyan/10 text-neon-cyan shadow-cyan">
+            <ShoppingBagIcon />
+          </div>
+          <h2 className="cosmic-title mt-6 text-4xl">Your Bag is Empty</h2>
+          <p className="mx-auto mt-3 max-w-md text-on-surface-variant">Add future-premium items to your bag and they will appear here.</p>
+          <Link to="/category/electronics" className="btn-primary mx-auto mt-8 w-full max-w-xs">Start Shopping</Link>
+        </div>
+      )}
     </main>
   );
 }
 
 function CartRow({ item, updateQty, removeItem }) {
-  const handlers = useSwipeable({ onSwipedLeft: () => removeItem(item.id, item.size), trackMouse: true });
   return (
-    <motion.article {...handlers} layout exit={{ opacity: 0, x: -80 }} className="zivvo-card flex gap-4 rounded-lg p-4">
-      <img src={item.thumbnail} alt={item.title} className="h-24 w-24 rounded-md object-cover" />
-      <div className="min-w-0 flex-1">
-        <h2 className="font-bold">{item.title}</h2>
-        <p className="text-sm text-[var(--muted)]">Size: {item.size}</p>
-        <div className="mt-3 flex items-center gap-2">
-          <button className="grid h-9 w-9 place-items-center rounded-md border border-[var(--border)]" onClick={() => updateQty(item.id, item.size, item.quantity - 1)}><Minus className="h-4 w-4" /></button>
-          <span className="w-8 text-center font-bold">{item.quantity}</span>
-          <button className="grid h-9 w-9 place-items-center rounded-md border border-[var(--border)]" onClick={() => updateQty(item.id, item.size, item.quantity + 1)}><Plus className="h-4 w-4" /></button>
+    <article className="glass-card grid gap-4 rounded-2xl p-4 transition hover:scale-[1.005] md:grid-cols-[132px_1fr_auto] md:items-center">
+      <img src={item.image || item.thumbnail} alt={item.title} className="h-36 w-full rounded-xl object-cover md:h-32 md:w-32" />
+      <div className="min-w-0">
+        <h2 className="cosmic-title text-2xl">{item.title}</h2>
+        <p className="mt-1 text-on-surface-variant">{item.size || item.variant}</p>
+        <p className="mt-4 text-xl font-black text-stellar-gold">${Number(item.price).toFixed(2)}</p>
+      </div>
+      <div className="flex items-center justify-between gap-4 md:flex-col md:items-end">
+        <button onClick={() => removeItem(item.id, item.size)} className="text-outline-variant transition hover:text-error" aria-label={`Remove ${item.title}`}>
+          <Trash2 className="h-5 w-5" />
+        </button>
+        <div className="flex items-center gap-3 rounded-full bg-white/5 px-2 py-1">
+          <button className="grid h-9 w-9 place-items-center text-neon-cyan" onClick={() => updateQty(item.id, item.size, item.quantity - 1)} aria-label="Decrease quantity">
+            <Minus className="h-4 w-4" />
+          </button>
+          <span className="w-6 text-center font-black">{item.quantity}</span>
+          <button className="grid h-9 w-9 place-items-center text-neon-cyan" onClick={() => updateQty(item.id, item.size, item.quantity + 1)} aria-label="Increase quantity">
+            <Plus className="h-4 w-4" />
+          </button>
         </div>
       </div>
-      <div className="text-right">
-        <p className="font-black">${(item.price * item.quantity).toFixed(2)}</p>
-        <button className="mt-4 text-red-400" onClick={() => removeItem(item.id, item.size)}><Trash2 className="h-5 w-5" /></button>
-      </div>
-    </motion.article>
+    </article>
   );
 }
 
-function Line({ label, value }) {
-  return <div className="mt-4 flex justify-between text-[var(--muted)]"><span>{label}</span><span>${value.toFixed(2)}</span></div>;
+function Line({ label, value, accent = false, free = false }) {
+  return (
+    <div className={`flex justify-between ${accent ? "text-neon-cyan" : ""}`}>
+      <span>{label}</span>
+      <span className="text-on-surface">{free ? "FREE" : `$${value.toFixed(2)}`}</span>
+    </div>
+  );
+}
+
+function ShoppingBagIcon() {
+  return (
+    <svg aria-hidden="true" className="h-12 w-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M6 8h12l-1 12H7L6 8Z" />
+      <path d="M9 8a3 3 0 0 1 6 0" />
+      <path d="m9 13 6 4M15 13l-6 4" />
+    </svg>
+  );
 }

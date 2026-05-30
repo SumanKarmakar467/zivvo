@@ -4,73 +4,56 @@ const columns = [
   {
     title: "Shop",
     links: [
-      { label: "Shop", to: "/search" },
-      { label: "Deals", to: "/search?sort=deals" },
-      { label: "New In", to: "/search?sort=new" },
+      { label: "Electronics", to: "/category/electronics" },
+      { label: "Search", to: "/search" },
       { label: "Cart", to: "/cart" }
+    ]
+  },
+  {
+    title: "Account",
+    links: [
+      { label: "Profile", to: "/profile" },
+      { label: "Orders", to: "/account/orders" },
+      { label: "Wishlist", to: "/wishlist" }
     ]
   },
   {
     title: "Sellers",
     links: [
-      { label: "Start Selling", to: "/seller" },
+      { label: "Dashboard", to: "/seller" },
       { label: "Verification", to: "/seller/verification" },
-      { label: "Coupons", to: "/seller/coupons" },
       { label: "Returns", to: "/seller/returns" }
-    ]
-  },
-  {
-    title: "Help",
-    links: [
-      { label: "Account", to: "/account" },
-      { label: "Orders", to: "/account/orders" },
-      { label: "Wishlist", to: "/wishlist" },
-      { label: "Notifications", to: "/notifications" }
     ]
   }
 ];
 
-const socials = ["Ig", "X", "Fb", "Yt"];
-
 export default function Footer() {
   return (
-    <footer className="border-t border-black/8 bg-brand-card py-10 dark:border-night-border dark:bg-night-card">
-      <div className="mx-auto grid max-w-6xl gap-8 px-6 md:grid-cols-4">
+    <footer className="relative z-[1] border-t border-white/10 bg-cosmic-black py-12 text-on-surface">
+      <div className="cosmic-container grid gap-8 md:grid-cols-[1.2fr_2fr]">
         <div>
-          <Link to="/" className="font-display text-2xl font-black text-accent">Zivvo</Link>
-          <p className="mt-3 text-sm leading-6 text-brand-inkFaint">
-            Premium ecommerce for modern shoppers and growing sellers across India.
+          <Link to="/" className="cosmic-title gradient-text text-4xl">ZIVVO</Link>
+          <p className="mt-4 max-w-sm text-on-surface-variant">
+            Cosmic Noir commerce for premium gear, modern shoppers, and future-facing sellers.
           </p>
         </div>
-
-        {columns.map((column) => (
-          <div key={column.title}>
-            <h3 className="font-display text-sm font-black uppercase tracking-widest text-brand-ink dark:text-white">{column.title}</h3>
-            <div className="mt-4 grid gap-2">
-              {column.links.map((link) => (
-                <Link key={link.to} to={link.to} className="text-sm text-brand-inkFaint transition-colors hover:text-accent">
-                  {link.label}
-                </Link>
-              ))}
+        <div className="grid gap-6 sm:grid-cols-3">
+          {columns.map((column) => (
+            <div key={column.title}>
+              <h3 className="text-label-caps font-bold uppercase tracking-[0.16em] text-neon-cyan">{column.title}</h3>
+              <div className="mt-4 grid gap-2">
+                {column.links.map((link) => (
+                  <Link key={link.to} to={link.to} className="text-sm text-on-surface-variant transition hover:text-on-surface">
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="mx-auto mt-8 flex max-w-6xl flex-col gap-4 border-t border-black/8 px-6 pt-6 text-sm text-brand-inkFaint dark:border-night-border md:flex-row md:items-center md:justify-between">
-        <p>Copyright {new Date().getFullYear()} Zivvo. All rights reserved.</p>
-        <div className="flex gap-2">
-          {socials.map((social) => (
-            <a
-              key={social}
-              href="/"
-              aria-label={social}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10 text-xs font-bold transition-all hover:border-accent hover:bg-accent hover:text-white dark:border-night-border"
-            >
-              {social}
-            </a>
           ))}
         </div>
+      </div>
+      <div className="cosmic-container mt-10 border-t border-white/10 pt-6 text-sm text-on-surface-variant">
+        Copyright {new Date().getFullYear()} Zivvo. All rights reserved.
       </div>
     </footer>
   );
