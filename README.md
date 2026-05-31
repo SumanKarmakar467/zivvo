@@ -1,4 +1,4 @@
-# ZIVVO - India's Premium E-Commerce Platform
+# ZIVVO - India's Premium E-Commerce Plaform
 
 <div align="center">
   <img src="./client/public/zivvo-banner.png" alt="Zivvo Banner" width="100%" />
