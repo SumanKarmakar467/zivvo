@@ -1,7 +1,7 @@
 # ZIVVO - India's Premium E-Commerce Platform
 
 <div align="center">
-  <img src="./client/public/zivvo-banner.png" alt="Zivvo Baner" width="100%" />
+  <img src="./client/public/zivvo-banner.png" alt="Zivvo Banner" width="100%" />
   <br /><br />
 
   ![React](https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react)
