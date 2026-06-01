@@ -1,6 +1,7 @@
+// Auth: protected routes use verifyFirebaseToken middleware (see middleware/verifyFirebaseToken.js)
 import express from "express";
 import { body, validationResult } from "express-validator";
-import { protect } from "../middlewares/authMiddleware.js";
+import { verifyFirebaseToken } from "../middleware/verifyFirebaseToken.js";
 import {
   approveReturn,
   closeReturn,
@@ -19,7 +20,7 @@ const handleValidation = (req, res, next) => {
   return res.status(422).json({ message: "Validation failed", errors: errors.array() });
 };
 
-router.use(protect);
+router.use(verifyFirebaseToken);
 router.post(
   "/",
   [
@@ -40,4 +41,3 @@ router.patch("/:id/reject", [body("reason").isString().notEmpty()], handleValida
 router.patch("/:id/close", closeReturn);
 
 export default router;
-

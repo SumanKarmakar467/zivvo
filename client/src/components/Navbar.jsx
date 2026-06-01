@@ -8,7 +8,7 @@ const desktopLinks = [
   { label: "Home", to: "/" },
   { label: "Categories", to: "/category/electronics" },
   { label: "Search", to: "/search" },
-  { label: "Orders", to: "/account/orders" },
+  { label: "My Orders", to: "/orders" },
   { label: "Profile", to: "/profile" }
 ];
 
@@ -16,13 +16,14 @@ const mobileLinks = [
   { label: "Home", to: "/", icon: Home },
   { label: "Search", to: "/search", icon: Search },
   { label: "Cart", to: "/cart", icon: ShoppingBag },
-  { label: "Orders", to: "/account/orders", icon: PackageSearch },
+  { label: "Orders", to: "/orders", icon: PackageSearch },
   { label: "Profile", to: "/profile", icon: User }
 ];
 
 export default function Navbar() {
   const { count } = useCartContext();
   const { logout } = useAuthContext();
+  // TODO: Replace with memoized selector from store/selectors.js
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const location = useLocation();
 

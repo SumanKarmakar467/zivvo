@@ -1,3 +1,5 @@
+// Selectors: see store/selectors.js
+/** @typedef {import('../types/authTypes').AuthState} AuthState */
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {

@@ -1,3 +1,4 @@
+// Types: see models/types/ReturnRequest.ts
 import mongoose from "mongoose";
 
 const returnItemSchema = new mongoose.Schema(
@@ -53,4 +54,3 @@ returnRequestSchema.index({ seller: 1, status: 1 });
 const ReturnRequest = mongoose.model("ReturnRequest", returnRequestSchema);
 
 export default ReturnRequest;
-

@@ -296,6 +296,7 @@ const statusPipeline = ["placed", "confirmed", "processing", "shipped", "out_for
 
 function SellerStatusUpdater({ order, onClose, onUpdated }) {
   const dispatch = useDispatch();
+  // TODO: Replace with memoized selector from store/selectors.js
   const updateStatusState = useSelector((state) => state.orders);
   const [status, setStatus] = useState("");
   const [note, setNote] = useState("");

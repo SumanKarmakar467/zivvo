@@ -21,6 +21,7 @@ export default function NotificationsPage() {
   const [page, setPage] = useState(1);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  // TODO: Replace with memoized selector from store/selectors.js
   const { items, status, error, pages } = useSelector((state) => state.notifications);
 
   useEffect(() => {

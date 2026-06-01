@@ -92,10 +92,6 @@ const buildCommonFilters = async (query, forceCategoryId) => {
     filter.isFeatured = true;
   }
 
-  if (query.search) {
-    filter.$or = buildSearchConditions(query.search);
-  }
-
   return { filter, categoryMissing: false };
 };
 
@@ -103,18 +99,29 @@ export const getProducts = asyncHandler(async (req, res) => {
   const page = Math.max(Number(req.query.page || 1), 1);
   const limit = Math.max(Number(req.query.limit || 20), 1);
   const skip = (page - 1) * limit;
+  const search = String(req.query.search || "").trim();
 
   const { filter, categoryMissing } = await buildCommonFilters(req.query);
 
   if (categoryMissing) {
-    return res.json({ products: [], page, pages: 0, total: 0, brands: [] });
+    return res.json({ products: [], page, pages: 0, totalPages: 0, total: 0, hasNextPage: false, brands: [] });
+  }
+
+  const projection = {};
+  let sortOption = getSortOption(req.query.sort);
+  if (search) {
+    filter.$text = { $search: search };
+    projection.score = { $meta: "textScore" };
+    if (!req.query.sort) {
+      sortOption = { score: { $meta: "textScore" } };
+    }
   }
 
   const [products, total, brands] = await Promise.all([
-    Product.find(filter)
+    Product.find(filter, projection)
       .populate("category", "name slug")
       .populate("seller", "name avatar isVerified trustScore")
-      .sort(getSortOption(req.query.sort))
+      .sort(sortOption)
       .skip(skip)
       .limit(limit)
       .lean(),
@@ -126,8 +133,67 @@ export const getProducts = asyncHandler(async (req, res) => {
     products,
     page,
     pages: Math.ceil(total / limit),
+    totalPages: Math.ceil(total / limit),
     total,
+    hasNextPage: skip + products.length < total,
     brands: brands.filter(Boolean)
+  });
+});
+
+export const getProductReviews = asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.id).select("reviews averageRating totalReviews reviewCount").lean();
+  if (!product) {
+    res.status(404);
+    throw new Error("Product not found");
+  }
+
+  const reviews = [...(product.reviews || [])].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const ratingBreakdown = reviews.reduce((acc, review) => {
+    const rating = Math.round(Number(review.rating || 0));
+    if (rating >= 1 && rating <= 5) acc[rating] = (acc[rating] || 0) + 1;
+    return acc;
+  }, { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
+
+  return res.json({
+    reviews,
+    total: product.totalReviews ?? product.reviewCount ?? reviews.length,
+    averageRating: product.averageRating || 0,
+    ratingBreakdown
+  });
+});
+
+export const addProductReview = asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.id);
+  if (!product) {
+    res.status(404);
+    throw new Error("Product not found");
+  }
+
+  const userId = String(req.user?._id || req.user?.uid || "");
+  if (!userId) {
+    res.status(401);
+    throw new Error("Not authenticated");
+  }
+
+  const alreadyReviewed = product.reviews.some((review) => String(review.userId) === userId);
+  if (alreadyReviewed) {
+    return res.status(409).json({ message: "You have already reviewed this product" });
+  }
+
+  product.reviews.push({
+    userId,
+    userName: req.user?.name || req.user?.email || "Zivvo customer",
+    rating: Number(req.body.rating),
+    comment: String(req.body.comment || "").trim(),
+    createdAt: new Date()
+  });
+  product.recalculateRating();
+  await product.save();
+
+  return res.status(201).json({
+    averageRating: product.averageRating,
+    totalReviews: product.totalReviews,
+    review: product.reviews[product.reviews.length - 1]
   });
 });
 

@@ -19,6 +19,7 @@ const emptyForm = {
 };
 
 export default function SellerCouponsPage() {
+  // TODO: Replace with memoized selector from store/selectors.js
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);

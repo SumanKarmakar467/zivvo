@@ -1,3 +1,4 @@
+// Auth: protected routes use verifyFirebaseToken middleware (see middleware/verifyFirebaseToken.js)
 import express from "express";
 import {
   addProduct,
@@ -9,12 +10,12 @@ import {
   toggleProductStatus,
   updateProduct
 } from "../controllers/sellerController.js";
-import { protect, isSeller } from "../middlewares/authMiddleware.js";
+import { verifyFirebaseToken, requireRole } from "../middleware/verifyFirebaseToken.js";
 import { uploadProductImage } from "../middleware/upload.js";
 
 const router = express.Router();
 
-router.use(protect, isSeller);
+router.use(verifyFirebaseToken, requireRole("seller", "admin"));
 
 router.get("/dashboard", getSellerStats);
 router.get("/stats", getSellerStats);

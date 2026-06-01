@@ -1,6 +1,7 @@
+// Auth: protected routes use verifyFirebaseToken middleware (see middleware/verifyFirebaseToken.js)
 import express from "express";
 import { body, validationResult } from "express-validator";
-import { protect } from "../middlewares/authMiddleware.js";
+import { verifyFirebaseToken } from "../middleware/verifyFirebaseToken.js";
 import {
   approveVerification,
   getMyVerificationStatus,
@@ -29,18 +30,17 @@ const submitValidators = [
   body("bankProofUrl").isURL().withMessage("Valid bank proof URL is required")
 ];
 
-router.post("/submit", protect, submitValidators, handleValidation, submitVerification);
-router.get("/status", protect, getMyVerificationStatus);
-router.get("/pending", protect, getPendingVerifications);
-router.get("/:sellerId", protect, getVerificationBySellerId);
-router.patch("/:sellerId/approve", protect, approveVerification);
+router.post("/submit", verifyFirebaseToken, submitValidators, handleValidation, submitVerification);
+router.get("/status", verifyFirebaseToken, getMyVerificationStatus);
+router.get("/pending", verifyFirebaseToken, getPendingVerifications);
+router.get("/:sellerId", verifyFirebaseToken, getVerificationBySellerId);
+router.patch("/:sellerId/approve", verifyFirebaseToken, approveVerification);
 router.patch(
   "/:sellerId/reject",
-  protect,
+  verifyFirebaseToken,
   [body("rejectionNote").isString().isLength({ min: 5, max: 500 }).withMessage("Rejection reason is required")],
   handleValidation,
   rejectVerification
 );
 
 export default router;
-

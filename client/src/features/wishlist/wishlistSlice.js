@@ -1,3 +1,5 @@
+// Selectors: see store/selectors.js
+/** @typedef {import('../../store/types/wishlistTypes').WishlistState} WishlistState */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 const isJwtLike = (token) => typeof token === "string" && token.split(".").length === 3;
@@ -70,9 +72,4 @@ const wishlistSlice = createSlice({
 });
 
 export const { optimisticToggleWishlist } = wishlistSlice.actions;
-export const selectWishlistItems = (state) => state.wishlist.items;
-export const selectWishlistCount = (state) => state.wishlist.items.length;
-export const selectIsWishlisted = (productId) => (state) =>
-  state.wishlist.items.some((item) => String(item._id) === String(productId));
-
 export default wishlistSlice.reducer;

@@ -1,3 +1,4 @@
+// Types: see models/types/Category.ts
 import mongoose from "mongoose";
 import slugify from "slugify";
 

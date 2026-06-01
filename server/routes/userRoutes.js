@@ -1,5 +1,6 @@
+// Auth: protected routes use verifyFirebaseToken middleware (see middleware/verifyFirebaseToken.js)
 import express from "express";
-import { protect } from "../middleware/authMiddleware.js";
+import { verifyFirebaseToken } from "../middleware/verifyFirebaseToken.js";
 import { upload } from "../middleware/upload.js";
 import {
   addAddress,
@@ -16,18 +17,18 @@ import {
 
 const router = express.Router();
 
-router.get("/profile", protect, getProfile);
-router.put("/profile", protect, updateProfile);
-router.post("/avatar", protect, upload.single("avatar"), uploadAvatar);
+router.get("/profile", verifyFirebaseToken, getProfile);
+router.put("/profile", verifyFirebaseToken, updateProfile);
+router.post("/avatar", verifyFirebaseToken, upload.single("avatar"), uploadAvatar);
 
-router.get("/addresses", protect, getAddresses);
-router.post("/addresses", protect, addAddress);
-router.put("/addresses/:id", protect, updateAddress);
-router.delete("/addresses/:id", protect, deleteAddress);
+router.get("/addresses", verifyFirebaseToken, getAddresses);
+router.post("/addresses", verifyFirebaseToken, addAddress);
+router.put("/addresses/:id", verifyFirebaseToken, updateAddress);
+router.delete("/addresses/:id", verifyFirebaseToken, deleteAddress);
 
-router.get("/wishlist", protect, getWishlist);
-router.post("/wishlist/:productId", protect, toggleWishlist);
+router.get("/wishlist", verifyFirebaseToken, getWishlist);
+router.post("/wishlist/:productId", verifyFirebaseToken, toggleWishlist);
 
-router.put("/password", protect, changePassword);
+router.put("/password", verifyFirebaseToken, changePassword);
 
 export default router;

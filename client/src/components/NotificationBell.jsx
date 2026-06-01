@@ -6,9 +6,9 @@ import {
   deleteNotification,
   fetchNotifications,
   markAllAsRead,
-  markAsRead,
-  selectUnreadCount
+  markAsRead
 } from "../features/notifications/notificationsSlice";
+import { selectUnreadCount } from "../store/selectors";
 
 const typeIcon = {
   new_order: "🛒",
@@ -23,7 +23,9 @@ export default function NotificationBell() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const unreadCount = useSelector(selectUnreadCount);
+  // TODO: Replace with memoized selector from store/selectors.js
   const items = useSelector((state) => state.notifications.items);
+  // TODO: Replace with memoized selector from store/selectors.js
   const status = useSelector((state) => state.notifications.status);
 
   useEffect(() => {

@@ -14,6 +14,7 @@ import { notifyError, notifySuccess } from "../components/common/Toast";
 
 export default function AddressBookPage() {
   const dispatch = useDispatch();
+  // TODO: Replace with memoized selector from store/selectors.js
   const { addresses, status, error } = useSelector((state) => state.address);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -90,4 +91,3 @@ export default function AddressBookPage() {
     </PageTransition>
   );
 }
-

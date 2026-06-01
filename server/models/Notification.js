@@ -1,3 +1,4 @@
+// Types: see models/types/Notification.ts
 import mongoose from "mongoose";
 
 const notificationSchema = new mongoose.Schema(

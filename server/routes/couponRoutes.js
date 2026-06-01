@@ -1,3 +1,4 @@
+// Auth: protected routes use verifyFirebaseToken middleware (see middleware/verifyFirebaseToken.js)
 import express from "express";
 import {
   createCoupon,
@@ -6,11 +7,11 @@ import {
   updateCoupon,
   validateCoupon
 } from "../controllers/couponController.js";
-import { protect } from "../middlewares/authMiddleware.js";
+import { verifyFirebaseToken } from "../middleware/verifyFirebaseToken.js";
 
 const router = express.Router();
 
-router.use(protect);
+router.use(verifyFirebaseToken);
 router.post("/", createCoupon);
 router.get("/", listCoupons);
 router.patch("/:id", updateCoupon);

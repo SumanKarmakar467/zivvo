@@ -4,7 +4,8 @@ import { useDispatch, useSelector } from "react-redux";
 import PageTransition from "../components/common/PageTransition";
 import ProductCard from "../components/ProductCard";
 import { notifyError, notifySuccess } from "../components/common/Toast";
-import { fetchWishlist, removeFromWishlist, selectWishlistItems } from "../features/wishlist/wishlistSlice";
+import { fetchWishlist, removeFromWishlist } from "../features/wishlist/wishlistSlice";
+import { selectWishlistItems } from "../store/selectors";
 
 const sections = ["Profile", "My Orders", "Wishlist", "Addresses", "Change Password"];
 const baseAddress = { fullName: "", phone: "", addressLine1: "", addressLine2: "", city: "", state: "", pincode: "", country: "India", isDefault: false };
@@ -12,6 +13,7 @@ const baseAddress = { fullName: "", phone: "", addressLine1: "", addressLine2: "
 export default function Account() {
   const dispatch = useDispatch();
   const fileRef = useRef(null);
+  // TODO: Replace with memoized selector from store/selectors.js
   const { isAuthenticated, accessToken } = useSelector((s) => s.auth);
   const [active, setActive] = useState("Profile");
   const [profile, setProfile] = useState({ name: "", phone: "", email: "", avatar: "" });

@@ -1,3 +1,4 @@
+// Types: see models/types/Product.ts
 import mongoose from "mongoose";
 import slugify from "slugify";
 
@@ -39,7 +40,20 @@ const productSchema = new mongoose.Schema(
     rating: { type: Number, default: 0, min: 0, max: 5 },
     numReviews: { type: Number, default: 0, min: 0 },
     averageRating: { type: Number, default: 0, min: 0, max: 5 },
+    totalReviews: { type: Number, default: 0, min: 0 },
     reviewCount: { type: Number, default: 0, min: 0 },
+    reviews: {
+      type: [
+        {
+          userId: { type: String, required: true },
+          userName: { type: String, required: true },
+          rating: { type: Number, required: true, min: 1, max: 5 },
+          comment: { type: String, maxlength: 500 },
+          createdAt: { type: Date, default: Date.now }
+        }
+      ],
+      default: []
+    },
     specs: { type: Map, of: String, default: {} },
     tags: { type: [String], default: [] },
     variants: { type: [variantSchema], default: [] },
@@ -52,11 +66,27 @@ const productSchema = new mongoose.Schema(
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
-productSchema.index(
-  { name: "text", description: "text", brand: "text", tags: "text" },
-  { weights: { name: 10, brand: 5, description: 2, tags: 1 } }
-);
+productSchema.index({ name: "text", description: "text", category: "text", brand: "text" });
 productSchema.index({ _id: 1, "variants.sku": 1 }, { unique: true, sparse: true });
+
+productSchema.methods.recalculateRating = function recalculateRating() {
+  if (!this.reviews.length) {
+    this.averageRating = 0;
+    this.totalReviews = 0;
+    this.reviewCount = 0;
+    this.rating = 0;
+    this.numReviews = 0;
+    return;
+  }
+
+  const sum = this.reviews.reduce((acc, review) => acc + Number(review.rating || 0), 0);
+  const average = Math.round((sum / this.reviews.length) * 10) / 10;
+  this.averageRating = average;
+  this.totalReviews = this.reviews.length;
+  this.reviewCount = this.reviews.length;
+  this.rating = average;
+  this.numReviews = this.reviews.length;
+};
 
 productSchema.pre("validate", function preValidate(next) {
   if (this.name) {

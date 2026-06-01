@@ -1,3 +1,5 @@
+// Selectors: see store/selectors.js
+/** @typedef {import('../../store/types/notificationsTypes').NotificationsState} NotificationsState */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import api from "../../api/axios";
 
@@ -97,6 +99,4 @@ const notificationsSlice = createSlice({
 });
 
 export const { addNotification } = notificationsSlice.actions;
-export const selectUnreadCount = (state) => state.notifications.unreadCount;
 export default notificationsSlice.reducer;
-

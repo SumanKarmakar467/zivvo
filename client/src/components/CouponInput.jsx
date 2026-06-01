@@ -9,6 +9,7 @@ export default function CouponInput({ cartTotal, items = [] }) {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // TODO: Replace with memoized selector from store/selectors.js
   const appliedCoupon = useSelector((state) => state.cart.appliedCoupon);
 
   const sellerId = useMemo(() => {

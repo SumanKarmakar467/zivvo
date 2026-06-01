@@ -1,6 +1,7 @@
+// Auth: protected routes use verifyFirebaseToken middleware (see middleware/verifyFirebaseToken.js)
 import express from "express";
 import { body, validationResult } from "express-validator";
-import { protect } from "../middlewares/authMiddleware.js";
+import { verifyFirebaseToken } from "../middleware/verifyFirebaseToken.js";
 import {
   addAddress,
   deleteAddress,
@@ -30,7 +31,7 @@ const addressValidators = [
   body("isDefault").optional().isBoolean()
 ];
 
-router.use(protect);
+router.use(verifyFirebaseToken);
 router.get("/", getAddresses);
 router.post("/", addressValidators, handleValidation, addAddress);
 router.patch("/:id", addressValidators.map((rule) => rule.optional()), handleValidation, updateAddress);
@@ -38,4 +39,3 @@ router.delete("/:id", deleteAddress);
 router.patch("/:id/default", setDefaultAddress);
 
 export default router;
-

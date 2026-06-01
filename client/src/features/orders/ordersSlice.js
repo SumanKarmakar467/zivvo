@@ -1,3 +1,5 @@
+// Selectors: see store/selectors.js
+/** @typedef {import('../../store/types/ordersTypes').OrdersState} OrdersState */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import api from "../../api/axios";
 

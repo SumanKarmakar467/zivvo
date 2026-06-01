@@ -1,10 +1,11 @@
+// Auth: protected routes use verifyFirebaseToken middleware (see middleware/verifyFirebaseToken.js)
 import express from "express";
 import { addToWishlist, getWishlist, removeFromWishlist } from "../controllers/wishlistController.js";
-import { protect, authorize } from "../middlewares/authMiddleware.js";
+import { verifyFirebaseToken, requireRole } from "../middleware/verifyFirebaseToken.js";
 
 const router = express.Router();
 
-router.use(protect, authorize("user", "buyer", "admin"));
+router.use(verifyFirebaseToken, requireRole("user", "buyer", "admin"));
 
 router.get("/", getWishlist);
 router.post("/:productId", addToWishlist);

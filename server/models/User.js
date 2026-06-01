@@ -1,3 +1,4 @@
+// Types: see models/types/User.ts
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 

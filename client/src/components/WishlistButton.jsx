@@ -1,11 +1,13 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { addToWishlist, optimisticToggleWishlist, removeFromWishlist, selectIsWishlisted } from "../features/wishlist/wishlistSlice";
+import { addToWishlist, optimisticToggleWishlist, removeFromWishlist } from "../features/wishlist/wishlistSlice";
+import { selectIsWishlisted } from "../store/selectors";
 import { notifyError } from "./common/Toast";
 
 export default function WishlistButton({ product, className = "", iconClassName = "", showLabel = false }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  // TODO: Replace with memoized selector from store/selectors.js
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const wishlisted = useSelector(selectIsWishlisted(product?._id));
 

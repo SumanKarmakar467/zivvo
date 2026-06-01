@@ -1,3 +1,4 @@
+// Types: see models/types/Cart.ts
 import mongoose from "mongoose";
 
 const cartItemSchema = new mongoose.Schema(

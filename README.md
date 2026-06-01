@@ -140,9 +140,11 @@ EMAIL_PASS=your_app_password
 ### Installation
 
 ```bash
-npm install
-npm install --prefix client
-npm install --prefix server
+# Install everything from root
+npm run install:all
+
+# Start both client and server with one command
+npm run dev
 ```
 
 ### Run Locally

@@ -22,6 +22,7 @@ const metricCard = (label, current, delta, amber = false) => (
 
 export default function SellerDashboardPage() {
   const dispatch = useDispatch();
+  // TODO: Replace with memoized selector from store/selectors.js
   const { overview, revenueChart, topProducts, orderFunnel, lowStock, status, error } = useSelector((state) => state.analytics);
   const [period, setPeriod] = useState("30d");
   const [topBy, setTopBy] = useState("revenue");

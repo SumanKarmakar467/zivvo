@@ -1,3 +1,5 @@
+// Selectors: see store/selectors.js
+/** @typedef {import('../../store/types/searchTypes').SearchState} SearchState */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 export const fetchSearchResults = createAsyncThunk(
@@ -53,7 +55,5 @@ const searchSlice = createSlice({
       });
   }
 });
-
-export const selectSearchResults = (state) => state.search;
 
 export default searchSlice.reducer;

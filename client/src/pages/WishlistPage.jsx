@@ -3,12 +3,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import ProductCard from "../components/ProductCard";
 import { addToCart } from "../store/slices/cartSlice";
-import { fetchWishlist, removeFromWishlist, selectWishlistItems } from "../features/wishlist/wishlistSlice";
+import { fetchWishlist, removeFromWishlist } from "../features/wishlist/wishlistSlice";
+import { selectWishlistItems } from "../store/selectors";
 import { notifyError, notifySuccess } from "../components/common/Toast";
 
 export default function WishlistPage() {
   const dispatch = useDispatch();
   const items = useSelector(selectWishlistItems);
+  // TODO: Replace with memoized selector from store/selectors.js
   const status = useSelector((state) => state.wishlist.status);
 
   useEffect(() => {

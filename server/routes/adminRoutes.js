@@ -1,3 +1,4 @@
+// Auth: protected routes use verifyFirebaseToken middleware (see middleware/verifyFirebaseToken.js)
 import express from "express";
 import {
   createCategory,
@@ -16,11 +17,11 @@ import {
   updateOrderStatus,
   updateUser
 } from "../controllers/adminController.js";
-import { protect, isAdmin } from "../middlewares/authMiddleware.js";
+import { verifyFirebaseToken, requireRole } from "../middleware/verifyFirebaseToken.js";
 
 const router = express.Router();
 
-router.use(protect, isAdmin);
+router.use(verifyFirebaseToken, requireRole("admin"));
 
 router.get("/stats", getDashboardStats);
 

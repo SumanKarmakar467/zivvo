@@ -1,3 +1,4 @@
+// Types: see models/types/Address.ts
 import mongoose from "mongoose";
 
 const addressSchema = new mongoose.Schema(
@@ -22,4 +23,3 @@ addressSchema.index({ user: 1 });
 const Address = mongoose.model("Address", addressSchema);
 
 export default Address;
-

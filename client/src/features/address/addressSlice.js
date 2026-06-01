@@ -1,3 +1,5 @@
+// Selectors: see store/selectors.js
+/** @typedef {import('../../store/types/addressTypes').AddressState} AddressState */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import api from "../../api/axios";
 
@@ -97,7 +99,4 @@ const addressSlice = createSlice({
   }
 });
 
-export const selectDefaultAddress = (state) => state.address.defaultAddress;
-
 export default addressSlice.reducer;
-

@@ -22,6 +22,7 @@ interface UploadedImage {
 export default function ImageUploader({ images, onChange, maxImages = 5 }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const dragIndex = useRef<number | null>(null);
+  // TODO: Replace with memoized selector from store/selectors.js
   const token = useSelector((state: RootState) => state.auth?.accessToken) || localStorage.getItem("zivvo-token");
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);

@@ -1,5 +1,6 @@
+// Auth: protected routes use verifyFirebaseToken middleware (see middleware/verifyFirebaseToken.js)
 import express from "express";
-import { protect } from "../middleware/authMiddleware.js";
+import { verifyFirebaseToken } from "../middleware/verifyFirebaseToken.js";
 import {
   getCart,
   addToCart,
@@ -11,7 +12,7 @@ import {
 
 const router = express.Router();
 
-router.use(protect);
+router.use(verifyFirebaseToken);
 router.get("/", getCart);
 router.post("/add", addToCart);
 router.put("/:itemId", updateCartItem);

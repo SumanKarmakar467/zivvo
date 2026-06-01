@@ -1,3 +1,5 @@
+// Selectors: see store/selectors.js
+/** @typedef {import('../types/uiTypes').UiState} UiState */
 import { createSlice } from "@reduxjs/toolkit";
 
 const STORAGE_KEY = "zivvo-theme";

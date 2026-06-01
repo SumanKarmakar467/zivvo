@@ -1,3 +1,4 @@
+// Types: see models/types/Wishlist.ts
 import mongoose from "mongoose";
 
 const wishlistSchema = new mongoose.Schema(

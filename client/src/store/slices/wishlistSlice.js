@@ -1,3 +1,5 @@
+// Selectors: see store/selectors.js
+/** @typedef {import('../types/wishlistTypes').WishlistState} WishlistState */
 import { createSlice } from "@reduxjs/toolkit";
 
 const KEY = "zivvo_wishlist_ids";

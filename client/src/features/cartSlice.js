@@ -1,3 +1,5 @@
+// Selectors: see store/selectors.js
+/** @typedef {import('../store/types/cartTypes').CartState} CartState */
 import { createSlice } from "@reduxjs/toolkit";
 const initialState = { items: [], totalItems: 0, totalPrice: 0, coupon: null };
 const calc = (s) => {

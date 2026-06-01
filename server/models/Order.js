@@ -1,3 +1,4 @@
+// Types: see models/types/Order.ts
 import mongoose from "mongoose";
 
 const orderItemSchema = new mongoose.Schema(
@@ -18,7 +19,7 @@ const statusHistorySchema = new mongoose.Schema(
   {
     status: {
       type: String,
-      enum: ["placed", "confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled", "return_requested", "returned"],
+      enum: ["payment_pending", "payment_confirmed", "placed", "confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled", "return_requested", "returned"],
       required: true
     },
     timestamp: { type: Date, default: Date.now },
@@ -52,6 +53,11 @@ const orderSchema = new mongoose.Schema(
       enum: ["placed", "confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled", "return_requested", "returned"],
       default: "placed"
     },
+    status: {
+      type: String,
+      enum: ["payment_pending", "payment_confirmed", "processing", "shipped", "delivered", "cancelled"],
+      default: "payment_pending"
+    },
     statusHistory: { type: [statusHistorySchema], default: [] },
     subtotal: { type: Number, required: true, min: 0 },
     discount: { type: Number, default: 0, min: 0 },
@@ -63,8 +69,8 @@ const orderSchema = new mongoose.Schema(
     totalAmount: { type: Number, default: 0, min: 0 },
     awbNumber: { type: String, default: "" },
     courierName: { type: String, default: "" },
-    estimatedDelivery: { type: Date },
-    trackingNumber: { type: String, default: "" },
+    estimatedDelivery: { type: Date, default: null },
+    trackingNumber: { type: String, default: null },
     cancelReason: { type: String, default: "" }
   },
   { timestamps: true }

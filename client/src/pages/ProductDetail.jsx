@@ -4,11 +4,10 @@ import { useDispatch, useSelector } from "react-redux";
 import PageTransition from "../components/common/PageTransition";
 import { formatPrice } from "../utils/formatPrice";
 import { addToCart } from "../store/slices/cartSlice";
-import { useGetProductBySlugQuery, useGetReviewEligibilityQuery } from "../services/productApi";
+import { useGetProductBySlugQuery } from "../services/productApi";
 import { notifySuccess } from "../components/common/Toast";
 import StarRating from "../components/StarRating";
-import ReviewForm from "../components/ReviewForm";
-import ReviewList from "../components/ReviewList";
+import ReviewsSection from "../components/ReviewsSection";
 import WishlistButton from "../components/WishlistButton";
 import VariantSelector from "../components/VariantSelector";
 import RecommendationsSection from "../components/RecommendationsSection";
@@ -21,14 +20,11 @@ export default function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  // TODO: Replace with memoized selector from store/selectors.js
   const { isAuthenticated } = useSelector((state) => state.auth);
 
   const { data, isLoading } = useGetProductBySlugQuery(slug);
   const product = data?.product;
-
-  const { data: eligibility } = useGetReviewEligibilityQuery(product?._id, {
-    skip: !product?._id || !isAuthenticated
-  });
 
   const [activeImage, setActiveImage] = useState(0);
   const [qty, setQty] = useState(1);
@@ -39,7 +35,7 @@ export default function ProductDetail() {
   const { addProduct } = useRecentlyViewed();
 
   const avgRating = Number(product?.averageRating ?? product?.rating ?? 0);
-  const reviewCount = Number(product?.reviewCount ?? product?.numReviews ?? 0);
+  const reviewCount = Number(product?.totalReviews ?? product?.reviewCount ?? product?.numReviews ?? 0);
   const stock = Number(product?.hasVariants ? (selectedVariant?.stock || 0) : (product?.stock || 0));
   const specsEntries = useMemo(() => Object.entries(product?.specs || {}), [product]);
 
@@ -282,17 +278,7 @@ export default function ProductDetail() {
           )}
         </section>
 
-        <section id="reviews" className="mt-10">
-          <h3 className="mb-5 text-xl font-bold">Ratings &amp; Reviews</h3>
-          {isAuthenticated && (
-            <ReviewForm
-              productId={product._id}
-              eligibility={eligibility}
-              onSubmitted={() => notifySuccess("Review added")}
-            />
-          )}
-          <ReviewList productId={product._id} />
-        </section>
+        <ReviewsSection productId={product._id} averageRating={avgRating} totalReviews={reviewCount} />
 
         <RecommendationsSection
           productId={product._id}

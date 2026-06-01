@@ -1,3 +1,5 @@
+// Selectors: see store/selectors.js
+/** @typedef {import('./types/wishlistTypes').WishlistState} WishlistState */
 import { createSlice } from "@reduxjs/toolkit";
 import { addToWishlist, fetchWishlist, optimisticToggleWishlist, removeFromWishlist } from "../features/wishlist/wishlistSlice";
 
@@ -38,6 +40,4 @@ const wishlistSlice = createSlice({
 });
 
 export const { toggleWishlist, clearWishlist } = wishlistSlice.actions;
-export const selectIsWishlisted = (id) => (state) => state.wishlist.items.some((item) => String(item._id) === String(id));
-export const selectWishlistCount = (state) => state.wishlist.items.length;
 export default wishlistSlice.reducer;

@@ -1,3 +1,4 @@
+// Auth: protected routes use verifyFirebaseToken middleware (see middleware/verifyFirebaseToken.js)
 import express from "express";
 import {
   deleteNotification,
@@ -5,11 +6,11 @@ import {
   markAllAsRead,
   markNotificationAsRead
 } from "../controllers/notificationController.js";
-import { protect } from "../middlewares/authMiddleware.js";
+import { verifyFirebaseToken } from "../middleware/verifyFirebaseToken.js";
 
 const router = express.Router();
 
-router.use(protect);
+router.use(verifyFirebaseToken);
 router.get("/", getNotifications);
 router.patch("/:id/read", markNotificationAsRead);
 router.patch("/read-all", markAllAsRead);

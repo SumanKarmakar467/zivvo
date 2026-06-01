@@ -33,6 +33,7 @@ const readProfile = () => {
 export default function Profile() {
   const [profile, setProfile] = useState(readProfile);
   const [draftAddress, setDraftAddress] = useState({ label: "", line: "", city: "", pin: "" });
+  // TODO: Replace with memoized selector from store/selectors.js
   const authUser = useSelector((state) => state.auth.user);
   const navigate = useNavigate();
   const { logout } = useAuthContext();

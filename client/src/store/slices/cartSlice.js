@@ -1,3 +1,5 @@
+// Selectors: see store/selectors.js
+/** @typedef {import('../types/cartTypes').CartState} CartState */
 import { createSlice } from "@reduxjs/toolkit";
 
 const STORAGE_KEY = "zivvo_guest_cart";
@@ -41,6 +43,7 @@ const loadGuestCart = () => {
 };
 
 const authHeaders = (getState) => {
+  // TODO: merge server cart with local on login if server cart is implemented.
   const token = getState().auth.accessToken;
   return token && token.split(".").length === 3 ? { Authorization: `Bearer ${token}` } : {};
 };
@@ -237,7 +240,5 @@ export const removeCoupon = () => async (dispatch, getState) => {
     dispatch(setLoading(false));
   }
 };
-
-export const selectCartItemCount = (state) => state.cart.itemCount;
 
 export default cartSlice.reducer;

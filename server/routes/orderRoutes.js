@@ -1,18 +1,19 @@
+// Auth: protected routes use verifyFirebaseToken middleware (see middleware/verifyFirebaseToken.js)
 import express from "express";
 import { body, validationResult } from "express-validator";
-import { authorize, protect } from "../middleware/authMiddleware.js";
+import { verifyFirebaseToken, requireRole } from "../middleware/verifyFirebaseToken.js";
 import { cancelOrder, getMyOrders, getOrderById, updateOrderStatus } from "../controllers/orderController.js";
 import { createRazorpayOrder, verifyPayment } from "../controllers/paymentController.js";
 
 const router = express.Router();
 
-router.post("/create", protect, createRazorpayOrder);
-router.post("/verify", protect, verifyPayment);
-router.get("/", protect, getMyOrders);
-router.get("/my", protect, getMyOrders);
-router.get("/:id/track", protect, getOrderById);
-router.get("/:id", protect, getOrderById);
-router.put("/:id/cancel", protect, cancelOrder);
+router.post("/create", verifyFirebaseToken, createRazorpayOrder);
+router.post("/verify", verifyFirebaseToken, verifyPayment);
+router.get("/", verifyFirebaseToken, getMyOrders);
+router.get("/my", verifyFirebaseToken, getMyOrders);
+router.get("/:id/track", verifyFirebaseToken, getOrderById);
+router.get("/:id", verifyFirebaseToken, getOrderById);
+router.put("/:id/cancel", verifyFirebaseToken, cancelOrder);
 
 const statusValidator = [
   body("status")
@@ -30,7 +31,7 @@ const handleValidation = (req, res, next) => {
   return res.status(422).json({ message: "Validation failed", errors: errors.array() });
 };
 
-router.patch("/:id/status", protect, authorize("admin", "seller"), statusValidator, handleValidation, updateOrderStatus);
-router.put("/:id/status", protect, authorize("admin", "seller"), statusValidator, handleValidation, updateOrderStatus);
+router.patch("/:id/status", verifyFirebaseToken, requireRole("admin", "seller"), statusValidator, handleValidation, updateOrderStatus);
+router.put("/:id/status", verifyFirebaseToken, requireRole("admin", "seller"), statusValidator, handleValidation, updateOrderStatus);
 
 export default router;
