@@ -1,4 +1,5 @@
 import { useState } from "react";
+import CloudinaryImage from "../CloudinaryImage";
 
 export function ProductGallery({ images = [], productName = "Product", badge = "HOT", wishlisted = false, onToggleWishlist }) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -18,9 +19,13 @@ export function ProductGallery({ images = [], productName = "Product", badge = "
         >
           {wishlisted ? "♥" : "♡"}
         </button>
-        <img
+        <CloudinaryImage
           src={activeImage}
           alt={productName}
+          width={800}
+          height={800}
+          crop="fill"
+          eager
           className="h-full w-full object-contain p-4 transition-transform duration-300 group-hover:scale-[1.08]"
         />
       </div>
@@ -34,7 +39,7 @@ export function ProductGallery({ images = [], productName = "Product", badge = "
             className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl border bg-[var(--bg2)] p-1 transition ${activeIndex === index ? "border-[#7C5CFC] ring-2 ring-[#7C5CFC]/25" : "border-[var(--border)] hover:border-[#A78BFA]"}`}
             aria-label={`View image ${index + 1}`}
           >
-            <img src={image} alt={`${productName} thumbnail ${index + 1}`} className="h-full w-full rounded-lg object-cover" />
+            <CloudinaryImage src={image} alt={`${productName} thumbnail ${index + 1}`} width={600} height={600} crop="fill" className="h-full w-full rounded-lg object-cover" />
           </button>
         ))}
       </div>

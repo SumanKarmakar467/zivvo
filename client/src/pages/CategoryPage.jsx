@@ -8,6 +8,7 @@ import {
   getSubcategoriesByCategory
 } from "../data/cosmicCatalog";
 import { useCartContext } from "../context/CartContext";
+import CloudinaryImage from "../components/CloudinaryImage";
 
 export default function CategoryPage() {
   const { slug } = useParams();
@@ -43,7 +44,7 @@ export default function CategoryPage() {
           </div>
         </div>
         <div className="min-h-[280px] overflow-hidden">
-          <img src={category.image} alt={category.name} className="h-full min-h-[280px] w-full object-cover opacity-80" />
+          <CloudinaryImage src={category.image} alt={category.name} width={1200} height={400} crop="fill" className="h-full min-h-[280px] w-full object-cover opacity-80" />
         </div>
       </section>
 
@@ -145,7 +146,7 @@ export default function CategoryPage() {
             {visibleProducts.map((product) => (
               <article key={product.id} className="group glass-card flex min-h-[420px] flex-col rounded-2xl p-3">
                 <Link to={`/product/${product.id}`} className="relative block aspect-[4/5] overflow-hidden rounded-xl bg-surface-container-lowest">
-                  <img src={product.image} alt={product.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-110" />
+                  <CloudinaryImage src={product.image} alt={product.title} width={400} height={400} crop="fill" className="h-full w-full object-cover transition duration-500 group-hover:scale-110" />
                   <span className="absolute left-3 top-3 rounded-full border border-stellar-gold/50 bg-cosmic-black/60 px-3 py-1 text-[10px] font-black text-stellar-gold">
                     {product.tag}
                   </span>

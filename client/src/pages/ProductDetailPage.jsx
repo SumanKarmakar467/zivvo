@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Heart, ShieldCheck, ShoppingBag, Star } from "lucide-react";
 import { getProductById, products } from "../data/cosmicCatalog";
 import { useCartContext } from "../context/CartContext";
+import CloudinaryImage from "../components/CloudinaryImage";
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
@@ -41,7 +42,7 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="glass-card overflow-hidden rounded-[2rem]">
-            <img src={activeImage} alt={product.title} className="h-[420px] w-full object-cover md:h-[620px]" />
+            <CloudinaryImage src={activeImage} alt={product.title} width={800} height={800} crop="fill" eager className="h-[420px] w-full object-cover md:h-[620px]" />
           </div>
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
             {angleImages.map(({ image, label }) => (
@@ -50,7 +51,7 @@ export default function ProductDetailPage() {
                 onClick={() => setActiveImage(image)}
                 className={`glass-card aspect-[4/3] overflow-hidden rounded-2xl p-1 ${activeImage === image ? "border-neon-cyan shadow-cyan" : ""}`}
               >
-                <img src={image} alt="" className="h-full w-full rounded-xl object-cover" />
+                <CloudinaryImage src={image} alt="" width={600} height={600} crop="fill" className="h-full w-full rounded-xl object-cover" />
                 <span className="absolute bottom-2 left-2 rounded-full bg-cosmic-black/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-neon-cyan">
                   {label}
                 </span>

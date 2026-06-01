@@ -23,6 +23,7 @@ import { useGetCategoriesQuery } from "../store/api/productsApi";
 import useAuth from "../hooks/useAuth";
 import { updateOrderStatus } from "../features/orders/ordersSlice";
 import { notifyError, notifySuccess } from "../components/common/Toast";
+import CloudinaryImage from "../components/CloudinaryImage";
 
 const sections = ["overview", "products", "orders", "add"];
 
@@ -536,7 +537,7 @@ export default function SellerDashboard() {
                     {(stats?.topProducts || []).map((product, index) => (
                       <div key={product._id} className="flex items-center gap-3 rounded-md bg-zinc-900 p-2">
                         <span className="w-6 text-center text-sm font-semibold text-[#ef9f27]">{index + 1}</span>
-                        <img src={product.images?.[0]} alt={product.name} className="h-10 w-10 rounded object-cover" />
+                        <CloudinaryImage src={product.images?.[0]} alt={product.name} width={400} height={400} crop="fill" className="h-10 w-10 rounded object-cover" />
                         <div className="flex-1">
                           <p className="text-sm font-medium">{product.name}</p>
                           <p className="text-xs text-zinc-400">Sold: {product.sold || 0}</p>
@@ -572,7 +573,7 @@ export default function SellerDashboard() {
                   <tbody>
                     {(productsData?.products || []).map((product) => (
                       <tr key={product._id} className="border-t border-zinc-800">
-                        <td className="py-2"><img src={product.images?.[0]} alt={product.name} className="h-10 w-10 rounded object-cover" /></td>
+                        <td className="py-2"><CloudinaryImage src={product.images?.[0]} alt={product.name} width={400} height={400} crop="fill" className="h-10 w-10 rounded object-cover" /></td>
                         <td>{product.name}</td>
                         <td>Rs {Number(product.price).toLocaleString()}</td>
                         <td>{product.stock}</td>

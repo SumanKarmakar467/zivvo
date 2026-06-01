@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Minus, Plus, ShieldCheck, Ticket, Trash2 } from "lucide-react";
 import { cartDefaults } from "../data/cosmicCatalog";
 import { useCartContext } from "../context/CartContext";
+import CloudinaryImage from "../components/CloudinaryImage";
 
 export default function Cart() {
   const { items, setItems, totals, updateQty, removeItem } = useCartContext();
@@ -78,7 +79,7 @@ export default function Cart() {
 function CartRow({ item, updateQty, removeItem }) {
   return (
     <article className="glass-card grid gap-4 rounded-2xl p-4 transition hover:scale-[1.005] md:grid-cols-[132px_1fr_auto] md:items-center">
-      <img src={item.image || item.thumbnail} alt={item.title} className="h-36 w-full rounded-xl object-cover md:h-32 md:w-32" />
+      <CloudinaryImage src={item.image || item.thumbnail} alt={item.title} width={80} height={80} crop="thumb" className="h-36 w-full rounded-xl object-cover md:h-32 md:w-32" />
       <div className="min-w-0">
         <h2 className="cosmic-title text-2xl">{item.title}</h2>
         <p className="mt-1 text-on-surface-variant">{item.size || item.variant}</p>

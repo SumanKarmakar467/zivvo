@@ -38,6 +38,17 @@ interface RazorpayCheckoutParams {
 
 export async function initiateRazorpayPayment({ orderData, userInfo, onSuccess, onFailure }: RazorpayCheckoutParams): Promise<void> {
   try {
+    if (!window.Razorpay) {
+      const loaded = await new Promise<boolean>((resolve) => {
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+      });
+      if (!loaded) throw new Error("Could not load Razorpay checkout");
+    }
+
     const token = localStorage.getItem("zivvo-token");
     const response = await fetch(`${import.meta.env.VITE_API_URL}/orders/create`, {
       method: "POST",

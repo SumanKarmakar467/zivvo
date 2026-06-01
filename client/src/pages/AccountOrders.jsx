@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import PageTransition from "../components/common/PageTransition";
 import { useCancelOrderMutation, useGetMyOrdersQuery } from "../services/orderApi";
 import { notifyError, notifySuccess } from "../components/common/Toast";
+import CloudinaryImage from "../components/CloudinaryImage";
 
 const tabs = [
   { key: "", label: "All" },
@@ -106,7 +107,7 @@ export default function AccountOrders() {
 
                   <div className="mt-3 flex gap-2 overflow-x-auto">
                     {(order.items || []).slice(0, 3).map((item, idx) => (
-                      <img key={`${order._id}-${idx}`} src={item.image || item.product?.images?.[0] || "https://picsum.photos/80"} alt={item.name} loading="lazy" className="h-14 w-14 rounded-md object-cover" />
+                      <CloudinaryImage key={`${order._id}-${idx}`} src={item.image || item.product?.images?.[0] || "https://picsum.photos/80"} alt={item.name} width={80} height={80} crop="thumb" className="h-14 w-14 rounded-md object-cover" />
                     ))}
                     {(order.items || []).length > 3 && <span className="flex h-14 w-14 items-center justify-center rounded-md bg-zivvo-dark-raised text-xs">+{(order.items || []).length - 3} more</span>}
                   </div>

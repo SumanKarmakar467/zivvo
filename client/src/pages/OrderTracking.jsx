@@ -7,6 +7,7 @@ import OrderTimeline from "../components/OrderTimeline";
 import ReturnRequestForm from "../components/ReturnRequestForm";
 import ReturnStatusTimeline from "../components/ReturnStatusTimeline";
 import api from "../api/axios";
+import CloudinaryImage from "../components/CloudinaryImage";
 
 export default function OrderTracking() {
   const { id } = useParams();
@@ -102,7 +103,7 @@ export default function OrderTracking() {
             <div className="mt-4 space-y-3">
               {(order.items || []).map((item, idx) => (
                 <div key={`${item.product?._id || idx}`} className="flex items-center gap-3 rounded-lg border border-zivvo-dark-raised p-2">
-                  <img src={item.image || item.product?.images?.[0] || "https://picsum.photos/60"} alt={item.name} loading="lazy" className="h-12 w-12 rounded-md object-cover" />
+                  <CloudinaryImage src={item.image || item.product?.images?.[0] || "https://picsum.photos/60"} alt={item.name} width={80} height={80} crop="thumb" className="h-12 w-12 rounded-md object-cover" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{item.name}</p>
                     <p className="text-xs text-zivvo-text-soft">Qty: {item.quantity}</p>

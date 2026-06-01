@@ -6,6 +6,7 @@ import confetti from "canvas-confetti";
 import { useCartContext } from "../context/CartContext";
 import StarRating from "./StarRating";
 import { productImageFallback } from "../utils/imageFallbacks";
+import CloudinaryImage from "./CloudinaryImage";
 
 export default function ProductCard({ product, index = 0, matchedText = "" }) {
   const [loaded, setLoaded] = useState(false);
@@ -36,11 +37,13 @@ export default function ProductCard({ product, index = 0, matchedText = "" }) {
     >
       <Link to={productUrl} className="block min-h-0">
         <div className="relative aspect-[4/3] overflow-hidden bg-[var(--bg3)]">
-          <img
+          <CloudinaryImage
             src={productImage}
             alt={productName}
-            loading="lazy"
-            onError={(event) => { event.currentTarget.src = productImageFallback; }}
+            width={400}
+            height={400}
+            crop="fill"
+            fallback={productImageFallback}
             onLoad={() => setLoaded(true)}
             className={`h-full w-full object-cover ${loaded ? "blur-up is-loaded" : "blur-up"}`}
           />

@@ -12,6 +12,7 @@ import {
   YAxis
 } from "recharts";
 import useAuth from "../hooks/useAuth";
+import CloudinaryImage from "../components/CloudinaryImage";
 import {
   useCreateCategoryMutation,
   useCreateCouponMutation,
@@ -226,7 +227,7 @@ export default function AdminPanel() {
                   <tbody>
                     {(usersData?.users || []).map((u) => (
                       <tr key={u._id} className="border-t border-zinc-800">
-                        <td className="py-2 flex items-center gap-2"><img src={u.avatar || "https://placehold.co/40x40"} alt={u.name} className="h-8 w-8 rounded-full object-cover" />{u.name}</td>
+                        <td className="py-2 flex items-center gap-2"><CloudinaryImage src={u.avatar || "https://placehold.co/40x40"} alt={u.name} width={96} height={96} crop="thumb" gravity="face" className="h-8 w-8 rounded-full object-cover" />{u.name}</td>
                         <td>{u.email}</td>
                         <td><span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs">{u.role}</span></td>
                         <td><span className={`rounded-full px-2 py-0.5 text-xs ${u.isActive ? "bg-green-900 text-green-300" : "bg-red-900 text-red-200"}`}>{u.isActive ? "Active" : "Banned"}</span></td>
@@ -262,7 +263,7 @@ export default function AdminPanel() {
                   <tbody>
                     {(productsData?.products || []).map((p) => (
                       <tr key={p._id} className="border-t border-zinc-800">
-                        <td className="py-2"><img src={p.images?.[0]} alt={p.name} className="h-10 w-10 rounded object-cover" /></td>
+                        <td className="py-2"><CloudinaryImage src={p.images?.[0]} alt={p.name} width={400} height={400} crop="fill" className="h-10 w-10 rounded object-cover" /></td>
                         <td>{p.name}</td>
                         <td>{p.seller?.name || "-"}</td>
                         <td>{p.category?.name || "-"}</td>

@@ -13,8 +13,9 @@ import { useNotificationSocket } from "./hooks/useNotificationSocket";
 import useLoadingStore from "./store/useLoadingStore";
 import PageWrapper from "./components/ui/PageWrapper";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
-import PageSeo from "./components/PageSeo";
+import SEO from "./components/SEO";
 import Spinner from "./components/Spinner";
+import PageLoader from "./components/PageLoader";
 
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const Home = lazy(() => import("./pages/Home"));
@@ -94,13 +95,18 @@ export default function App() {
   const [routeLoading, setRouteLoading] = useState(true);
   const [globalLoadingVisible, setGlobalLoadingVisible] = useState(false);
   const seo = useMemo(() => {
-    if (location.pathname.startsWith("/search")) return { title: "Search Products | Zivvo", description: "Search and filter Zivvo products by category, price, rating, and newest arrivals." };
-    if (location.pathname.startsWith("/product")) return { title: "Product Details | Zivvo", description: "View product details, ratings, offers, delivery options, and secure checkout on Zivvo." };
-    if (location.pathname.startsWith("/seller/dashboard")) return { title: "Seller Dashboard | Zivvo", description: "Track seller products, orders, revenue, ratings, and recent activity on Zivvo." };
-    if (location.pathname.startsWith("/cart")) return { title: "Cart | Zivvo", description: "Review your Zivvo cart, coupons, delivery charges, and checkout total." };
-    if (location.pathname.startsWith("/checkout")) return { title: "Checkout | Zivvo", description: "Complete your Zivvo order with saved addresses and secure payment options." };
-    if (location.pathname.startsWith("/account/orders")) return { title: "My Orders | Zivvo", description: "Track your Zivvo orders, shipment status, cancellation, and returns." };
-    return { title: "Zivvo | Indian E-commerce Marketplace", description: "Shop curated Indian products on Zivvo with secure checkout, seller tools, and fast discovery." };
+    if (location.pathname.startsWith("/search")) return { title: "Shop", description: "Browse all products on Zivvo. Filter by category, price, and more.", url: "/products" };
+    if (location.pathname.startsWith("/product")) return { title: "Product Details", description: "View product details, ratings, offers, delivery options, and secure checkout on Zivvo." };
+    if (location.pathname.startsWith("/cart")) return { title: "Your Cart", noIndex: true };
+    if (location.pathname.startsWith("/checkout")) return { title: "Checkout", noIndex: true };
+    if (location.pathname.startsWith("/orders/")) return { title: `Order ${location.pathname.split("/").pop()?.slice(-8).toUpperCase()}`, noIndex: true };
+    if (location.pathname.startsWith("/orders") || location.pathname.startsWith("/account/orders")) return { title: "My Orders", noIndex: true };
+    if (location.pathname.startsWith("/login") || location.pathname.startsWith("/auth")) return { title: "Sign In", noIndex: true };
+    if (location.pathname.startsWith("/register")) return { title: "Create Account", noIndex: true };
+    if (location.pathname.startsWith("/seller")) return { title: "Seller Dashboard", noIndex: true };
+    if (location.pathname.startsWith("/admin")) return { title: "Admin Dashboard", noIndex: true };
+    if (location.pathname === "/") return { title: "Home", description: "Zivvo - premium e-commerce. Discover the latest products in cosmic violet style.", url: "/" };
+    return { title: "Page Not Found", noIndex: true };
   }, [location.pathname]);
   useNotificationSocket();
 
@@ -169,11 +175,11 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--cream)] transition-colors duration-300">
       <ServerWakeUp />
-      <PageSeo title={seo.title} description={seo.description} />
+      <SEO title={seo.title} description={seo.description} url={seo.url} noIndex={seo.noIndex} />
       <Loader active={false} />
       <Navbar />
       <AnimatePresence mode="wait" initial={false}>
-        <Suspense fallback={<main className="grid min-h-[60vh] place-items-center"><Spinner label="Loading page" /></main>}>
+        <Suspense fallback={<PageLoader />}>
         <Routes location={location} key={location.pathname + location.search}>
           <Route path="/" element={<PageWrapper><LandingPage /></PageWrapper>} />
           <Route path="/home" element={<PageWrapper><Home /></PageWrapper>} />

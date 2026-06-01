@@ -1,5 +1,6 @@
 import StarRating from "./StarRating";
 import { avatarImageFallback, productImageFallback } from "../utils/imageFallbacks";
+import CloudinaryImage from "./CloudinaryImage";
 
 export default function ReviewCard({ review, onHelpful }) {
   const displayName = review?.userName || review?.buyer?.name || "User";
@@ -9,10 +10,14 @@ export default function ReviewCard({ review, onHelpful }) {
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           {review?.buyer?.avatar ? (
-            <img
+            <CloudinaryImage
               src={review.buyer.avatar || avatarImageFallback}
               alt={displayName}
-              onError={(e) => { e.currentTarget.src = avatarImageFallback; }}
+              width={96}
+              height={96}
+              crop="thumb"
+              gravity="face"
+              fallback={avatarImageFallback}
               className="h-10 w-10 rounded-full object-cover"
             />
           ) : (
@@ -37,7 +42,7 @@ export default function ReviewCard({ review, onHelpful }) {
       {Array.isArray(review.images) && review.images.length > 0 && (
         <div className="mt-3 grid grid-cols-3 gap-2">
           {review.images.slice(0, 3).map((image) => (
-            <img key={image} src={image} alt="review" onError={(e) => { e.currentTarget.src = productImageFallback; }} className="h-20 w-full rounded-md object-cover" />
+            <CloudinaryImage key={image} src={image} alt="review" width={400} height={400} crop="fill" fallback={productImageFallback} className="h-20 w-full rounded-md object-cover" />
           ))}
         </div>
       )}

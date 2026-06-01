@@ -27,6 +27,7 @@ import addressRoutes from "./routes/addressRoutes.js";
 import shippingRoutes from "./routes/shippingRoutes.js";
 import searchRoutes from "./routes/searchRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import sitemapRoute from "./routes/sitemapRoute.js";
 import { AppError, globalErrorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -62,6 +63,7 @@ app.use(
 app.use(helmet());
 app.use(mongoSanitize());
 app.use("/api/health", healthRoutes);
+app.use("/sitemap.xml", sitemapRoute);
 
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

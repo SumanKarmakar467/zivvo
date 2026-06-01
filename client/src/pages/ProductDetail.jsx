@@ -8,6 +8,7 @@ import { useGetProductBySlugQuery } from "../services/productApi";
 import { notifySuccess } from "../components/common/Toast";
 import StarRating from "../components/StarRating";
 import ReviewsSection from "../components/ReviewsSection";
+import SEO from "../components/SEO";
 import WishlistButton from "../components/WishlistButton";
 import VariantSelector from "../components/VariantSelector";
 import RecommendationsSection from "../components/RecommendationsSection";
@@ -15,6 +16,7 @@ import RecentlyViewedStrip from "../components/RecentlyViewedStrip";
 import { useRecentlyViewed } from "../hooks/useRecentlyViewed";
 import VerifiedBadge from "../components/VerifiedBadge";
 import { getUsableImages, productImageFallback } from "../utils/imageFallbacks";
+import CloudinaryImage from "../components/CloudinaryImage";
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -97,6 +99,14 @@ export default function ProductDetail() {
 
   return (
     <PageTransition>
+      <SEO
+        title={product.name}
+        description={product.description?.slice(0, 155)}
+        image={product.images?.[0]}
+        url={`/products/${product._id}`}
+        type="product"
+        product={product}
+      />
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-8">
         <nav className="mb-5 flex items-center gap-2 text-xs text-zivvo-text-soft md:text-sm">
           <Link to="/" className="hover:text-zivvo-text-base">Home</Link>
@@ -110,9 +120,13 @@ export default function ProductDetail() {
           <div>
             <div className="group overflow-hidden rounded-xl bg-zivvo-dark-raised">
               <div className="aspect-[4/5] overflow-hidden">
-                <img
+                <CloudinaryImage
                   src={images[activeImage]}
                   alt={product.name}
+                  width={800}
+                  height={800}
+                  crop="fill"
+                  eager
                   className="h-full w-full object-contain transition-transform duration-500 md:group-hover:scale-110"
                 />
               </div>
@@ -128,7 +142,7 @@ export default function ProductDetail() {
                     activeImage === index ? "border-zivvo-amber-brand" : "border-zivvo-dark-raised"
                   }`}
                 >
-                  <img src={img} alt={`${product.name}-${index + 1}`} className="h-full w-full object-cover" />
+                  <CloudinaryImage src={img} alt={`${product.name}-${index + 1}`} width={600} height={600} crop="fill" className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>
