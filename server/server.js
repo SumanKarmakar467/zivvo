@@ -20,6 +20,14 @@ const startServer = async () => {
 
   const httpServer = http.createServer(app);
   initSocket(httpServer);
+  httpServer.on("error", (error) => {
+    if (error.code === "EADDRINUSE") {
+      console.error(`Port ${PORT} is already in use.`);
+      console.error(`Stop the existing process or start this server with another port, for example: PORT=5001 npm run dev`);
+      process.exit(1);
+    }
+    throw error;
+  });
   httpServer.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
