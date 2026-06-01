@@ -4,6 +4,7 @@ import ProductCard from "../components/ProductCard";
 import ProductCardSkeleton from "../components/ProductCardSkeleton";
 import SearchBar from "../components/SearchBar";
 import Pagination from "../components/Pagination";
+import ErrorBoundary from "../components/ErrorBoundary";
 import { useDebounce } from "../hooks/useDebounce";
 import useClarifai from "../hooks/useClarifai";
 import { useGetProductsQuery } from "../store/api/productsApi";
@@ -42,7 +43,7 @@ export default function SearchResultsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#05060F] px-4 py-8 text-white md:px-8">
+    <main className="min-h-screen bg-[#05060F] px-4 py-8 text-white sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <section className="rounded-lg border border-violet-500/20 bg-white/[0.03] p-4 shadow-2xl shadow-violet-950/30 md:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
@@ -91,14 +92,16 @@ export default function SearchResultsPage() {
         </div>
 
         {isLoading || isFetching ? (
-          <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
             {Array.from({ length: 20 }).map((_, index) => <ProductCardSkeleton key={index} />)}
           </div>
         ) : products.length ? (
           <>
-            <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {products.map((product, index) => <ProductCard key={product._id || product.id} product={product} index={index} matchedText={debouncedSearch} />)}
-            </div>
+            <ErrorBoundary level="section" fallbackMessage="Products failed to load. Please refresh.">
+              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+                {products.map((product, index) => <ProductCard key={product._id || product.id} product={product} index={index} matchedText={debouncedSearch} />)}
+              </div>
+            </ErrorBoundary>
             <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
           </>
         ) : (

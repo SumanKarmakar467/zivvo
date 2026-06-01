@@ -64,13 +64,13 @@ export default function ProductCard({ product, index = 0, matchedText = "" }) {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">{productCategory || "Zivvo"}</p>
-              <h3 className="mt-1 line-clamp-2 text-base font-bold text-[var(--cream)]">{title}</h3>
+              <h3 className="mt-1 line-clamp-2 text-sm font-bold text-[var(--cream)] sm:text-base">{title}</h3>
               <div className="mt-2 flex items-center gap-2 text-xs text-cyan-200/80">
                 <StarRating rating={productRating} value={productRating} size="sm" />
                 <span>({totalReviews})</span>
               </div>
             </div>
-            <p className="shrink-0 font-bold text-[var(--gold,#C9A84C)]">₹{Number(product.price || 0).toLocaleString("en-IN")}</p>
+            <p className="shrink-0 text-sm font-bold text-[var(--gold,#C9A84C)] sm:text-base">Rs {Number(product.price || 0).toLocaleString("en-IN")}</p>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-[var(--muted)]">{productRating.toFixed(1)} stars</span>
@@ -78,7 +78,7 @@ export default function ProductCard({ product, index = 0, matchedText = "" }) {
               whileTap={{ scale: 0.85 }}
               type="button"
               onClick={add}
-              className="magnetic-target inline-flex h-10 items-center gap-2 rounded-full bg-[#C9A84C] px-4 text-sm font-bold text-black"
+              className="magnetic-target inline-flex min-h-11 items-center gap-2 rounded-full bg-[#C9A84C] px-3 py-1.5 text-xs font-bold text-black sm:px-4 sm:py-2 sm:text-sm"
             >
               <ShoppingBag className="h-4 w-4" /> Add
             </motion.button>

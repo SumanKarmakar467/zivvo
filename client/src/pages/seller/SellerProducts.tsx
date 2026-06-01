@@ -4,6 +4,7 @@ import { api } from "@/utils/api";
 import type { Product } from "@/types";
 import ProductFormModal from "./ProductFormModal";
 import CloudinaryImage from "../../components/CloudinaryImage";
+import ErrorBoundary from "../../components/ErrorBoundary";
 
 interface ProductsResponse {
   products: Product[];
@@ -73,12 +74,13 @@ export default function SellerProducts() {
 
       {selected.length > 0 && <div className="mb-3 rounded-lg border border-[#7C5CFC]/40 bg-[#7C5CFC]/10 p-3 text-sm">{selected.length} selected <button className="ml-3 text-[#A78BFA]" type="button">Pause all</button><button className="ml-3 text-[#A78BFA]" type="button">Activate all</button><button className="ml-3 text-rose-300" type="button">Delete all</button></div>}
 
+      <ErrorBoundary level="section" fallbackMessage="Dashboard data failed to load.">
       <section className="overflow-hidden rounded-[14px] border border-[var(--border)] bg-[var(--bg2)]">
         {loading ? (
           <div className="space-y-2 p-4">{Array.from({ length: 6 }).map((_, index) => <div key={index} className="h-16 animate-pulse rounded-lg bg-white/5" />)}</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="min-w-full text-left text-sm">
               <thead className="text-xs uppercase text-[var(--muted)]"><tr><th className="p-3"><input type="checkbox" checked={selected.length === products.length && products.length > 0} onChange={(e) => setSelected(e.target.checked ? products.map((p) => p._id) : [])} /></th><th>Image</th><th>Name & Brand</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
                 {products.map((product) => (
@@ -97,6 +99,7 @@ export default function SellerProducts() {
           </div>
         )}
       </section>
+      </ErrorBoundary>
 
       <div className="mt-4 flex justify-center gap-2">{Array.from({ length: totalPages }).map((_, index) => <button key={index} type="button" onClick={() => setPage(index + 1)} className={`h-9 w-9 rounded-full ${page === index + 1 ? "bg-[#7C5CFC] text-white" : "border border-[var(--border)]"}`}>{index + 1}</button>)}</div>
       {modalOpen && <ProductFormModal product={editing} onClose={() => setModalOpen(false)} onSaved={() => { setModalOpen(false); void load(); }} />}

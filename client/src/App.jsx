@@ -12,7 +12,7 @@ import { fetchNotifications } from "./features/notifications/notificationsSlice"
 import { useNotificationSocket } from "./hooks/useNotificationSocket";
 import useLoadingStore from "./store/useLoadingStore";
 import PageWrapper from "./components/ui/PageWrapper";
-import ErrorBoundary from "./components/ui/ErrorBoundary";
+import ErrorBoundary from "./components/ErrorBoundary";
 import SEO from "./components/SEO";
 import Spinner from "./components/Spinner";
 import PageLoader from "./components/PageLoader";
@@ -173,12 +173,13 @@ export default function App() {
   }, [dispatch, isAuthenticated, accessToken]);
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--cream)] transition-colors duration-300">
+    <div className="min-h-screen overflow-x-hidden bg-[#05060F] text-[var(--cream)] transition-colors duration-300">
       <ServerWakeUp />
       <SEO title={seo.title} description={seo.description} url={seo.url} noIndex={seo.noIndex} />
       <Loader active={false} />
       <Navbar />
       <AnimatePresence mode="wait" initial={false}>
+        <ErrorBoundary level="page">
         <Suspense fallback={<PageLoader />}>
         <Routes location={location} key={location.pathname + location.search}>
           <Route path="/" element={<PageWrapper><LandingPage /></PageWrapper>} />
@@ -218,6 +219,7 @@ export default function App() {
           <Route path="*" element={<PageWrapper><Placeholder title="Not Found" /></PageWrapper>} />
         </Routes>
         </Suspense>
+        </ErrorBoundary>
       </AnimatePresence>
       {location.pathname !== "/" && <Footer />}
     </div>

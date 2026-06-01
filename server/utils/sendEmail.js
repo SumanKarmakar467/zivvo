@@ -9,7 +9,7 @@ const transporter = nodemailer.createTransport({
 
 const sendEmail = async ({ to, subject, html }) => {
   return transporter.sendMail({
-    from: `ShopPop <${process.env.EMAIL_USER}>`,
+    from: `Zivvo <${process.env.EMAIL_USER}>`,
     to,
     subject,
     html

@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import useAuth from "../hooks/useAuth";
 import CloudinaryImage from "../components/CloudinaryImage";
+import ErrorBoundary from "../components/ErrorBoundary";
 import {
   useCreateCategoryMutation,
   useCreateCouponMutation,
@@ -50,7 +51,7 @@ const categoryEmpty = { name: "", icon: "", image: "" };
 function Modal({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-lg rounded-xl border border-zinc-700 bg-[#1f1a14] p-4">
+      <div className="mx-4 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-zinc-700 bg-[#1f1a14] p-4 sm:mx-auto">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-lg font-semibold">{title}</h3>
           <button type="button" onClick={onClose} className="rounded bg-zinc-800 px-2 py-1 text-xs">Close</button>
@@ -136,6 +137,7 @@ export default function AdminPanel() {
           ))}
         </aside>
 
+        <ErrorBoundary level="section" fallbackMessage="Dashboard data failed to load.">
         <section className="space-y-5">
           {active === "dashboard" && (
             <>
@@ -379,6 +381,7 @@ export default function AdminPanel() {
             </div>
           )}
         </section>
+        </ErrorBoundary>
       </div>
 
       {categoryModal && (

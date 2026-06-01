@@ -41,12 +41,12 @@ function ShipOrderModal({ order, onClose, onShipped }: { order: SellerOrder; onC
 
   return (
     <div className="fixed inset-0 z-[100] grid place-items-center bg-black/70 p-4">
-      <div className="w-full max-w-md rounded-[14px] border border-[var(--border)] bg-[var(--bg2)] p-5">
+      <div className="mx-4 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[14px] border border-[var(--border)] bg-[var(--bg2)] p-5 sm:mx-auto">
         <h2 className="font-serif text-2xl">Ship Order #ZIVVO-{order._id.slice(-6)}</h2>
         <div className="mt-4 grid gap-3">
-          <select value={courier} onChange={(e) => setCourier(e.target.value)} className="rounded-lg border border-[var(--border)] bg-[var(--bg2)] p-3"><option>Blue Dart</option><option>Delhivery</option><option>Ekart</option><option>DTDC</option><option>India Post</option><option>Other</option></select>
-          <input value={trackingId} onChange={(e) => setTrackingId(e.target.value)} placeholder="Tracking ID*" className="rounded-lg border border-[var(--border)] bg-transparent p-3" />
-          <input type="date" min={tomorrow} value={estimatedDelivery} onChange={(e) => setEstimatedDelivery(e.target.value)} className="rounded-lg border border-[var(--border)] bg-transparent p-3" />
+          <select value={courier} onChange={(e) => setCourier(e.target.value)} className="rounded-lg border border-[var(--border)] bg-[var(--bg2)] p-3 text-base"><option>Blue Dart</option><option>Delhivery</option><option>Ekart</option><option>DTDC</option><option>India Post</option><option>Other</option></select>
+          <input value={trackingId} onChange={(e) => setTrackingId(e.target.value)} placeholder="Tracking ID*" className="rounded-lg border border-[var(--border)] bg-transparent p-3 text-base" />
+          <input type="date" min={tomorrow} value={estimatedDelivery} onChange={(e) => setEstimatedDelivery(e.target.value)} className="rounded-lg border border-[var(--border)] bg-transparent p-3 text-base" />
         </div>
         <div className="mt-5 flex justify-end gap-2"><button type="button" onClick={onClose} className="rounded-full border border-[var(--border)] px-4 py-2">Cancel</button><button type="button" onClick={() => void submit()} className="rounded-full bg-[#7C5CFC] px-4 py-2 font-semibold text-white">Confirm Shipment</button></div>
       </div>
@@ -77,8 +77,8 @@ export default function SellerOrders() {
         <h1 className="font-serif text-3xl">Seller Orders</h1>
         <div className="flex flex-wrap gap-2">
           {[["", "All"], ["confirmed", "New"], ["processing", "Processing"], ["shipped", "Shipped"], ["delivered", "Delivered"]].map(([value, label]) => <button key={value} type="button" onClick={() => setStatus(value)} className={`rounded-full px-4 py-2 text-sm ${status === value ? "bg-[#7C5CFC] text-white" : "border border-[var(--border)] text-[var(--muted)]"}`}>{label}</button>)}
-          <input type="date" className="rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm" />
-          <input type="date" className="rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm" />
+          <input type="date" className="rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-base sm:text-sm" />
+          <input type="date" className="rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-base sm:text-sm" />
         </div>
       </div>
       <div className="grid gap-4">

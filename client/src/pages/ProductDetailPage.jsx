@@ -4,6 +4,7 @@ import { ArrowLeft, Heart, ShieldCheck, ShoppingBag, Star } from "lucide-react";
 import { getProductById, products } from "../data/cosmicCatalog";
 import { useCartContext } from "../context/CartContext";
 import CloudinaryImage from "../components/CloudinaryImage";
+import ErrorBoundary from "../components/ErrorBoundary";
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
@@ -41,23 +42,25 @@ export default function ProductDetailPage() {
             </span>
           </div>
 
-          <div className="glass-card overflow-hidden rounded-[2rem]">
-            <CloudinaryImage src={activeImage} alt={product.title} width={800} height={800} crop="fill" eager className="h-[420px] w-full object-cover md:h-[620px]" />
-          </div>
-          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {angleImages.map(({ image, label }) => (
-              <button
-                key={`${label}-${image}`}
-                onClick={() => setActiveImage(image)}
-                className={`glass-card aspect-[4/3] overflow-hidden rounded-2xl p-1 ${activeImage === image ? "border-neon-cyan shadow-cyan" : ""}`}
-              >
-                <CloudinaryImage src={image} alt="" width={600} height={600} crop="fill" className="h-full w-full rounded-xl object-cover" />
-                <span className="absolute bottom-2 left-2 rounded-full bg-cosmic-black/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-neon-cyan">
-                  {label}
-                </span>
-              </button>
-            ))}
-          </div>
+          <ErrorBoundary level="section" fallbackMessage="Product images failed to load.">
+            <div className="glass-card aspect-square w-full overflow-hidden rounded-[2rem] sm:aspect-auto">
+              <CloudinaryImage src={activeImage} alt={product.title} width={800} height={800} crop="fill" eager className="h-full w-full object-contain sm:h-[620px]" />
+            </div>
+            <div className="mt-3 flex flex-row gap-2 overflow-x-auto pb-2 sm:mt-4 sm:grid sm:grid-cols-4 sm:gap-4 sm:overflow-visible sm:pb-0">
+              {angleImages.map(({ image, label }) => (
+                <button
+                  key={`${label}-${image}`}
+                  onClick={() => setActiveImage(image)}
+                  className={`glass-card aspect-[4/3] w-32 shrink-0 overflow-hidden rounded-2xl p-1 sm:w-auto ${activeImage === image ? "border-neon-cyan shadow-cyan" : ""}`}
+                >
+                  <CloudinaryImage src={image} alt="" width={600} height={600} crop="fill" className="h-full w-full rounded-xl object-contain" />
+                  <span className="absolute bottom-2 left-2 rounded-full bg-cosmic-black/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-neon-cyan">
+                    {label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </ErrorBoundary>
         </div>
 
         <aside className="lg:sticky lg:top-28 lg:self-start">
@@ -120,28 +123,30 @@ export default function ProductDetailPage() {
           <h2 className="cosmic-title text-3xl">Member Reviews</h2>
           <p className="mt-3 text-on-surface-variant">Verified buyers highlight camera quality, delivery speed, battery life, build, and the premium in-hand feel.</p>
         </div>
-        <div className="grid gap-4">
-          {feedback.map((review) => (
-            <div key={review.name} className="glass-card rounded-2xl border-electric-violet/70 p-6">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex text-stellar-gold">
-                  {Array.from({ length: 5 }).map((_, index) => <Star key={index} className="h-5 w-5 fill-current" />)}
+        <ErrorBoundary level="section" fallbackMessage="Reviews failed to load.">
+          <div className="grid gap-4">
+            {feedback.map((review) => (
+              <div key={review.name} className="glass-card rounded-2xl border-electric-violet/70 p-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex text-stellar-gold">
+                    {Array.from({ length: 5 }).map((_, index) => <Star key={index} className="h-5 w-5 fill-current" />)}
+                  </div>
+                  <span className="text-xs font-bold uppercase tracking-[0.14em] text-neon-cyan">{review.badge}</span>
                 </div>
-                <span className="text-xs font-bold uppercase tracking-[0.14em] text-neon-cyan">{review.badge}</span>
-              </div>
-              <p className="mt-4 text-body-lg italic">"{review.text}"</p>
-              <div className="mt-5 flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-r from-electric-violet to-neon-cyan font-black text-white">
-                  {review.name.charAt(0)}
-                </span>
-                <div>
-                  <p className="font-bold">{review.name}</p>
-                  <p className="text-sm text-neon-cyan">Verified buyer</p>
+                <p className="mt-4 text-body-lg italic">"{review.text}"</p>
+                <div className="mt-5 flex items-center gap-3">
+                  <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-r from-electric-violet to-neon-cyan font-black text-white">
+                    {review.name.charAt(0)}
+                  </span>
+                  <div>
+                    <p className="font-bold">{review.name}</p>
+                    <p className="text-sm text-neon-cyan">Verified buyer</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </ErrorBoundary>
       </section>
 
       <section className="cosmic-container py-stack-lg">

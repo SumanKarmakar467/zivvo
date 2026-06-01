@@ -8,6 +8,7 @@ import ReturnRequestForm from "../components/ReturnRequestForm";
 import ReturnStatusTimeline from "../components/ReturnStatusTimeline";
 import api from "../api/axios";
 import CloudinaryImage from "../components/CloudinaryImage";
+import ErrorBoundary from "../components/ErrorBoundary";
 
 export default function OrderTracking() {
   const { id } = useParams();
@@ -74,9 +75,11 @@ export default function OrderTracking() {
         <section className="rounded-xl border border-zivvo-dark-raised bg-zivvo-dark-surface p-5">
           <h1 className="text-2xl font-bold">Order Detail</h1>
           <p className="mt-1 text-xs text-zivvo-text-soft">Order ID: {order._id}</p>
-          <div className="mt-6">
-            <OrderTimeline statusHistory={order.statusHistory || []} currentStatus={currentStatus} />
-          </div>
+          <ErrorBoundary level="section" fallbackMessage="Order tracking failed to load.">
+            <div className="mt-6">
+              <OrderTimeline statusHistory={order.statusHistory || []} currentStatus={currentStatus} />
+            </div>
+          </ErrorBoundary>
           <div className="mt-6">
             {returnRequest ? <ReturnStatusTimeline request={returnRequest} /> : <ReturnRequestForm order={order} onSubmitted={loadReturnRequest} />}
           </div>
@@ -135,9 +138,9 @@ export default function OrderTracking() {
 
       {showCancel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-md rounded-xl border border-zivvo-dark-raised bg-zivvo-dark-surface p-5">
+          <div className="mx-4 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-zivvo-dark-raised bg-zivvo-dark-surface p-5 sm:mx-auto">
             <h3 className="mb-3 text-lg font-bold">Cancel Order</h3>
-            <select value={reason} onChange={(e) => setReason(e.target.value)} className="w-full rounded-md border border-zivvo-dark-raised bg-zivvo-dark-bg px-3 py-2 text-sm">
+            <select value={reason} onChange={(e) => setReason(e.target.value)} className="w-full rounded-md border border-zivvo-dark-raised bg-zivvo-dark-bg px-3 py-2 text-base">
               <option>Changed my mind</option>
               <option>Found better price elsewhere</option>
               <option>Ordered by mistake</option>

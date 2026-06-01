@@ -1,222 +1,180 @@
-# ZIVVO - India's Premium E-Commerce Platform
+# Zivvo - Premium E-Commerce Experience
 
-<div align="center">
-  <img src="./client/public/zivvo-banner.png" alt="Zivvo Banner" width="100%" />
-  <br /><br />
+![Zivvo](https://img.shields.io/badge/Zivvo-E--Commerce-7C3AED?style=for-the-badge&logo=shopify&logoColor=white)
+![React](https://img.shields.io/badge/React_18-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Redux](https://img.shields.io/badge/Redux_Toolkit-593D88?style=for-the-badge&logo=redux&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-039BE5?style=for-the-badge&logo=Firebase&logoColor=white)
 
-  ![React](https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react)
-  ![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=flat&logo=vite)
-  ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-06B6D4?style=flat&logo=tailwind-css)
-  ![Node.js](https://img.shields.io/badge/Node.js-20-339933?style=flat&logo=node.js)
-  ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=flat&logo=mongodb)
-  ![Framer Motion](https://img.shields.io/badge/Framer_Motion-10-0055FF?style=flat&logo=framer)
-  ![Redux Toolkit](https://img.shields.io/badge/Redux_Toolkit-2-764ABC?style=flat&logo=redux)
-  ![License](https://img.shields.io/badge/License-MIT-green?style=flat)
+> A full-stack e-commerce marketplace with cosmic violet aesthetics, real-time cart,
+> Razorpay payments, Firebase Auth, Cloudinary media, and a multi-role seller/admin system.
 
-  **[Live Demo](https://zivvo-six.vercel.app)** ·
-  **[Source Code](https://github.com/SumanKarmakar467/zivvo)** ·
-  **[Report Bug](https://github.com/SumanKarmakar467/zivvo/issues)**
-</div>
-
----
-
-## Overview
-
-Zivvo is a full-stack e-commerce web application built for the Indian market, connecting 800+ verified artisan sellers with conscious shoppers across India. Built with a modern React frontend and a scalable Node.js backend, it covers the complete shopping lifecycle from discovery to delivery.
-
----
-
-## Screenshots
-
-| Landing Page | Product Detail |
-|---|---|
-| ![Landing](./docs/screenshots/landing.png) | ![Product](./docs/screenshots/product.png) |
-
-| Cart & Checkout | Seller Dashboard |
-|---|---|
-| ![Cart](./docs/screenshots/cart.png) | ![Seller](./docs/screenshots/seller.png) |
-
----
+**Live Demo:** [zivvo-six.vercel.app](https://zivvo-six.vercel.app)
+**Repository:** [github.com/SumanKarmakar467/zivvo](https://github.com/SumanKarmakar467/zivvo)
 
 ## Features
 
-### Buyer Features
-- JWT-secured authentication with access and refresh tokens
-- Full-text product search with live autocomplete and debouncing
-- Advanced filters by category, brand, price, rating, and discount
-- Product detail page with image gallery, reviews, and delivery checks
-- Wishlist with persistent server sync on login
-- Cart management with quantity updates and coupon application
-- Razorpay-powered checkout for UPI, card, net banking, wallet, and COD
-- Order tracking with status timeline from placed to delivered
-- Star ratings and verified-buyer review system
-- Email notifications for order confirmation and status updates
-- Zivvo rewards-ready data model for purchase incentives
-
-### Seller Features
-- Dedicated seller dashboard with revenue and order analytics
-- Product management for listings, pricing, stock, variants, and images
-- Cloudinary-ready image upload flow
-- Variant builder for size/color combinations with individual stock
-- Order management with shipping updates and tracking IDs
-- Low-stock inventory visibility
-
-### Technical Highlights
-- Dark/light theme with CSS variables and persisted preference
-- Framer Motion scroll-reveal animations and page transitions
-- Skeleton loading and polished async UI states
-- Mobile-first responsive design from 375px to desktop
-- Redux Toolkit for global state and Zustand for UI state
-- Express rate limiting, Helmet security headers, and Mongo sanitization
-- Mongoose schemas and indexes for search, auth, products, and orders
-
----
+- Multi-role system: Buyer, Seller, Admin
+- Firebase Authentication (email/password + social)
+- Product listings with debounced search and pagination
+- Cart with redux-persist (survives page refresh)
+- Razorpay payment integration with webhook order tracking
+- Order status timeline: Payment Confirmed -> Processing -> Shipped -> Delivered
+- Product reviews and star ratings
+- Cloudinary image optimization with automatic transforms
+- Fully responsive: mobile, tablet, desktop
+- Dark cosmic violet/cyan theme with Framer Motion animations
+- SEO meta tags and JSON-LD structured data per page
+- Code-split bundle with lazy-loaded routes
 
 ## Tech Stack
 
 | Layer | Technology |
-|---|---|
-| Frontend | React 18, Vite 5, Tailwind CSS 3, Framer Motion |
-| State | Redux Toolkit, Zustand |
+|-------|-----------|
+| Frontend | React 18, Vite, Redux Toolkit, React Router v6 |
+| Styling | Tailwind CSS, Framer Motion |
 | Backend | Node.js, Express.js |
-| Database | MongoDB Atlas with Mongoose |
-| Auth | JWT access + refresh tokens, bcrypt |
-| Payments | Razorpay orders API + server-side signature verification |
+| Database | MongoDB, Mongoose |
+| Auth | Firebase Authentication |
+| Payments | Razorpay |
 | Media | Cloudinary |
-| Email | Nodemailer + Gmail SMTP |
-| Deployment | Vercel frontend, Railway/Render backend |
-
----
-
-## Getting Started
-
-### Prerequisites
-- Node.js >= 18
-- MongoDB Atlas account
-- Razorpay test account
-- Cloudinary account
-- Gmail account or SMTP provider
-
-### Environment Variables
-
-Copy the example files:
-
-```bash
-cp client/.env.example client/.env
-cp server/.env.example server/.env
-```
-
-Create `client/.env`:
-
-```env
-VITE_API_URL=/api
-VITE_RAZORPAY_KEY_ID=rzp_test_xxx
-VITE_FIREBASE_API_KEY=your_firebase_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-```
-
-Create `server/.env`:
-
-```env
-PORT=5000
-NODE_ENV=development
-MONGO_URI=mongodb+srv://user:password@cluster.mongodb.net/zivvo
-JWT_SECRET=replace_with_strong_secret
-JWT_REFRESH_SECRET=replace_with_strong_refresh_secret
-CLIENT_URL=http://localhost:5173
-RAZORPAY_KEY_ID=rzp_test_xxx
-RAZORPAY_KEY_SECRET=your_razorpay_secret
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_cloudinary_key
-CLOUDINARY_API_SECRET=your_cloudinary_secret
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_app_password
-```
-
-### Installation
-
-```bash
-# Install everything from root
-npm run install:all
-
-# Start both client and server with one command
-npm run dev
-```
-
-### Run Locally
-
-```bash
-npm run dev
-```
-
-The client runs on `http://localhost:5173` and proxies API requests to the backend on `http://localhost:5000`.
-
-### Seed Demo Data
-
-```bash
-npm run seed --prefix server
-```
-
-## Credentials (after seed)
-After running `npm run seed`, check the terminal output for the generated demo credentials,
-or refer to `server/seed.js` directly. Do not commit real credentials to this file.
-
----
-
-## API Overview
-
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/auth/register` | Create a buyer account |
-| POST | `/api/auth/login` | Login and issue refresh cookie |
-| POST | `/api/auth/refresh` | Rotate refresh token and return access token |
-| GET | `/api/products` | List products with filters/search |
-| GET | `/api/products/:slug` | Product detail |
-| GET | `/api/cart` | Authenticated user cart |
-| POST | `/api/cart/add` | Add item to cart |
-| POST | `/api/payment/create-order` | Create Razorpay or COD order |
-| POST | `/api/payment/verify` | Verify Razorpay signature server-side |
-| GET | `/api/orders/my` | Paginated user order history |
-| GET | `/api/orders/:id` | Secure order detail |
-| PATCH | `/api/orders/:id/status` | Seller/admin status update |
-
----
-
-## Security Notes
-
-- Razorpay secret is used only on the backend.
-- Payment signatures are verified server-side before stock or cart mutations.
-- Refresh tokens are stored in HTTP-only cookies and rotated on refresh.
-- Helmet, rate limiting, and Mongo sanitization protect the API surface.
-- Users can only access their own orders unless they are admins.
-
----
+| Deployment | Vercel (client), Render (server) |
 
 ## Project Structure
 
 ```text
 zivvo/
-  client/            React + Vite frontend
-  server/            Express API, models, routes, sockets
-  docs/screenshots/  README screenshots
-  .github/           PR template and GitHub workflow docs
+|-- client/                 # React 18 + Vite frontend
+|   |-- src/
+|   |   |-- components/     # Reusable UI components
+|   |   |-- pages/          # Route-level page components
+|   |   |-- store/          # Redux Toolkit slices + selectors
+|   |   |-- hooks/          # Custom React hooks
+|   |   |-- utils/          # Helpers (cloudinary, formatters)
+|   |   `-- App.jsx         # Router + lazy route definitions
+|   |-- public/
+|   `-- index.html
+|-- server/                 # Node.js + Express backend
+|   |-- controllers/        # Route handler logic
+|   |-- models/             # Mongoose schemas
+|   |-- routes/             # Express routers
+|   |-- middleware/         # Auth, error handling
+|   |-- webhooks/           # Razorpay webhook handler
+|   `-- server.js           # Entry point
+|-- package.json            # Root monorepo scripts
+`-- README.md
 ```
 
----
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- MongoDB Atlas or local MongoDB
+- Firebase project
+- Razorpay test account
+- Cloudinary account
+
+### Installation
+
+```bash
+npm run install:all
+npm run dev
+```
+
+The client runs on `http://localhost:5173` and the server runs on `http://localhost:5000`.
+
+### Build
+
+```bash
+npm run build
+npm start
+```
+
+## Environment Variables
+
+Create `client/.env` from `client/.env.example`:
+
+```env
+VITE_API_BASE_URL=
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+VITE_RAZORPAY_KEY_ID=
+VITE_CLOUDINARY_CLOUD_NAME=
+VITE_SITE_URL=
+```
+
+Create `server/.env` from `server/.env.example`:
+
+```env
+PORT=
+MONGODB_URI=
+JWT_SECRET=
+FIREBASE_PROJECT_ID=
+FIREBASE_PRIVATE_KEY=
+FIREBASE_CLIENT_EMAIL=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+RAZORPAY_WEBHOOK_SECRET=
+CLIENT_URL=
+SEED_ADMIN_PASSWORD=
+```
+
+## Database Seeding
+
+```bash
+npm run seed --prefix server
+```
+
+After seeding, use the credentials printed by the seed script. Keep real credentials in local `.env` files only.
+
+## Deployment
+
+- Deploy the client from `client/` to Vercel.
+- Deploy the server from `server/` to Render.
+- Configure the client API base URL to point at the deployed backend.
+- Add MongoDB, Firebase, Cloudinary, Razorpay, and email secrets to the server host.
+- Keep Razorpay secrets and webhook secret on the backend only.
+
+## Screenshots
+
+<!-- Screenshots will be added here. See docs/screenshots/README.md. -->
+> Screenshots and demo GIF coming soon - see the [live demo](https://zivvo-six.vercel.app)
+
+### Desktop
+| Home | Products | Product Detail |
+|------|----------|----------------|
+| <!-- ![Home](docs/screenshots/01-homepage.png) --> | <!-- ![Products](docs/screenshots/02-products.png) --> | <!-- ![Detail](docs/screenshots/03-product-detail.png) --> |
+
+| Cart | Checkout | Order Tracking |
+|------|----------|----------------|
+| <!-- ![Cart](docs/screenshots/04-cart.png) --> | <!-- ![Checkout](docs/screenshots/05-checkout.png) --> | <!-- ![Orders](docs/screenshots/06-orders.png) --> |
+
+### Mobile
+| Cart Drawer | Product Listing |
+|-------------|-----------------|
+| <!-- ![Cart Mobile](docs/screenshots/07-cart-mobile.png) --> | <!-- ![Mobile](docs/screenshots/08-mobile-listing.png) --> |
+
+### Demo
+> Add `docs/demo/zivvo-demo.gif` to see the full walkthrough here.
 
 ## Contributing
 
-1. Fork the repo
-2. Create a feature branch: `git checkout -b feat/your-feature`
-3. Commit with conventional messages: `git commit -m "feat: add wishlist sync"`
-4. Push and open a Pull Request
-
----
+1. Fork the repo.
+2. Create a feature branch: `git checkout -b feat/your-feature`.
+3. Commit with a conventional message: `git commit -m "feat: add wishlist sync"`.
+4. Push and open a pull request.
 
 ## License
 
-MIT © 2024 Suman Karmakar
+MIT (c) [Suman Karmakar](https://github.com/SumanKarmakar467)

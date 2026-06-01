@@ -17,7 +17,7 @@
     const filter = {};
     if (q.category) filter.category = q.category;
     if (q.brand) filter.brand = q.brand;
-    if (q.isShopPopAssured) filter.isShopPopAssured = q.isShopPopAssured === "true";
+    if (q.isZivvoAssured) filter.isZivvoAssured = q.isZivvoAssured === "true";
     if (q.minPrice || q.maxPrice) filter.price = { ...(q.minPrice && { $gte: Number(q.minPrice) }), ...(q.maxPrice && { $lte: Number(q.maxPrice) }) };
     if (q.rating) filter["ratings.average"] = { $gte: Number(q.rating) };
     this.query = this.query.find(filter);

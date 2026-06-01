@@ -19,7 +19,7 @@ const baseEmailLayout = ({ title, content }) => `
       <tr>
         <td style="padding:18px 20px;background:#17110b;border-bottom:1px solid #3a2d1d;">
           <div style="font-size:24px;font-weight:700;color:#ef9f27;letter-spacing:0.4px;">Zivvo</div>
-          <div style="font-size:12px;color:#bca892;margin-top:4px;">India's Smartest Marketplace</div>
+          <div style="font-size:12px;color:#bca892;margin-top:4px;">Premium E-Commerce Experience</div>
         </td>
       </tr>
       <tr>
@@ -150,7 +150,7 @@ export const sendWelcomeEmail = async (user) => {
   const html = baseEmailLayout({
     title: `Welcome to Zivvo, ${user?.name || "Shopper"}!`,
     content: `
-      <p style="margin:0 0 14px 0;color:#bca892;">Your account is ready. Start exploring India's smartest marketplace.</p>
+      <p style="margin:0 0 14px 0;color:#bca892;">Your account is ready. Start exploring a premium e-commerce experience.</p>
       <div style="margin:14px 0 18px;">
         <a href="${APP_URL}" style="display:inline-block;background:#ef9f27;color:#19120b;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:700;">Start Shopping</a>
       </div>
@@ -164,7 +164,7 @@ export const sendWelcomeEmail = async (user) => {
 
   await sendMail({
     to: user?.email,
-    subject: "Welcome to Zivvo — India's Smartest Marketplace! 🛍️",
+    subject: "Welcome to Zivvo - Premium E-Commerce Experience!",
     html
   });
 };
@@ -189,4 +189,3 @@ export const sendPasswordResetEmail = async (user, resetToken) => {
     html
   });
 };
-

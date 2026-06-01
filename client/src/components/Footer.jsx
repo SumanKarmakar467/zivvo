@@ -37,7 +37,7 @@ export default function Footer() {
             Cosmic Noir commerce for premium gear, modern shoppers, and future-facing sellers.
           </p>
         </div>
-        <div className="grid gap-6 sm:grid-cols-3">
+        <div className="flex flex-col gap-6 sm:flex-row sm:justify-between">
           {columns.map((column) => (
             <div key={column.title}>
               <h3 className="text-label-caps font-bold uppercase tracking-[0.16em] text-neon-cyan">{column.title}</h3>

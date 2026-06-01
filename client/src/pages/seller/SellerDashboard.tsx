@@ -4,6 +4,7 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { api } from "@/utils/api";
 import type { Product } from "@/types";
 import ProductFormModal from "./ProductFormModal";
+import ErrorBoundary from "../../components/ErrorBoundary";
 
 interface RevenuePoint {
   date: string;
@@ -141,16 +142,18 @@ export default function SellerDashboard() {
       </section>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[1.5fr_1fr]">
+        <ErrorBoundary level="section" fallbackMessage="Dashboard data failed to load.">
         <section className="rounded-[14px] border border-[var(--border)] bg-[var(--bg2)] p-5">
           <h2 className="mb-4 font-serif text-xl">Recent Orders</h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="min-w-full text-left text-sm">
               <thead className="text-xs uppercase text-[var(--muted)]"><tr><th className="p-2">Order ID</th><th>Product</th><th>Buyer</th><th>Amount</th><th>Status</th></tr></thead>
               <tbody>{data.recentOrders.map((order) => <tr key={order._id} className="border-t border-[var(--border)]"><td className="p-2">#{order._id.slice(-6)}</td><td>{order.items[0]?.name || "Product"}</td><td>{order.user?.name || "Customer"}</td><td>₹{Number(order.total || order.totalAmount || 0).toLocaleString("en-IN")}</td><td>{order.orderStatus}</td></tr>)}</tbody>
             </table>
           </div>
           <Link to="/seller/orders" className="mt-4 inline-block text-sm text-[#A78BFA]">View all orders</Link>
         </section>
+        </ErrorBoundary>
         <section className="rounded-[14px] border border-[var(--border)] bg-[var(--bg2)] p-5">
           <h2 className="mb-4 font-serif text-xl text-amber-300">Low Stock</h2>
           <div className="space-y-3">{data.lowStockProducts.map((product) => <div key={product._id} className="flex items-center gap-3"><img src={product.images[0]} alt={product.name} loading="lazy" className="h-9 w-9 rounded-lg object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm">{product.name}</p><p className={product.stock <= 2 ? "text-xs text-rose-400" : "text-xs text-amber-300"}>{product.stock} left</p></div><button type="button" onClick={() => setRestockProduct(product)} className="rounded-full border border-[var(--border)] px-3 py-1 text-xs">Restock</button></div>)}</div>

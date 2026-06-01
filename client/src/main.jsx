@@ -17,6 +17,11 @@ import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import ErrorBoundary from "./ErrorBoundary";
 
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("Unhandled promise rejection:", event.reason);
+  // TODO: send to error tracking (Sentry etc.)
+});
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ErrorBoundary>

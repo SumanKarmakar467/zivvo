@@ -1,5 +1,6 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { Heart, Home, LogIn, LogOut, Menu, PackageSearch, Search, ShoppingBag, User } from "lucide-react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useCartContext } from "../context/CartContext";
 import { useAuthContext } from "../context/AuthContext";
@@ -26,13 +27,14 @@ export default function Navbar() {
   // TODO: Replace with memoized selector from store/selectors.js
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-glass-surface/70 backdrop-blur-3xl shadow-lg shadow-neon-cyan/10">
         <div className="cosmic-container flex h-20 items-center justify-between gap-6">
           <div className="flex items-center gap-5">
-            <button type="button" className="grid h-11 w-11 place-items-center rounded-xl text-primary hover:bg-white/5 lg:hidden" aria-label="Open menu">
+            <button type="button" onClick={() => setMobileOpen(true)} className="grid h-11 w-11 place-items-center rounded-xl text-primary hover:bg-white/5 lg:hidden" aria-label="Open menu">
               <Menu className="h-5 w-5" />
             </button>
             <Link to="/" className="cosmic-title gradient-text text-4xl tracking-wide md:text-5xl" aria-label="Zivvo home">
@@ -82,6 +84,26 @@ export default function Navbar() {
           </div>
         </div>
       </header>
+
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 bg-cosmic-black/95 pt-24 backdrop-blur-2xl lg:hidden">
+          <button type="button" onClick={() => setMobileOpen(false)} className="absolute right-4 top-5 grid h-11 w-11 place-items-center rounded-xl border border-white/10 text-primary" aria-label="Close menu">
+            x
+          </button>
+          <nav className="grid">
+            {desktopLinks.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                onClick={() => setMobileOpen(false)}
+                className={({ isActive }) => `py-4 px-6 text-lg font-bold uppercase tracking-[0.12em] ${isActive ? "text-neon-cyan" : "text-on-surface"}`}
+              >
+                {link.label}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
+      )}
 
       <nav className="fixed inset-x-0 bottom-0 z-50 flex h-20 items-center justify-around rounded-t-xl border-t border-white/10 bg-glass-surface/85 px-2 pb-1 shadow-[0_-8px_30px_rgba(6,182,212,0.12)] backdrop-blur-2xl lg:hidden">
         {mobileLinks.map((link) => {
