@@ -1,11 +1,13 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
+const isJwtLike = (token) => typeof token === "string" && token.split(".").length === 3;
+
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_URL,
   credentials: "include",
   prepareHeaders: (headers, { getState }) => {
     const token = getState().auth.accessToken;
-    if (token) headers.set("authorization", `Bearer ${token}`);
+    if (isJwtLike(token)) headers.set("authorization", `Bearer ${token}`);
     return headers;
   }
 });

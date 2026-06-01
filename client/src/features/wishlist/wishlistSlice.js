@@ -1,8 +1,10 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
+const isJwtLike = (token) => typeof token === "string" && token.split(".").length === 3;
+
 const authHeaders = (getState) => {
   const token = getState().auth.accessToken;
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return isJwtLike(token) ? { Authorization: `Bearer ${token}` } : {};
 };
 
 const wishlistRequest = async ({ path = "", method = "GET", getState }) => {

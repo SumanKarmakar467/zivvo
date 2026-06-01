@@ -4,7 +4,8 @@ const initialState = {
   user: null,
   accessToken: null,
   loading: true,
-  isAuthenticated: false
+  isAuthenticated: false,
+  isDemoSession: false
 };
 
 const authSlice = createSlice({
@@ -14,7 +15,8 @@ const authSlice = createSlice({
     setCredentials: (state, action) => {
       state.user = action.payload.user || null;
       state.accessToken = action.payload.accessToken || null;
-      state.isAuthenticated = Boolean(action.payload.accessToken);
+      state.isDemoSession = Boolean(action.payload.isDemoSession);
+      state.isAuthenticated = Boolean(state.user && (state.accessToken || state.isDemoSession));
       state.loading = false;
       if (action.payload.accessToken) localStorage.setItem("zivvo-token", action.payload.accessToken);
     },
@@ -23,7 +25,9 @@ const authSlice = createSlice({
       state.accessToken = null;
       state.loading = false;
       state.isAuthenticated = false;
+      state.isDemoSession = false;
       localStorage.removeItem("zivvo-token");
+      localStorage.removeItem("zivvo-demo-user");
     },
     setLoading: (state, action) => {
       state.loading = action.payload;

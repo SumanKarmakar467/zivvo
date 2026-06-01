@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Heart, ShieldCheck, ShoppingBag, Star } from "lucide-react";
 import { getProductById, products } from "../data/cosmicCatalog";
@@ -8,12 +8,18 @@ export default function ProductDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const product = getProductById(slug);
-  const [activeImage, setActiveImage] = useState(product.gallery[0]);
+  const angleImages = useMemo(() => buildAngleImages(product), [product]);
+  const [activeImage, setActiveImage] = useState(angleImages[0].image);
   const [finish, setFinish] = useState("Titanium");
   const [storage, setStorage] = useState("128GB");
   const [liked, setLiked] = useState(false);
   const { addItem, setItems } = useCartContext();
   const related = useMemo(() => products.filter((item) => item.id !== product.id).slice(0, 4), [product.id]);
+  const feedback = useMemo(() => buildFeedback(product), [product]);
+
+  useEffect(() => {
+    setActiveImage(angleImages[0].image);
+  }, [angleImages]);
 
   const addToCart = () => addItem(product, { size: `${finish} | ${storage}` });
   const buyNow = () => {
@@ -37,14 +43,17 @@ export default function ProductDetailPage() {
           <div className="glass-card overflow-hidden rounded-[2rem]">
             <img src={activeImage} alt={product.title} className="h-[420px] w-full object-cover md:h-[620px]" />
           </div>
-          <div className="mt-4 grid grid-cols-3 gap-4">
-            {product.gallery.map((image) => (
+          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {angleImages.map(({ image, label }) => (
               <button
-                key={image}
+                key={`${label}-${image}`}
                 onClick={() => setActiveImage(image)}
                 className={`glass-card aspect-[4/3] overflow-hidden rounded-2xl p-1 ${activeImage === image ? "border-neon-cyan shadow-cyan" : ""}`}
               >
                 <img src={image} alt="" className="h-full w-full rounded-xl object-cover" />
+                <span className="absolute bottom-2 left-2 rounded-full bg-cosmic-black/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-neon-cyan">
+                  {label}
+                </span>
               </button>
             ))}
           </div>
@@ -108,20 +117,45 @@ export default function ProductDetailPage() {
       <section className="cosmic-container grid gap-6 py-stack-lg lg:grid-cols-[0.75fr_1.25fr]">
         <div>
           <h2 className="cosmic-title text-3xl">Member Reviews</h2>
-          <p className="mt-3 text-on-surface-variant">Verified buyers highlight finish, delivery speed, and the premium in-hand feel.</p>
+          <p className="mt-3 text-on-surface-variant">Verified buyers highlight camera quality, delivery speed, battery life, build, and the premium in-hand feel.</p>
         </div>
-        <div className="glass-card rounded-2xl border-electric-violet/70 p-6">
-          <div className="flex text-stellar-gold">
-            {Array.from({ length: 5 }).map((_, index) => <Star key={index} className="h-5 w-5 fill-current" />)}
-          </div>
-          <p className="mt-4 text-body-lg italic">The finish is out of this world. It feels incredibly light yet solid, and delivery was lightning fast.</p>
-          <div className="mt-5 flex items-center gap-3">
-            <span className="h-10 w-10 rounded-full bg-gradient-to-r from-electric-violet to-neon-cyan" />
-            <div>
-              <p className="font-bold">Marcus V.</p>
-              <p className="text-sm text-neon-cyan">Verified member</p>
+        <div className="grid gap-4">
+          {feedback.map((review) => (
+            <div key={review.name} className="glass-card rounded-2xl border-electric-violet/70 p-6">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex text-stellar-gold">
+                  {Array.from({ length: 5 }).map((_, index) => <Star key={index} className="h-5 w-5 fill-current" />)}
+                </div>
+                <span className="text-xs font-bold uppercase tracking-[0.14em] text-neon-cyan">{review.badge}</span>
+              </div>
+              <p className="mt-4 text-body-lg italic">"{review.text}"</p>
+              <div className="mt-5 flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-r from-electric-violet to-neon-cyan font-black text-white">
+                  {review.name.charAt(0)}
+                </span>
+                <div>
+                  <p className="font-bold">{review.name}</p>
+                  <p className="text-sm text-neon-cyan">Verified buyer</p>
+                </div>
+              </div>
             </div>
-          </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="cosmic-container py-stack-lg">
+        <div className="mb-5">
+          <p className="text-label-caps font-bold uppercase tracking-[0.14em] text-neon-cyan">Angle Gallery</p>
+          <h2 className="cosmic-title mt-2 text-3xl">See {product.title} From Every Side</h2>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {angleImages.map(({ image, label }) => (
+            <article key={`angle-${label}`} className="glass-card rounded-2xl p-3">
+              <img src={image} alt={`${product.title} ${label} angle`} className="aspect-square w-full rounded-xl object-cover" />
+              <h3 className="cosmic-title mt-4 text-xl">{label} Angle</h3>
+              <p className="mt-2 text-sm text-on-surface-variant">Detailed product view for confident shopping.</p>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -135,7 +169,7 @@ export default function ProductDetailPage() {
               <p className="mt-2 font-black text-stellar-gold">${item.price}.00</p>
             </Link>
           ))}
-        </div>
+          </div>
       </section>
 
       <div className="fixed inset-x-0 bottom-20 z-40 grid grid-cols-2 gap-3 border-t border-white/10 bg-cosmic-black/90 p-4 backdrop-blur-2xl lg:hidden">
@@ -144,6 +178,42 @@ export default function ProductDetailPage() {
       </div>
     </main>
   );
+}
+
+function buildAngleImages(product) {
+  const labels = ["Front", "Back", "Side", "Detail"];
+  const unique = [...new Set([product.image, ...(product.gallery || [])])].slice(0, 4);
+  return labels.map((label, index) => ({
+    label,
+    image: unique[index] || getAngleFallback(product, label)
+  }));
+}
+
+function getAngleFallback(product, label) {
+  const query = encodeURIComponent(`${product.brand} ${product.title} product ${label} angle`);
+  return `https://source.unsplash.com/900x1100/?${query}&sig=${encodeURIComponent(`${product.id}-${label}`)}`;
+}
+
+function buildFeedback(product) {
+  const isPhone = product.category === "phones" || /phone/i.test(product.title);
+  const topic = isPhone ? "camera and battery" : "quality and finish";
+  return [
+    {
+      name: "Aarav S.",
+      badge: "2 day delivery",
+      text: `The ${product.title} looked exactly like the angle photos. The ${topic} feel premium, and packaging was clean.`
+    },
+    {
+      name: "Priya M.",
+      badge: "Best value",
+      text: `I compared the side and detail shots before buying. It made the product choice much easier.`
+    },
+    {
+      name: "Rohan K.",
+      badge: "Verified",
+      text: `Smooth checkout, fast updates, and the product arrived in fresh condition. I would buy this brand again.`
+    }
+  ];
 }
 
 function OptionGroup({ title, options, value, onChange, boxed = false }) {

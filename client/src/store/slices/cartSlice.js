@@ -42,7 +42,7 @@ const loadGuestCart = () => {
 
 const authHeaders = (getState) => {
   const token = getState().auth.accessToken;
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return token && token.split(".").length === 3 ? { Authorization: `Bearer ${token}` } : {};
 };
 
 const apiCall = async (path, method, body, getState) => {
@@ -117,7 +117,7 @@ export const { setCart, clearCart, setLoading, setCoupon, clearCoupon } = cartSl
 export const fetchCart = () => async (dispatch, getState) => {
   dispatch(setLoading(true));
   try {
-    const isAuthenticated = getState().auth.isAuthenticated;
+    const isAuthenticated = Boolean(getState().auth.accessToken);
     if (!isAuthenticated) {
       const guest = loadGuestCart();
       dispatch(setCart(guest));
@@ -134,7 +134,7 @@ export const fetchCart = () => async (dispatch, getState) => {
 export const addToCart = ({ productId, quantity = 1, productData, variantSku = "", variantAttributes = {}, priceOverride = null }) => async (dispatch, getState) => {
   dispatch(setLoading(true));
   try {
-    const isAuthenticated = getState().auth.isAuthenticated;
+    const isAuthenticated = Boolean(getState().auth.accessToken);
     if (!isAuthenticated) {
       const guest = loadGuestCart();
       const items = [...guest.items];
@@ -167,7 +167,7 @@ export const addToCart = ({ productId, quantity = 1, productData, variantSku = "
 export const updateCartItem = ({ itemId, quantity }) => async (dispatch, getState) => {
   dispatch(setLoading(true));
   try {
-    const isAuthenticated = getState().auth.isAuthenticated;
+    const isAuthenticated = Boolean(getState().auth.accessToken);
     if (!isAuthenticated) {
       const guest = loadGuestCart();
       const items = guest.items
@@ -189,7 +189,7 @@ export const updateCartItem = ({ itemId, quantity }) => async (dispatch, getStat
 export const removeFromCart = (itemId) => async (dispatch, getState) => {
   dispatch(setLoading(true));
   try {
-    const isAuthenticated = getState().auth.isAuthenticated;
+    const isAuthenticated = Boolean(getState().auth.accessToken);
     if (!isAuthenticated) {
       const guest = loadGuestCart();
       const items = guest.items.filter((item) => String(item._id) !== String(itemId));
@@ -209,7 +209,7 @@ export const removeFromCart = (itemId) => async (dispatch, getState) => {
 export const applyCoupon = (code) => async (dispatch, getState) => {
   dispatch(setLoading(true));
   try {
-    if (!getState().auth.isAuthenticated) {
+    if (!getState().auth.accessToken) {
       throw new Error("Login required to apply coupon");
     }
     const data = await apiCall("/cart/coupon", "POST", { code }, getState);
@@ -222,7 +222,7 @@ export const applyCoupon = (code) => async (dispatch, getState) => {
 export const removeCoupon = () => async (dispatch, getState) => {
   dispatch(setLoading(true));
   try {
-    const isAuthenticated = getState().auth.isAuthenticated;
+    const isAuthenticated = Boolean(getState().auth.accessToken);
     if (!isAuthenticated) {
       const guest = loadGuestCart();
       const next = guestTotals(guest.items, "");

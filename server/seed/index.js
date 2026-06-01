@@ -1,4 +1,5 @@
 import "dotenv/config";
+import crypto from "crypto";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
@@ -43,9 +44,18 @@ const products = [
   ["Terracotta Wall Panel Set", "Art & Collectibles", "Bengal Craft Co.", 3199, 4600]
 ];
 
+const createSeedPassword = () => {
+  if (process.env.SEED_ADMIN_PASSWORD) {
+    return { password: process.env.SEED_ADMIN_PASSWORD, generated: false };
+  }
+
+  return { password: `${crypto.randomBytes(18).toString("base64url")}A1!`, generated: true };
+};
+
 async function seed() {
-  if (!process.env.MONGO_URI) throw new Error("MONGO_URI is not set.");
-  await mongoose.connect(process.env.MONGO_URI);
+  const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+  if (!mongoUri) throw new Error("MONGO_URI or MONGODB_URI is not set.");
+  await mongoose.connect(mongoUri);
   console.log("Connected to MongoDB");
 
   await Promise.all([
@@ -59,7 +69,8 @@ async function seed() {
   ]);
   console.log("Cleared existing data");
 
-  const passwordHash = await bcrypt.hash("Test@1234", 10);
+  const seedPassword = createSeedPassword();
+  const passwordHash = await bcrypt.hash(seedPassword.password, 10);
   const buyer = await User.create({
     name: "Priya Rao",
     email: "buyer@zivvo.com",
@@ -159,10 +170,15 @@ async function seed() {
   ]);
 
   console.log("\n=== SEED COMPLETE ===");
-  console.log("Buyer:   buyer@zivvo.com  / Test@1234");
-  console.log("Seller:  seller@zivvo.com / Test@1234");
-  console.log("Seller2: seller2@zivvo.com / Test@1234");
-  console.log(`Admin:   ${admin.email} / Test@1234`);
+  if (seedPassword.generated) {
+    console.log(`Generated demo password: ${seedPassword.password}`);
+  } else {
+    console.log("Demo password: value from SEED_ADMIN_PASSWORD");
+  }
+  console.log("Buyer:   buyer@zivvo.com");
+  console.log("Seller:  seller@zivvo.com");
+  console.log("Seller2: seller2@zivvo.com");
+  console.log(`Admin:   ${admin.email}`);
   console.log("====================\n");
 
   await mongoose.disconnect();

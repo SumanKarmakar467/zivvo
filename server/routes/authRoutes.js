@@ -18,7 +18,7 @@ router.post("/login", login);
 router.get("/me", protect, me);
 router.post("/google", googleLogin);
 router.post("/refresh", refreshToken);
-router.post("/logout", protect, logout);
+router.post("/logout", logout);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 

@@ -6,6 +6,7 @@ import { setCredentials, setLoading } from "./store/slices/authSlice";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Loader from "./components/Loader";
+import ServerWakeUp from "./components/ServerWakeUp";
 import { fetchWishlist } from "./features/wishlist/wishlistSlice";
 import { fetchNotifications } from "./features/notifications/notificationsSlice";
 import { useNotificationSocket } from "./hooks/useNotificationSocket";
@@ -104,7 +105,7 @@ export default function App() {
 
   useEffect(() => {
     setRouteLoading(true);
-    const timer = setTimeout(() => setRouteLoading(false), 2200);
+    const timer = setTimeout(() => setRouteLoading(false), 120);
     return () => clearTimeout(timer);
   }, [location.pathname, location.search]);
 
@@ -122,6 +123,17 @@ export default function App() {
     const restore = async () => {
       dispatch(setLoading(true));
       try {
+        const demoUser = localStorage.getItem("zivvo-demo-user");
+        if (demoUser) {
+          dispatch(setCredentials({ user: JSON.parse(demoUser), accessToken: null, isDemoSession: true }));
+          return;
+        }
+        const storedToken = localStorage.getItem("zivvo-token");
+        if (!storedToken || !parseJwt(storedToken)) {
+          localStorage.removeItem("zivvo-token");
+          dispatch(setLoading(false));
+          return;
+        }
         const apiBase = import.meta.env.VITE_API_URL || "/api";
         const res = await fetch(`${apiBase}/auth/refresh`, {
           method: "POST",
@@ -139,6 +151,7 @@ export default function App() {
           );
         }
       } catch {
+        localStorage.removeItem("zivvo-token");
         dispatch(setLoading(false));
       }
     };
@@ -154,8 +167,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--cream)] transition-colors duration-300">
+      <ServerWakeUp />
       <PageSeo title={seo.title} description={seo.description} />
-      <Loader active={!reduceMotion && (routeLoading || globalLoadingVisible)} />
+      <Loader active={false} />
       <Navbar />
       <AnimatePresence mode="wait" initial={false}>
         <Suspense fallback={<main className="grid min-h-[60vh] place-items-center"><Spinner label="Loading page" /></main>}>

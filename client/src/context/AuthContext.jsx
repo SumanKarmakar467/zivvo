@@ -1,30 +1,49 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, updateProfile } from "firebase/auth";
+import { useDispatch } from "react-redux";
 import api from "../api/axios";
 import { auth, googleProvider, hasFirebaseConfig } from "../config/firebase";
+import { logout as logoutAction, setCredentials } from "../store/slices/authSlice";
 
 const AuthContext = createContext(null);
+const useFirebaseAuth = hasFirebaseConfig && import.meta.env.VITE_ENABLE_FIREBASE_AUTH === "true";
+
+const getDisplayNameFromEmail = (email) => {
+  const name = String(email || "").split("@")[0].replace(/[._-]+/g, " ").trim();
+  return name ? name.replace(/\b\w/g, (letter) => letter.toUpperCase()) : "Zivvo Member";
+};
 
 export function AuthProvider({ children }) {
+  const dispatch = useDispatch();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const persistUser = (authUser, accessToken = null) => {
+    const isDemoSession = !accessToken;
+    setUser(authUser);
+    if (isDemoSession) localStorage.setItem("zivvo-demo-user", JSON.stringify(authUser));
+    else localStorage.removeItem("zivvo-demo-user");
+    dispatch(setCredentials({ user: authUser, accessToken, isDemoSession }));
+    return authUser;
+  };
 
   const register = async ({ name, email, password }) => {
     setLoading(true);
     try {
-      if (hasFirebaseConfig) {
-        const credential = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(credential.user, { displayName: name });
+      if (useFirebaseAuth) {
+        try {
+          const credential = await createUserWithEmailAndPassword(auth, email, password);
+          await updateProfile(credential.user, { displayName: name });
+        } catch (error) {
+          console.warn("Firebase email registration skipped:", error.code || error.message);
+        }
       }
       try {
         const { data } = await api.post("/auth/register", { name, email, password });
-        setUser(data.user);
-        return data.user;
+        return persistUser(data.user, data.accessToken);
       } catch {
         const demoUser = { name: name || "Zivvo Member", email, role: "user" };
-        setUser(demoUser);
-        localStorage.setItem("zivvo-demo-user", JSON.stringify(demoUser));
-        return demoUser;
+        return persistUser(demoUser);
       }
     } finally {
       setLoading(false);
@@ -34,16 +53,19 @@ export function AuthProvider({ children }) {
   const login = async ({ email, password }) => {
     setLoading(true);
     try {
-      if (hasFirebaseConfig) await signInWithEmailAndPassword(auth, email, password);
+      if (useFirebaseAuth) {
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+          console.warn("Firebase email login skipped:", error.code || error.message);
+        }
+      }
       try {
         const { data } = await api.post("/auth/login", { email, password });
-        setUser(data.user);
-        return data.user;
+        return persistUser(data.user, data.accessToken);
       } catch {
-        const demoUser = { name: "Zivvo Member", email, role: "user" };
-        setUser(demoUser);
-        localStorage.setItem("zivvo-demo-user", JSON.stringify(demoUser));
-        return demoUser;
+        const demoUser = { name: getDisplayNameFromEmail(email), email, role: "user" };
+        return persistUser(demoUser);
       }
     } finally {
       setLoading(false);
@@ -51,20 +73,35 @@ export function AuthProvider({ children }) {
   };
 
   const googleLogin = async () => {
-    if (!hasFirebaseConfig) throw new Error("Firebase is not configured");
     setLoading(true);
     try {
+      if (!useFirebaseAuth) {
+        return persistUser({ name: "Google Demo User", email: "google.demo@zivvo.local", role: "user" });
+      }
       const credential = await signInWithPopup(auth, googleProvider);
       const idToken = await credential.user.getIdToken();
       const { data } = await api.post("/auth/google", { idToken });
-      setUser(data.user);
-      return data.user;
+      return persistUser(data.user, data.accessToken);
+    } catch (error) {
+      console.warn("Google login using local demo fallback:", error.code || error.message);
+      return persistUser({ name: "Google Demo User", email: "google.demo@zivvo.local", role: "user" });
     } finally {
       setLoading(false);
     }
   };
+  
+  const logout = async () => {
+    setLoading(true);
+    try {
+      await api.post("/auth/logout").catch(() => null);
+    } finally {
+      setUser(null);
+      dispatch(logoutAction());
+      setLoading(false);
+    }
+  };
 
-  const value = useMemo(() => ({ user, loading, register, login, googleLogin, setUser }), [user, loading]);
+  const value = useMemo(() => ({ user, loading, register, login, googleLogin, logout, setUser }), [user, loading]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

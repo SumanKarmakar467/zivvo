@@ -4,6 +4,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import mongoSanitize from "express-mongo-sanitize";
 import cookieParser from "cookie-parser";
+import healthRoutes from "./routes/health.js";
 import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
@@ -40,13 +41,17 @@ const allowedOrigins = [
   process.env.CLIENT_URL,
   ...envOrigins,
   "http://localhost:5173",
-  "http://127.0.0.1:5173"
+  "http://127.0.0.1:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:5174"
 ].filter(Boolean);
+
+const isAllowedLocalDevOrigin = (origin) => /^http:\/\/(localhost|127\.0\.0\.1):517\d$/.test(origin);
 
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(origin) || isAllowedLocalDevOrigin(origin)) {
         return callback(null, true);
       }
       return callback(new Error(`CORS blocked for origin: ${origin}`));
@@ -57,6 +62,7 @@ app.use(
 
 app.use(helmet());
 app.use(mongoSanitize());
+app.use("/api/health", healthRoutes);
 
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -81,10 +87,6 @@ app.use("/api/webhooks/razorpay", express.raw({ type: "application/json" }), web
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
-app.get("/api/health", (req, res) => {
-  res.status(200).json({ success: true, message: "Zivvo API is running" });
-});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/search", searchRoutes);

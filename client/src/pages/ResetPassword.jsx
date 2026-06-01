@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { Eye, EyeOff, Wand2 } from "lucide-react";
 import { useResetPasswordMutation } from "../services/authApi";
+
+const createPassword = () => {
+  const chars = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%";
+  const seed = ["Z", "7", "!"];
+  while (seed.length < 14) seed.push(chars[Math.floor(Math.random() * chars.length)]);
+  return seed.sort(() => Math.random() - 0.5).join("");
+};
 
 export default function ResetPassword() {
   const { token } = useParams();
@@ -8,6 +16,7 @@ export default function ResetPassword() {
   const [form, setForm] = useState({ newPassword: "", confirmPassword: "" });
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [resetPassword, { isLoading }] = useResetPasswordMutation();
 
   const onSubmit = async (e) => {
@@ -34,8 +43,23 @@ export default function ResetPassword() {
         <p className="mt-2 text-sm text-zinc-400">Set a new password for your account.</p>
 
         <form onSubmit={onSubmit} className="mt-5 space-y-4">
-          <input type="password" value={form.newPassword} onChange={(e) => setForm({ ...form, newPassword: e.target.value })} placeholder="New Password" className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2" required />
-          <input type="password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} placeholder="Confirm Password" className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2" required />
+          <div>
+            <div className="relative">
+              <input type={showPassword ? "text" : "password"} value={form.newPassword} onChange={(e) => setForm({ ...form, newPassword: e.target.value })} placeholder="New Password" className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 pr-24" autoComplete="new-password" required />
+              <button type="button" onClick={() => setShowPassword((value) => !value)} className="absolute right-3 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-white" aria-label={showPassword ? "Hide password" : "Show password"}>
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+              <button type="button" onClick={() => {
+                const password = createPassword();
+                setForm({ newPassword: password, confirmPassword: password });
+                setShowPassword(true);
+              }} className="absolute right-12 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-[#ef9f27]" aria-label="Create strong password">
+                <Wand2 className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-zinc-400">Use at least 8 characters, 1 uppercase letter, and 1 number.</p>
+          </div>
+          <input type={showPassword ? "text" : "password"} value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} placeholder="Confirm Password" className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2" autoComplete="new-password" required />
           <button disabled={isLoading} className="w-full rounded-lg bg-[#ef9f27] px-4 py-2 font-semibold text-black">{isLoading ? "Resetting..." : "Reset Password"}</button>
         </form>
 

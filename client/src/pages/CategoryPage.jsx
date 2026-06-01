@@ -1,13 +1,27 @@
-import { Link, useParams } from "react-router-dom";
-import { SlidersHorizontal, Star } from "lucide-react";
-import { getCategoryBySlug, getProductsByCategory } from "../data/cosmicCatalog";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Layers3, SlidersHorizontal, Star } from "lucide-react";
+import {
+  getBrandsByCategoryAndSubcategory,
+  getCategoryBySlug,
+  getProductsByCategory,
+  getProductsByCategorySubcategoryAndBrand,
+  getSubcategoriesByCategory
+} from "../data/cosmicCatalog";
 import { useCartContext } from "../context/CartContext";
 
 export default function CategoryPage() {
   const { slug } = useParams();
+  const [searchParams] = useSearchParams();
   const category = getCategoryBySlug(slug);
   const { addItem } = useCartContext();
-  const visibleProducts = getProductsByCategory(category.slug);
+  const selectedType = searchParams.get("type") || "";
+  const selectedBrand = searchParams.get("brand") || "";
+  const productTypes = getSubcategoriesByCategory(category.slug);
+  const brands = selectedType ? getBrandsByCategoryAndSubcategory(category.slug, selectedType) : [];
+  const visibleProducts = selectedType || selectedBrand
+    ? getProductsByCategorySubcategoryAndBrand(category.slug, selectedType, selectedBrand)
+    : getProductsByCategory(category.slug);
+  const heroChips = productTypes.slice(0, 7);
 
   return (
     <main className="cosmic-container py-10 lg:py-14">
@@ -15,21 +29,63 @@ export default function CategoryPage() {
         <div className="p-6 md:p-10 lg:p-12">
           <p className="text-label-caps font-bold uppercase tracking-[0.16em] text-neon-cyan">{category.eyebrow}</p>
           <h1 className="cosmic-title mt-4 max-w-2xl text-5xl leading-tight md:text-6xl lg:text-7xl">
-            {category.name === "Electronics" ? "Electronics & Gadgets" : category.name}
+            {selectedBrand ? `${selectedBrand} ${selectedType}` : selectedType || (category.name === "Electronics" ? "Electronics & Gadgets" : category.name)}
           </h1>
           <p className="mt-5 max-w-xl text-body-lg text-on-surface-variant">
-            Curated next-generation hardware, everyday luxury, and high-signal products for the digital elite.
+            Choose a product type first, then pick a company to browse focused products with premium images and quick actions.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            {["iPhone 15 Pro", "Sony XM5", "MacBook Air", "Vision Glass"].map((chip) => (
-              <button key={chip} type="button" className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-on-surface">
+            {heroChips.map((chip) => (
+              <Link key={chip} to={`/category/${category.slug}?type=${encodeURIComponent(chip)}`} className={`rounded-full border px-4 py-2 text-sm font-semibold ${selectedType === chip ? "border-neon-cyan bg-neon-cyan/15 text-neon-cyan" : "border-white/10 bg-white/5 text-on-surface"}`}>
                 {chip}
-              </button>
+              </Link>
             ))}
           </div>
         </div>
         <div className="min-h-[280px] overflow-hidden">
           <img src={category.image} alt={category.name} className="h-full min-h-[280px] w-full object-cover opacity-80" />
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <p className="text-label-caps font-bold uppercase tracking-[0.14em] text-neon-cyan">Shop Path</p>
+            <h2 className="cosmic-title mt-1 text-3xl">{selectedType ? `Choose a ${selectedType} company` : "Choose product type"}</h2>
+          </div>
+          {(selectedType || selectedBrand) && (
+            <Link to={`/category/${category.slug}`} className="text-sm font-bold uppercase tracking-[0.12em] text-neon-cyan">
+              Reset
+            </Link>
+          )}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          {!selectedType && productTypes.map((productType) => (
+            <Link
+              key={productType}
+              to={`/category/${category.slug}?type=${encodeURIComponent(productType)}`}
+              className="glass-card flex min-h-24 items-center justify-between rounded-2xl p-4 transition hover:-translate-y-1 hover:shadow-cyan"
+            >
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-outline">{category.name}</p>
+                <h3 className="cosmic-title mt-1 text-xl">{productType}</h3>
+              </div>
+              <Layers3 className="h-5 w-5 text-neon-cyan" />
+            </Link>
+          ))}
+          {selectedType && brands.map((brand) => (
+            <Link
+              key={brand}
+              to={`/category/${category.slug}?type=${encodeURIComponent(selectedType)}&brand=${encodeURIComponent(brand)}`}
+              className={`glass-card flex min-h-24 items-center justify-between rounded-2xl p-4 transition hover:-translate-y-1 hover:shadow-cyan ${selectedBrand === brand ? "border-neon-cyan bg-neon-cyan/10" : ""}`}
+            >
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-outline">{selectedType}</p>
+                <h3 className="cosmic-title mt-1 text-xl">{brand}</h3>
+              </div>
+              <Layers3 className="h-5 w-5 text-neon-cyan" />
+            </Link>
+          ))}
         </div>
       </section>
 
@@ -47,13 +103,19 @@ export default function CategoryPage() {
                 <span>$5000+</span>
               </div>
             </FilterGroup>
-            <FilterGroup title="Brands">
+            <FilterGroup title={selectedType ? "Companies" : "Product Types"}>
               <div className="flex flex-wrap gap-2">
-                {["Apple", "Sony", "Samsung", "Bose"].map((brand, index) => (
-                  <button key={brand} className={`rounded-full border px-4 py-2 text-sm ${index === 0 ? "border-neon-cyan bg-neon-cyan/10 text-neon-cyan" : "border-white/10 bg-white/5"}`}>
-                    {brand}
-                  </button>
+                {(selectedType ? brands : productTypes).slice(0, 8).map((item) => (
+                  <Link key={item} to={selectedType ? `/category/${category.slug}?type=${encodeURIComponent(selectedType)}&brand=${encodeURIComponent(item)}` : `/category/${category.slug}?type=${encodeURIComponent(item)}`} className={`rounded-full border px-4 py-2 text-sm ${(selectedBrand === item || selectedType === item) ? "border-neon-cyan bg-neon-cyan/10 text-neon-cyan" : "border-white/10 bg-white/5"}`}>
+                    {item}
+                  </Link>
                 ))}
+                {selectedType && brands.length === 0 && (
+                  <span className="text-sm text-on-surface-variant">Choose a product type to see companies.</span>
+                )}
+                {!selectedType && (
+                  <span className="basis-full text-xs uppercase tracking-[0.12em] text-outline">Select a type before company</span>
+                )}
               </div>
             </FilterGroup>
             <FilterGroup title="Availability">
@@ -72,7 +134,7 @@ export default function CategoryPage() {
           <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="cosmic-title text-3xl">Available Gear</h2>
-              <p className="mt-1 text-on-surface-variant">{visibleProducts.length} related items</p>
+              <p className="mt-1 text-on-surface-variant">{visibleProducts.length} {selectedBrand || selectedType || category.name.toLowerCase()} related items</p>
             </div>
             <button className="inline-flex items-center gap-2 text-label-caps font-bold uppercase tracking-[0.14em] text-neon-cyan lg:hidden">
               <SlidersHorizontal className="h-4 w-4" /> Filter

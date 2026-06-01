@@ -12,7 +12,14 @@ export const protect = asyncHandler(async (req, res, next) => {
   }
 
   const token = authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : cookieToken;
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  let decoded;
+
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (error) {
+    res.status(401);
+    throw new Error("Not authorized, invalid or expired token");
+  }
 
   const user = await User.findById(decoded.id).select("-passwordHash -refreshToken");
   if (!user) {

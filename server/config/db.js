@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 
 const connectDB = async () => {
-  const uri = process.env.MONGO_URI;
+  const uri = process.env.MONGO_URI || process.env.MONGODB_URI;
 
   if (!uri) {
-    throw new Error("MONGO_URI is not defined in environment variables");
+    throw new Error("MONGO_URI or MONGODB_URI is not defined in environment variables");
   }
 
   try {
@@ -20,7 +20,7 @@ const connectDB = async () => {
     const details = [
       "Unable to connect to MongoDB Atlas.",
       "Check that your current public IP is allowed in Atlas Network Access.",
-      "Also verify that your MongoDB username/password are correct and URL-encoded in MONGO_URI.",
+      "Also verify that your MongoDB username/password are correct and URL-encoded in MONGO_URI or MONGODB_URI.",
       "If you are on a restricted network, allow outbound TCP traffic to port 27017 or try another network/VPN."
     ];
 

@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Camera, LogOut, Mail, MapPin, Phone, Plus, Save, Trash2, User } from "lucide-react";
-import { logout } from "../store/slices/authSlice";
 import { useAuthContext } from "../context/AuthContext";
 
 const STORAGE_KEY = "zivvo_profile";
@@ -34,9 +33,19 @@ const readProfile = () => {
 export default function Profile() {
   const [profile, setProfile] = useState(readProfile);
   const [draftAddress, setDraftAddress] = useState({ label: "", line: "", city: "", pin: "" });
-  const dispatch = useDispatch();
+  const authUser = useSelector((state) => state.auth.user);
   const navigate = useNavigate();
-  const { setUser } = useAuthContext();
+  const { logout } = useAuthContext();
+
+  useEffect(() => {
+    if (!authUser) return;
+    setProfile((current) => ({
+      ...current,
+      name: authUser.name || current.name || defaultProfile.name,
+      email: authUser.email || current.email || defaultProfile.email,
+      avatar: authUser.avatar || current.avatar || ""
+    }));
+  }, [authUser]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
@@ -65,9 +74,8 @@ export default function Profile() {
 
   const deleteContact = (field) => updateField(field, "");
 
-  const handleLogout = () => {
-    dispatch(logout());
-    setUser(null);
+  const handleLogout = async () => {
+    await logout();
     navigate("/login");
   };
 

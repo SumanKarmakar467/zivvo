@@ -1,4 +1,5 @@
 import "dotenv/config";
+import crypto from "crypto";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
@@ -62,13 +63,22 @@ const categorySeed = [
   { name: "Toys", icon: "🎮" }
 ];
 
+const createSeedPassword = () => {
+  if (process.env.SEED_ADMIN_PASSWORD) {
+    return { password: process.env.SEED_ADMIN_PASSWORD, generated: false };
+  }
+
+  return { password: `${crypto.randomBytes(18).toString("base64url")}A1!`, generated: true };
+};
+
 const runSeed = async () => {
   try {
-    if (!process.env.MONGO_URI) {
-      throw new Error("MONGO_URI is not set in environment variables.");
+    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+    if (!mongoUri) {
+      throw new Error("MONGO_URI or MONGODB_URI is not set in environment variables.");
     }
 
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(mongoUri);
     console.log("Connected to MongoDB");
 
     await Promise.all([
@@ -91,9 +101,10 @@ const runSeed = async () => {
     );
     console.log(`Inserted categories: ${insertedCategories.length}`);
 
-    const hashAdmin = await bcrypt.hash("Admin@123", 10);
-    const hashSeller = await bcrypt.hash("Seller@123", 10);
-    const hashUser = await bcrypt.hash("User@123", 10);
+    const seedPassword = createSeedPassword();
+    const hashAdmin = await bcrypt.hash(seedPassword.password, 10);
+    const hashSeller = await bcrypt.hash(seedPassword.password, 10);
+    const hashUser = await bcrypt.hash(seedPassword.password, 10);
 
     const insertedUsers = await User.insertMany([
       {
@@ -212,6 +223,11 @@ const runSeed = async () => {
     console.log(`Inserted coupons: ${insertedCoupons.length}`);
 
     console.log("Seeding completed successfully.");
+    if (seedPassword.generated) {
+      console.log(`Generated demo password: ${seedPassword.password}`);
+    } else {
+      console.log("Demo password: value from SEED_ADMIN_PASSWORD");
+    }
     process.exit(0);
   } catch (error) {
     console.error("Seed failed:", error.message);

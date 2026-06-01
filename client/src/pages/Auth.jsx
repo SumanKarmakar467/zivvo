@@ -5,26 +5,34 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
-import { Gift, LogIn, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Gift, KeyRound, LogIn, Sparkles, Wand2 } from "lucide-react";
 import { useAuthContext } from "../context/AuthContext";
 
 const schema = z.object({
   name: z.string().optional(),
   email: z.string().email("Enter a valid email"),
-  password: z.string().min(8, "Use at least 8 characters")
+  password: z.string().regex(/^(?=.*[A-Z])(?=.*\d).{8,}$/, "Use 8+ characters with 1 uppercase letter and 1 number")
 });
+
+const createPassword = () => {
+  const chars = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%";
+  const seed = ["Z", "7", "!"];
+  while (seed.length < 14) seed.push(chars[Math.floor(Math.random() * chars.length)]);
+  return seed.sort(() => Math.random() - 0.5).join("");
+};
 
 export default function Auth({ mode = "login" }) {
   const isRegister = mode === "register";
   const navigate = useNavigate();
   const { login, register, googleLogin, loading } = useAuthContext();
   const [showCoupon, setShowCoupon] = useState(false);
-  const { register: field, handleSubmit, formState: { errors } } = useForm({ resolver: zodResolver(schema) });
+  const [showPassword, setShowPassword] = useState(false);
+  const { register: field, handleSubmit, setValue, formState: { errors } } = useForm({ resolver: zodResolver(schema) });
 
   const completeLogin = () => {
     localStorage.setItem("zivvo_first_login_coupon", "shown");
-    setShowCoupon(true);
-    window.setTimeout(() => navigate("/?welcome=1"), 2600);
+    setShowCoupon(false);
+    navigate("/profile", { replace: true });
   };
 
   const submit = async (values) => {
@@ -49,15 +57,18 @@ export default function Auth({ mode = "login" }) {
   };
 
   return (
-    <main className="cosmic-container grid min-h-[calc(100vh-5rem)] items-center gap-8 py-10 lg:grid-cols-[1fr_0.9fr]">
-      <section>
+    <main className="auth-page cosmic-container grid min-h-[calc(100vh-5rem)] items-center gap-8 py-10 lg:grid-cols-[1fr_0.9fr]">
+      <section className="auth-copy">
         <p className="text-label-caps font-bold uppercase tracking-[0.18em] text-neon-cyan">Member Access</p>
         <h1 className="cosmic-title mt-4 text-5xl leading-tight md:text-7xl">
-          Login to unlock <span className="gradient-text">cosmic rewards.</span>
+          {isRegister ? "Create your" : "Open your"} <span className="gradient-text">ZIVVO vault.</span>
         </h1>
         <p className="mt-5 max-w-xl text-body-lg text-on-surface-variant">
-          First-time members receive an animated welcome coupon, saved cart access, profile controls, and faster checkout.
+          {isRegister
+            ? "Create your key to ZIVVO rewards, saved carts, profile controls, and faster checkout."
+            : "Use your key to open ZIVVO rewards, saved cart access, profile controls, and faster checkout."}
         </p>
+        <AuthAnimation mode={mode} />
         <div className="mt-8 grid max-w-xl gap-4 sm:grid-cols-3">
           {["ZIVVO10", "Free delivery", "Elite drops"].map((item) => (
             <div key={item} className="glass-card rounded-2xl p-4 text-center">
@@ -68,19 +79,45 @@ export default function Auth({ mode = "login" }) {
         </div>
       </section>
 
-      <motion.section initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", damping: 22 }} className="glass-card rounded-[2rem] p-6 md:p-8">
+      <motion.section initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", damping: 22 }} className="auth-form-card glass-card rounded-[2rem] p-6 md:p-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <p className="text-label-caps font-bold uppercase tracking-[0.16em] text-neon-cyan">{isRegister ? "Create Account" : "Sign In"}</p>
             <h2 className="cosmic-title mt-2 text-4xl">{isRegister ? "Join ZIVVO" : "Welcome Back"}</h2>
           </div>
-          <LogIn className="h-8 w-8 text-primary" />
+          {isRegister ? <KeyRound className="h-8 w-8 text-primary" /> : <LogIn className="h-8 w-8 text-primary" />}
         </div>
 
         <form onSubmit={handleSubmit(submit)} className="grid gap-4">
           {isRegister && <Field label="Name" error={errors.name?.message}><input {...field("name")} className="input-cosmic px-4" /></Field>}
           <Field label="Email" error={errors.email?.message}><input {...field("email")} type="email" className="input-cosmic px-4" /></Field>
-          <Field label="Password" error={errors.password?.message}><input {...field("password")} type="password" className="input-cosmic px-4" /></Field>
+          <Field label="Password" error={errors.password?.message}>
+            <div className="relative">
+              <input {...field("password")} type={showPassword ? "text" : "password"} className="input-cosmic w-full px-4 pr-24" autoComplete={isRegister ? "new-password" : "current-password"} />
+              <button
+                type="button"
+                onClick={() => setShowPassword((value) => !value)}
+                className="absolute right-3 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-white/10 hover:text-neon-cyan"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+              {isRegister && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValue("password", createPassword(), { shouldDirty: true, shouldValidate: true });
+                    setShowPassword(true);
+                  }}
+                  className="absolute right-14 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-white/10 hover:text-stellar-gold"
+                  aria-label="Create strong password"
+                >
+                  <Wand2 className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <span className="text-xs font-medium text-on-surface-variant">Use at least 8 characters, 1 uppercase letter, and 1 number.</span>
+          </Field>
           <button disabled={loading || showCoupon} className="btn-primary w-full px-5 disabled:opacity-60">
             {loading ? "Please wait..." : isRegister ? "Create Account" : "Login"}
           </button>
@@ -97,6 +134,42 @@ export default function Auth({ mode = "login" }) {
 
       {showCoupon && <CouponCelebration />}
     </main>
+  );
+}
+
+function AuthAnimation({ mode }) {
+  const isRegister = mode === "register";
+  return (
+    <div className={`auth-anim-card ${isRegister ? "auth-anim-register" : "auth-anim-login"}`} aria-hidden="true">
+      <div className="auth-anim-grid" />
+      <div className="auth-vault-ring auth-vault-ring-one" />
+      <div className="auth-vault-ring auth-vault-ring-two" />
+      <div className="auth-energy-beam" />
+      <div className="auth-gate">
+        <span className="auth-gate-light" />
+        <span className="auth-gate-lock" />
+      </div>
+      <div className="auth-key">
+        <span className="auth-key-ring" />
+        <span className="auth-key-stem" />
+        <span className="auth-key-tooth auth-key-tooth-one" />
+        <span className="auth-key-tooth auth-key-tooth-two" />
+      </div>
+      <div className="auth-human">
+        <span className="auth-human-head" />
+        <span className="auth-human-body" />
+        <span className="auth-human-arm auth-human-arm-left" />
+        <span className="auth-human-arm auth-human-arm-right" />
+        <span className="auth-human-leg auth-human-leg-left" />
+        <span className="auth-human-leg auth-human-leg-right" />
+      </div>
+      <div className="auth-sparks">
+        {Array.from({ length: 8 }).map((_, index) => <span key={index} style={{ "--spark": index }} />)}
+      </div>
+      <div className="auth-floating-chip auth-floating-chip-one">{isRegister ? "Key Forge" : "Access Scan"}</div>
+      <div className="auth-floating-chip auth-floating-chip-two">{isRegister ? "Profile Ready" : "Cart Restored"}</div>
+      <p className="auth-anim-caption">{isRegister ? "Crafting your access key" : "Opening your reward gate"}</p>
+    </div>
   );
 }
 

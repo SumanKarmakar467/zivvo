@@ -99,6 +99,13 @@ Zivvo is a full-stack e-commerce web application built for the Indian market, co
 
 ### Environment Variables
 
+Copy the example files:
+
+```bash
+cp client/.env.example client/.env
+cp server/.env.example server/.env
+```
+
 Create `client/.env`:
 
 ```env
@@ -152,14 +159,9 @@ The client runs on `http://localhost:5173` and proxies API requests to the backe
 npm run seed --prefix server
 ```
 
-Seed credentials:
-
-| Role | Email | Password |
-|---|---|---|
-| Buyer | buyer@zivvo.com | Test@1234 |
-| Seller | seller@zivvo.com | Test@1234 |
-| Seller 2 | seller2@zivvo.com | Test@1234 |
-| Admin | admin@zivvo.com | Test@1234 |
+## Credentials (after seed)
+After running `npm run seed`, check the terminal output for the generated demo credentials,
+or refer to `server/seed.js` directly. Do not commit real credentials to this file.
 
 ---
 

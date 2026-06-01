@@ -25,7 +25,7 @@ createRoot(document.getElementById("root")).render(
             <AuthProvider>
               <CartProvider>
                 <SocketProvider>
-                  <BrowserRouter>
+                  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                     <AnimatePresence mode="wait" initial={false}>
                       <App />
                     </AnimatePresence>

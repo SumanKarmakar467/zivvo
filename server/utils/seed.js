@@ -1,4 +1,5 @@
-﻿import "dotenv/config";
+import "dotenv/config";
+import crypto from "crypto";
 import mongoose from "mongoose";
 import connectDB from "../config/db.js";
 import User from "../models/User.js";
@@ -7,14 +8,24 @@ import Product from "../models/Product.js";
 import Coupon from "../models/Coupon.js";
 import slugify from "slugify";
 
+const createSeedPassword = () => {
+  if (process.env.SEED_ADMIN_PASSWORD) {
+    return { password: process.env.SEED_ADMIN_PASSWORD, generated: false };
+  }
+
+  return { password: `${crypto.randomBytes(18).toString("base64url")}A1!`, generated: true };
+};
+
 const seed = async () => {
   await connectDB();
   await Promise.all([User.deleteMany({}), Category.deleteMany({}), Product.deleteMany({}), Coupon.deleteMany({})]);
 
+  const seedPassword = createSeedPassword();
+  const passwordHash = await User.hashPassword(seedPassword.password);
   const [admin, seller1, seller2] = await User.create([
-    { name: "Admin", email: "admin@shoppop.com", password: "Admin@123", role: "admin", isVerified: true },
-    { name: "Seller One", email: "seller1@shoppop.com", password: "Seller@123", role: "seller", isVerified: true },
-    { name: "Seller Two", email: "seller2@shoppop.com", password: "Seller@123", role: "seller", isVerified: true }
+    { name: "Admin", email: "admin@shoppop.com", passwordHash, role: "admin", isVerified: true },
+    { name: "Seller One", email: "seller1@shoppop.com", passwordHash, role: "seller", isVerified: true },
+    { name: "Seller Two", email: "seller2@shoppop.com", passwordHash, role: "seller", isVerified: true }
   ]);
 
   const categoryNames = ["Electronics", "Fashion", "Home & Kitchen", "Beauty", "Sports", "Books", "Toys", "Grocery"];
@@ -49,8 +60,15 @@ const seed = async () => {
   ]);
 
   console.log("Seed completed");
+  if (seedPassword.generated) {
+    console.log(`Generated demo password: ${seedPassword.password}`);
+  } else {
+    console.log("Demo password: value from SEED_ADMIN_PASSWORD");
+  }
+  console.log(`Admin: ${admin.email}`);
+  console.log(`Seller: ${seller1.email}`);
+  console.log(`Seller2: ${seller2.email}`);
   await mongoose.connection.close();
 };
 
 seed();
-
