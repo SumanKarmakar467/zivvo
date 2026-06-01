@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
 import api from "../api/axios";
 import { useCartContext } from "../context/CartContext";
+import { clearCart as clearReduxCart } from "../store/slices/cartSlice";
 
 const steps = ["Address", "Payment", "Confirm"];
 
 export default function Checkout() {
   const [step, setStep] = useState(0);
   const [paid, setPaid] = useState(false);
+  const dispatch = useDispatch();
   const { items, totals, clearCart } = useCartContext();
 
   const pay = async () => {
@@ -19,6 +22,7 @@ export default function Checkout() {
     }
     setPaid(true);
     clearCart();
+    dispatch(clearReduxCart());
     toast.success("Order confirmed and email queued");
   };
 

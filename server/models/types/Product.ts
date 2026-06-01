@@ -7,6 +7,14 @@ export interface IProductVariant {
   isActive: boolean;
 }
 
+export interface IProductReview {
+  userId: string;
+  userName: string;
+  rating: number;
+  comment?: string;
+  createdAt: Date;
+}
+
 export interface IProduct {
   _id: string;
   name: string;
@@ -26,7 +34,9 @@ export interface IProduct {
   rating: number;
   numReviews: number;
   averageRating: number;
+  totalReviews: number;
   reviewCount: number;
+  reviews: IProductReview[];
   specs: Record<string, string>;
   tags: string[];
   variants: IProductVariant[];

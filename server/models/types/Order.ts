@@ -1,4 +1,5 @@
-export type OrderStatus = "placed" | "confirmed" | "processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled" | "return_requested" | "returned";
+export type OrderStatus = "payment_pending" | "payment_confirmed" | "placed" | "confirmed" | "processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled" | "return_requested" | "returned";
+export type OrderTrackingStatus = "payment_pending" | "payment_confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
 
 export interface IOrderItem {
   product: string;
@@ -40,6 +41,7 @@ export interface IOrder {
   razorpayPaymentId: string;
   razorpaySignature: string;
   orderStatus: OrderStatus;
+  status: OrderTrackingStatus;
   statusHistory: IOrderStatusHistory[];
   subtotal: number;
   discount: number;

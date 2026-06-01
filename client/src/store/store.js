@@ -1,4 +1,15 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import {
+  FLUSH,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+  REHYDRATE,
+  persistReducer,
+  persistStore
+} from "redux-persist";
+import storage from "redux-persist/lib/storage";
 import auth from "./slices/authSlice";
 import cart from "./slices/cartSlice";
 import uiReducer from "./uiSlice";
@@ -19,30 +30,42 @@ import { productsApi } from "./api/productsApi";
 import { sellerApi } from "./api/sellerApi";
 import { adminApi } from "./api/adminApi";
 
+const cartPersistConfig = {
+  key: "cart",
+  storage,
+  whitelist: ["items", "totalAmount", "totalItems", "total", "itemCount", "subtotal", "shipping", "couponDiscount"]
+};
+
+const rootReducer = combineReducers({
+  auth,
+  cart: persistReducer(cartPersistConfig, cart),
+  ui: uiReducer,
+  product,
+  order,
+  wishlist: wishlistReducer,
+  search,
+  orders,
+  analytics,
+  notifications,
+  address,
+  [authApi.reducerPath]: authApi.reducer,
+  [productApi.reducerPath]: productApi.reducer,
+  [orderApi.reducerPath]: orderApi.reducer,
+  [cartApi.reducerPath]: cartApi.reducer,
+  [paymentApi.reducerPath]: paymentApi.reducer,
+  [productsApi.reducerPath]: productsApi.reducer,
+  [sellerApi.reducerPath]: sellerApi.reducer,
+  [adminApi.reducerPath]: adminApi.reducer
+});
+
 export const store = configureStore({
-  reducer: {
-    auth,
-    cart,
-    ui: uiReducer,
-    product,
-    order,
-    wishlist: wishlistReducer,
-    search,
-    orders,
-    analytics,
-    notifications,
-    address,
-    [authApi.reducerPath]: authApi.reducer,
-    [productApi.reducerPath]: productApi.reducer,
-    [orderApi.reducerPath]: orderApi.reducer,
-    [cartApi.reducerPath]: cartApi.reducer,
-    [paymentApi.reducerPath]: paymentApi.reducer,
-    [productsApi.reducerPath]: productsApi.reducer,
-    [sellerApi.reducerPath]: sellerApi.reducer,
-    [adminApi.reducerPath]: adminApi.reducer
-  },
+  reducer: rootReducer,
   middleware: (gDM) =>
-    gDM().concat(
+    gDM({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER]
+      }
+    }).concat(
       authApi.middleware,
       productApi.middleware,
       orderApi.middleware,
@@ -53,3 +76,5 @@ export const store = configureStore({
       adminApi.middleware
     )
 });
+
+export const persistor = persistStore(store);

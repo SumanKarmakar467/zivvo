@@ -40,8 +40,9 @@ export default function OrderTracking() {
   };
 
   const copyAwb = async () => {
-    if (!order?.awbNumber) return;
-    await navigator.clipboard.writeText(order.awbNumber);
+    const value = order?.trackingNumber || order?.awbNumber;
+    if (!value) return;
+    await navigator.clipboard.writeText(value);
     notifySuccess("Tracking number copied");
   };
 
@@ -62,7 +63,9 @@ export default function OrderTracking() {
 
   if (!order) return <PageTransition><div className="p-6 text-zivvo-text-muted">Order not found.</div></PageTransition>;
 
-  const canCancel = ["placed", "confirmed"].includes(order.orderStatus);
+  const currentStatus = order.status || order.orderStatus;
+  const trackingNumber = order.trackingNumber || order.awbNumber;
+  const canCancel = ["payment_pending", "placed", "confirmed"].includes(currentStatus);
 
   return (
     <PageTransition>
@@ -71,7 +74,7 @@ export default function OrderTracking() {
           <h1 className="text-2xl font-bold">Order Detail</h1>
           <p className="mt-1 text-xs text-zivvo-text-soft">Order ID: {order._id}</p>
           <div className="mt-6">
-            <OrderTimeline statusHistory={order.statusHistory || []} currentStatus={order.orderStatus} />
+            <OrderTimeline statusHistory={order.statusHistory || []} currentStatus={currentStatus} />
           </div>
           <div className="mt-6">
             {returnRequest ? <ReturnStatusTimeline request={returnRequest} /> : <ReturnRequestForm order={order} onSubmitted={loadReturnRequest} />}
@@ -85,11 +88,11 @@ export default function OrderTracking() {
               {order.shippingAddress?.fullName}, {order.shippingAddress?.phone}, {order.shippingAddress?.addressLine1}, {order.shippingAddress?.addressLine2}, {order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}
             </p>
 
-            {order.awbNumber && (
+            {trackingNumber && (
               <div className="mt-4 rounded-lg border border-zinc-700 bg-zinc-900 p-3 text-sm">
                 <p>Courier: <span className="font-semibold">{order.courierName || "N/A"}</span></p>
                 <div className="mt-1 flex items-center gap-2">
-                  <p>Tracking: <span className="font-semibold">{order.awbNumber}</span></p>
+                  <p>Tracking: <span className="font-semibold">{trackingNumber}</span></p>
                   <button type="button" onClick={copyAwb} className="rounded border border-zinc-600 px-2 py-0.5 text-xs">Copy</button>
                 </div>
                 {order.estimatedDelivery && <p className="mt-1 text-zivvo-text-soft">Expected by {new Date(order.estimatedDelivery).toLocaleDateString()}</p>}

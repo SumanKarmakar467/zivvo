@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
 import { BrowserRouter } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { Toaster } from "react-hot-toast";
@@ -8,7 +9,7 @@ import { HelmetProvider } from "react-helmet-async";
 import "swiper/css";
 import "./index.css";
 import App from "./App";
-import { store } from "./store/store";
+import { persistor, store } from "./store/store";
 import { ToastViewport } from "./components/common/Toast";
 import { ThemeProvider } from "./context/ThemeContext";
 import { SocketProvider } from "./context/SocketContext";
@@ -21,15 +22,16 @@ createRoot(document.getElementById("root")).render(
     <ErrorBoundary>
       <HelmetProvider>
         <Provider store={store}>
-          <ThemeProvider>
-            <AuthProvider>
-              <CartProvider>
-                <SocketProvider>
-                  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                    <AnimatePresence mode="wait" initial={false}>
-                      <App />
-                    </AnimatePresence>
-                    <Toaster
+          <PersistGate loading={null} persistor={persistor}>
+            <ThemeProvider>
+              <AuthProvider>
+                <CartProvider>
+                  <SocketProvider>
+                    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                      <AnimatePresence mode="wait" initial={false}>
+                        <App />
+                      </AnimatePresence>
+                      <Toaster
                   position="top-right"
                   toastOptions={{
                     duration: 3000,
@@ -49,13 +51,14 @@ createRoot(document.getElementById("root")).render(
                       iconTheme: { primary: "#F43F5E", secondary: "#0C0F1A" }
                     }
                   }}
-                    />
-                    <ToastViewport />
-                  </BrowserRouter>
-                </SocketProvider>
-              </CartProvider>
-            </AuthProvider>
-          </ThemeProvider>
+                      />
+                      <ToastViewport />
+                    </BrowserRouter>
+                  </SocketProvider>
+                </CartProvider>
+              </AuthProvider>
+            </ThemeProvider>
+          </PersistGate>
         </Provider>
       </HelmetProvider>
     </ErrorBoundary>

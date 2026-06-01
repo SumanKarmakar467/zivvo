@@ -1,48 +1,32 @@
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import Spinner from "./Spinner";
+import { SearchIcon, X } from "lucide-react";
 
-export default function SearchBar() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [value, setValue] = useState(searchParams.get("q") || "");
-  const [isTyping, setIsTyping] = useState(false);
-
-  useEffect(() => {
-    setValue(searchParams.get("q") || "");
-  }, [searchParams]);
-
-  useEffect(() => {
-    setIsTyping(true);
-    const timer = setTimeout(() => {
-      const params = new URLSearchParams(searchParams);
-      if (value.trim()) params.set("q", value.trim());
-      else params.delete("q");
-      params.set("page", "1");
-      setSearchParams(params, { replace: true });
-      setIsTyping(false);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const onSubmit = (e) => {
-    e.preventDefault();
-    const params = new URLSearchParams(searchParams);
-    if (value.trim()) params.set("q", value.trim());
-    else params.delete("q");
-    params.set("page", "1");
-    setSearchParams(params, { replace: true });
+export default function SearchBar({ value = "", onSearch, isLoading = false, placeholder = "Search products" }) {
+  const handleChange = (event) => {
+    onSearch(event.target.value);
   };
 
   return (
-    <form onSubmit={onSubmit} className="relative w-full">
+    <div className="relative w-full max-w-xl">
+      <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-cyan-300/80" />
       <input
-        type="text"
         value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder="Search products"
-        className="w-full rounded-xl border border-black/10 bg-brand-bg px-3 py-2 pr-10 text-sm font-semibold text-brand-ink outline-none placeholder:text-brand-inkFaint focus:border-[#e8730a] dark:border-night-border dark:bg-night-muted dark:text-white"
+        onChange={handleChange}
+        placeholder={placeholder}
+        className="h-12 w-full rounded-xl border border-violet-500/30 bg-[#05060F]/90 pl-12 pr-20 text-sm text-white outline-none transition placeholder:text-cyan-300/60 focus:border-violet-400 focus:ring-2 focus:ring-violet-600/50"
       />
-      {isTyping && <Spinner label="" className="absolute right-3 top-1/2 -translate-y-1/2" />}
-    </form>
+      <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-2">
+        {isLoading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-cyan-300/30 border-t-cyan-300" />}
+        {value && (
+          <button
+            type="button"
+            onClick={() => onSearch("")}
+            className="grid h-7 w-7 place-items-center rounded-full text-cyan-200 transition hover:bg-violet-500/20 hover:text-white"
+            aria-label="Clear search"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+    </div>
   );
 }

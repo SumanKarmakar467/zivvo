@@ -1,15 +1,16 @@
 export default function ProductCardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zivvo-surface">
-      <div className="skeleton aspect-square w-full" />
-      <div className="space-y-2 p-3">
-        <div className="skeleton h-3 w-1/3 rounded" />
-        <div className="skeleton h-4 w-full rounded" />
-        <div className="skeleton h-3 w-2/3 rounded" />
-        <div className="skeleton h-4 w-1/2 rounded" />
-      </div>
-      <div className="p-3 pt-0">
-        <div className="skeleton h-9 w-full rounded" />
+    <div className="overflow-hidden rounded-lg border border-violet-500/20 bg-[#0B0D1A] shadow-lg shadow-violet-950/20">
+      <div className="aspect-[4/3] w-full animate-pulse bg-violet-950/50" />
+      <div className="space-y-3 p-4">
+        <div className="h-3 w-1/3 animate-pulse rounded bg-cyan-400/10" />
+        <div className="h-4 w-full animate-pulse rounded bg-violet-400/15" />
+        <div className="h-4 w-2/3 animate-pulse rounded bg-violet-400/15" />
+        <div className="h-3 w-28 animate-pulse rounded bg-cyan-400/10" />
+        <div className="flex items-center justify-between">
+          <div className="h-5 w-20 animate-pulse rounded bg-violet-400/20" />
+          <div className="h-10 w-24 animate-pulse rounded-full bg-cyan-400/10" />
+        </div>
       </div>
     </div>
   );

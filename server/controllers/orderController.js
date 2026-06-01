@@ -9,6 +9,15 @@ import { createNotification } from "../utils/notify.js";
 import { recalcTrustScoreAsync } from "../utils/trustScore.js";
 
 const razorpay = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
+const statusAlias = {
+  placed: "payment_pending",
+  confirmed: "payment_confirmed",
+  processing: "processing",
+  shipped: "shipped",
+  out_for_delivery: "shipped",
+  delivered: "delivered",
+  cancelled: "cancelled"
+};
 
 export const getMyOrders = asyncHandler(async (req, res) => {
   const page = Math.max(Number(req.query.page || 1), 1);
@@ -17,7 +26,7 @@ export const getMyOrders = asyncHandler(async (req, res) => {
 
   const filter = { user: req.user._id };
   if (req.query.status) {
-    filter.orderStatus = req.query.status;
+    filter.$or = [{ orderStatus: req.query.status }, { status: req.query.status }];
   }
 
   const [orders, total] = await Promise.all([
@@ -44,7 +53,10 @@ export const getOrderById = asyncHandler(async (req, res) => {
     throw new AppError("Order not found", 404);
   }
 
-  if (String(order.user._id) !== String(req.user._id)) {
+  const isBuyer = String(order.user._id) === String(req.user._id);
+  const isSeller = req.user.role === "seller" && order.items.some((item) => String(item.seller?._id || item.seller) === String(req.user._id));
+  const isAdmin = req.user.role === "admin";
+  if (!isBuyer && !isSeller && !isAdmin) {
     throw new AppError("Forbidden", 403);
   }
 
@@ -68,6 +80,7 @@ export const cancelOrder = asyncHandler(async (req, res) => {
   }
 
   order.orderStatus = "cancelled";
+  order.status = "cancelled";
   order.cancelReason = reason || "Cancelled by user";
   order.statusHistory.push({ status: "cancelled", note: order.cancelReason, timestamp: new Date() });
 
@@ -114,6 +127,7 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
   if (newIdx <= currentIdx) throw new AppError("Invalid status transition", 400);
 
   order.orderStatus = status;
+  order.status = statusAlias[status] || status;
   order.statusHistory.push({ status, note: note || "Status updated", timestamp: new Date(), updatedBy: req.user._id });
 
   if (status === "shipped") {

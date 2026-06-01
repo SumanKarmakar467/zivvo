@@ -4,11 +4,20 @@ import { Heart, ShoppingBag } from "lucide-react";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { useCartContext } from "../context/CartContext";
+import StarRating from "./StarRating";
+import { productImageFallback } from "../utils/imageFallbacks";
 
 export default function ProductCard({ product, index = 0, matchedText = "" }) {
   const [loaded, setLoaded] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
   const { addItem } = useCartContext();
+  const productId = product._id || product.id;
+  const productName = product.name || product.title || "Product";
+  const productImage = product.thumbnail || product.images?.[0] || product.image || productImageFallback;
+  const productCategory = typeof product.category === "object" ? product.category?.name : product.category;
+  const productRating = Number(product.averageRating ?? product.rating ?? 0);
+  const totalReviews = Number(product.totalReviews ?? product.reviewCount ?? product.numReviews ?? 0);
+  const productUrl = `/product/${product.slug || productId}`;
 
   const add = async (event) => {
     event.preventDefault();
@@ -16,7 +25,7 @@ export default function ProductCard({ product, index = 0, matchedText = "" }) {
     confetti({ particleCount: 28, spread: 48, origin: { y: 0.75 } });
   };
 
-  const title = matchedText ? highlight(product.title, matchedText) : product.title;
+  const title = matchedText ? highlight(productName, matchedText) : productName;
 
   return (
     <motion.article
@@ -25,12 +34,13 @@ export default function ProductCard({ product, index = 0, matchedText = "" }) {
       transition={{ delay: index * 0.05, duration: 0.45 }}
       className="tilt-card zivvo-card group overflow-hidden rounded-lg"
     >
-      <Link to={`/product/${product.id}`} className="block min-h-0">
+      <Link to={productUrl} className="block min-h-0">
         <div className="relative aspect-[4/3] overflow-hidden bg-[var(--bg3)]">
           <img
-            src={product.thumbnail}
-            alt={product.title}
+            src={productImage}
+            alt={productName}
             loading="lazy"
+            onError={(event) => { event.currentTarget.src = productImageFallback; }}
             onLoad={() => setLoaded(true)}
             className={`h-full w-full object-cover ${loaded ? "blur-up is-loaded" : "blur-up"}`}
           />
@@ -50,13 +60,17 @@ export default function ProductCard({ product, index = 0, matchedText = "" }) {
         <div className="space-y-3 p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">{product.category}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">{productCategory || "Zivvo"}</p>
               <h3 className="mt-1 line-clamp-2 text-base font-bold text-[var(--cream)]">{title}</h3>
+              <div className="mt-2 flex items-center gap-2 text-xs text-cyan-200/80">
+                <StarRating rating={productRating} value={productRating} size="sm" />
+                <span>({totalReviews})</span>
+              </div>
             </div>
-            <p className="shrink-0 font-bold text-[var(--gold,#C9A84C)]">${product.price}</p>
+            <p className="shrink-0 font-bold text-[var(--gold,#C9A84C)]">₹{Number(product.price || 0).toLocaleString("en-IN")}</p>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-[var(--muted)]">{product.rating.toFixed(1)} stars</span>
+            <span className="text-sm text-[var(--muted)]">{productRating.toFixed(1)} stars</span>
             <motion.button
               whileTap={{ scale: 0.85 }}
               type="button"

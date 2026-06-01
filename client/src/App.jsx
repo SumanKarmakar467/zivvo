@@ -29,6 +29,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
 const OrderDetailPage = lazy(() => import("./pages/OrderDetailPage"));
+const OrdersPage = lazy(() => import("./pages/OrdersPage"));
 const AccountOrders = lazy(() => import("./pages/AccountOrders"));
 const Account = lazy(() => import("./pages/Account"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -204,6 +205,7 @@ export default function App() {
           <Route path="/account/addresses" element={<PageWrapper><PrivateRoute><AddressBookPage /></PrivateRoute></PageWrapper>} />
           <Route path="/order-success/:orderId" element={<PageWrapper><PrivateRoute><OrderSuccess /></PrivateRoute></PageWrapper>} />
           <Route path="/account/orders" element={<PageWrapper><PrivateRoute><AccountOrders /></PrivateRoute></PageWrapper>} />
+          <Route path="/orders" element={<PageWrapper><PrivateRoute><OrdersPage /></PrivateRoute></PageWrapper>} />
           <Route path="/orders/:id" element={<PageWrapper><PrivateRoute><OrderDetailPage /></PrivateRoute></PageWrapper>} />
           <Route path="/seller/:sellerId" element={<PageWrapper><SellerStorefrontPage /></PageWrapper>} />
           <Route path="/returns/:id" element={<PageWrapper><PrivateRoute><ReturnDetailPage /></PrivateRoute></PageWrapper>} />
