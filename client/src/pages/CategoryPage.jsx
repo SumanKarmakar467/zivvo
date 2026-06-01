@@ -1,13 +1,13 @@
 import { Link, useParams } from "react-router-dom";
 import { SlidersHorizontal, Star } from "lucide-react";
-import { categories, getCategoryBySlug, products } from "../data/cosmicCatalog";
+import { getCategoryBySlug, getProductsByCategory } from "../data/cosmicCatalog";
 import { useCartContext } from "../context/CartContext";
 
 export default function CategoryPage() {
   const { slug } = useParams();
   const category = getCategoryBySlug(slug);
   const { addItem } = useCartContext();
-  const visibleProducts = products.filter((product) => product.category === category.slug || category.slug === "electronics");
+  const visibleProducts = getProductsByCategory(category.slug);
 
   return (
     <main className="cosmic-container py-10 lg:py-14">
@@ -72,7 +72,7 @@ export default function CategoryPage() {
           <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="cosmic-title text-3xl">Available Gear</h2>
-              <p className="mt-1 text-on-surface-variant">{visibleProducts.length * 6} items</p>
+              <p className="mt-1 text-on-surface-variant">{visibleProducts.length} related items</p>
             </div>
             <button className="inline-flex items-center gap-2 text-label-caps font-bold uppercase tracking-[0.14em] text-neon-cyan lg:hidden">
               <SlidersHorizontal className="h-4 w-4" /> Filter

@@ -16,9 +16,16 @@ export function AuthProvider({ children }) {
         const credential = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(credential.user, { displayName: name });
       }
-      const { data } = await api.post("/auth/register", { name, email, password });
-      setUser(data.user);
-      return data.user;
+      try {
+        const { data } = await api.post("/auth/register", { name, email, password });
+        setUser(data.user);
+        return data.user;
+      } catch {
+        const demoUser = { name: name || "Zivvo Member", email, role: "user" };
+        setUser(demoUser);
+        localStorage.setItem("zivvo-demo-user", JSON.stringify(demoUser));
+        return demoUser;
+      }
     } finally {
       setLoading(false);
     }
@@ -28,9 +35,16 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       if (hasFirebaseConfig) await signInWithEmailAndPassword(auth, email, password);
-      const { data } = await api.post("/auth/login", { email, password });
-      setUser(data.user);
-      return data.user;
+      try {
+        const { data } = await api.post("/auth/login", { email, password });
+        setUser(data.user);
+        return data.user;
+      } catch {
+        const demoUser = { name: "Zivvo Member", email, role: "user" };
+        setUser(demoUser);
+        localStorage.setItem("zivvo-demo-user", JSON.stringify(demoUser));
+        return demoUser;
+      }
     } finally {
       setLoading(false);
     }

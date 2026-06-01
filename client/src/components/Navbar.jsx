@@ -1,12 +1,13 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { Heart, Home, Menu, PackageSearch, Search, ShoppingBag, User } from "lucide-react";
+import { Heart, Home, LogIn, Menu, PackageSearch, Search, ShoppingBag, User } from "lucide-react";
 import { useCartContext } from "../context/CartContext";
 
 const desktopLinks = [
   { label: "Home", to: "/" },
   { label: "Categories", to: "/category/electronics" },
   { label: "Search", to: "/search" },
-  { label: "Orders", to: "/account/orders" }
+  { label: "Orders", to: "/account/orders" },
+  { label: "Profile", to: "/profile" }
 ];
 
 const mobileLinks = [
@@ -53,6 +54,10 @@ export default function Navbar() {
           <div className="flex items-center gap-3">
             <Link to="/wishlist" className="hidden h-11 w-11 place-items-center rounded-xl border border-white/10 bg-white/5 text-primary transition hover:text-neon-cyan md:grid" aria-label="Wishlist">
               <Heart className="h-5 w-5" />
+            </Link>
+            <Link to="/login" className="hidden h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 text-sm font-bold uppercase tracking-[0.12em] text-on-surface-variant transition hover:text-neon-cyan md:inline-flex" aria-label="Login">
+              <LogIn className="h-4 w-4" />
+              Login
             </Link>
             <Link to="/cart" className="relative grid h-11 w-11 place-items-center rounded-xl border border-white/10 bg-white/5 text-neon-cyan transition hover:shadow-cyan" aria-label="Cart">
               <ShoppingBag className="h-5 w-5" />
